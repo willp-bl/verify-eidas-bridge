@@ -1,0 +1,11 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: ${PORT:-8080}
+
+logging:
+  level: INFO
+  loggers:
+    com.eidas.uk.gov.bridge: DEBUG
+  appenders:
+    - type: console

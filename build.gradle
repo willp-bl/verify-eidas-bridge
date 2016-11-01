@@ -1,0 +1,47 @@
+apply plugin: 'java'
+apply from: 'idea.gradle'
+apply plugin: 'application'
+
+// Use Java 8 by default
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+// UTF-8 should be standard by now. So use it!
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.3'
+    }
+}
+
+
+
+repositories {
+    mavenCentral()
+}
+
+project.ext {
+    dropwizardVersion = '1.0.3'
+}
+dependencies {
+    compile (
+            'io.dropwizard:dropwizard-core:' + dropwizardVersion,
+            'io.dropwizard:dropwizard-configuration:' + dropwizardVersion
+    )
+}
+
+mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
+
+run {
+  args 'server', 'src/dist/eidasbridge.yml'
+}
