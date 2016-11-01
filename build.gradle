@@ -1,5 +1,7 @@
 apply plugin: 'java'
 apply from: 'idea.gradle'
+apply plugin: 'gradle-one-jar'
+apply plugin: 'application'
 
 // Use Java 8 by default
 sourceCompatibility = '1.8'
@@ -39,8 +41,16 @@ dependencies {
     )
 }
 
+// task oneJar(type: OneJar) {
+//     mainClass 'uk.gov.ida.eidas.bridge.BridgeApplication'
+// }
+//
+mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.1'
+    gradleVersion = '3.1'
 }
 
+run {
+  args 'server', 'src/dist/eidasbridge.yml'
+}
