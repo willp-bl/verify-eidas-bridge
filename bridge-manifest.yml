@@ -1,0 +1,9 @@
+---
+applications:
+- memory: 1G
+  buildpack: java_buildpack
+  services:
+    - newrelic
+
+
+

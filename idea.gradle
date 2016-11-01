@@ -1,0 +1,17 @@
+apply plugin: "idea"
+
+idea {
+    project {
+        jdkName = '1.8'
+        languageLevel = '1.8'
+    }
+
+    
+    module {
+        //if you love browsing Javadoc
+        downloadJavadoc = true
+
+        //and love reading sources :)
+        downloadSources = true
+    }
+}

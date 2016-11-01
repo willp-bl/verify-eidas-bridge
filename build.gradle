@@ -1,6 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'gradle-one-jar'
-apply plugin: 'application'
+apply from: 'idea.gradle'
 
 // Use Java 8 by default
 sourceCompatibility = '1.8'
@@ -9,10 +8,11 @@ targetCompatibility = '1.8'
 // UTF-8 should be standard by now. So use it!
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-// The main class of the application
-mainClassName = 'uk.gov.ida.eidas.bridge.VerifyEidasBridgeApplication'
 
 // Add Gradle OneJar Plugin, see https://github.com/rholder/gradle-one-jar
+
+// Set our project variables
+
 buildscript {
     repositories {
         mavenCentral()
@@ -23,39 +23,24 @@ buildscript {
     }
 }
 
-// Set our project variables
-project.ext {
-    dropwizardVersion = '0.6.2'
-    jacksonVersion = '2.0.1'
-}
+
 
 repositories {
     mavenCentral()
 }
 
+project.ext {
+    dropwizardVersion = '1.0.3'
+}
 dependencies {
     compile (
-            'com.yammer.dropwizard:dropwizard-core:' + dropwizardVersion,
-            'com.yammer.dropwizard:dropwizard-auth:' + dropwizardVersion,
-            'com.fasterxml.jackson.core:jackson-databind:' + jacksonVersion
+            'io.dropwizard:dropwizard-core:' + dropwizardVersion,
+            'io.dropwizard:dropwizard-configuration:' + dropwizardVersion
     )
 }
 
-// Configure the oneJar task
-task oneJar(type: OneJar) {
-    mainClass = mainClassName
-}
-
-// Configure the run task to start the Dropwizard service
-run {
-    args 'server', './src/dist/config/eidasbridge.yml'
-
-}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.1'
 }
 
-artifacts {
-    oneJar
-}
