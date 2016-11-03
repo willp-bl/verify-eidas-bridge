@@ -20,10 +20,9 @@ buildscript {
     }
 }
 
-
-
 repositories {
     mavenCentral()
+    maven { url 'https://artifactory.ida.digital.cabinet-office.gov.uk/artifactory/whitelisted-repos' }
 }
 
 project.ext {
@@ -32,7 +31,17 @@ project.ext {
 dependencies {
     compile (
             'io.dropwizard:dropwizard-core:' + dropwizardVersion,
-            'io.dropwizard:dropwizard-configuration:' + dropwizardVersion
+            'io.dropwizard:dropwizard-client:' + dropwizardVersion,
+            'io.dropwizard:dropwizard-configuration:' + dropwizardVersion,
+            'uk.gov.ida:saml-metadata-bindings:3.2.0-18',
+            "org.opensaml:opensaml-core:3.2.0",
+            "uk.gov.ida:dropwizard-saml:3.2.0-349",
+    )
+    testCompile(
+            'io.dropwizard:dropwizard-testing:' + dropwizardVersion,
+            'uk.gov.ida:saml-metadata-bindings-test:3.2.0-18',
+            'com.github.tomakehurst:wiremock:2.2.2'
+
     )
 }
 

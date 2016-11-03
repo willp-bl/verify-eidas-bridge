@@ -1,7 +1,7 @@
 server:
   applicationConnectors:
     - type: http
-      port: ${PORT:-8080}
+      port: ${PORT:-0}
 
 logging:
   level: INFO
@@ -30,3 +30,4 @@ metadata:
       protocol: TLSv1.2
       verifyHostname: false
       trustSelfSignedCertificates: true
+
