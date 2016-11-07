@@ -2,11 +2,9 @@ apply plugin: 'java'
 apply from: 'idea.gradle'
 apply plugin: 'application'
 
-// Use Java 8 by default
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-// UTF-8 should be standard by now. So use it!
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 
@@ -27,21 +25,24 @@ repositories {
 
 project.ext {
     dropwizardVersion = '1.0.3'
+    openSamlVersion = '3.2.0'
 }
+
 dependencies {
     compile (
-            'io.dropwizard:dropwizard-core:' + dropwizardVersion,
-            'io.dropwizard:dropwizard-client:' + dropwizardVersion,
-            'io.dropwizard:dropwizard-configuration:' + dropwizardVersion,
-            'uk.gov.ida:saml-metadata-bindings:3.2.0-18',
-            "org.opensaml:opensaml-core:3.2.0",
-            "uk.gov.ida:dropwizard-saml:3.2.0-349",
+            "io.dropwizard:dropwizard-core:$dropwizardVersion",
+            "io.dropwizard:dropwizard-client:$dropwizardVersion",
+            "io.dropwizard:dropwizard-configuration:" + dropwizardVersion,
+            "org.opensaml:opensaml-core:$openSamlVersion",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-18",
+            "uk.gov.ida:dropwizard-saml:$openSamlVersion-349",
+            "uk.gov.verify:saml-utils:$openSamlVersion-11",
     )
     testCompile(
-            'io.dropwizard:dropwizard-testing:' + dropwizardVersion,
-            'uk.gov.ida:saml-metadata-bindings-test:3.2.0-18',
-            'com.github.tomakehurst:wiremock:2.2.2'
-
+            "io.dropwizard:dropwizard-testing:$dropwizardVersion",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-18",
+            "uk.gov.ida:hub-saml-test-utils:$openSamlVersion-29",
+            'com.github.tomakehurst:wiremock:2.2.2',
     )
 }
 

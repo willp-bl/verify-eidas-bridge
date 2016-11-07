@@ -4,7 +4,7 @@ server:
       port: ${PORT:-0}
 
 logging:
-  level: INFO
+  level: DEBUG
   loggers:
     com.eidas.uk.gov.bridge: DEBUG
   appenders:

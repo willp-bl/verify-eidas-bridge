@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge;
+package uk.gov.ida.eidas.bridge.apprule;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.dropwizard.testing.ConfigOverride;
@@ -7,6 +7,8 @@ import io.dropwizard.testing.ResourceHelpers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import uk.gov.ida.eidas.bridge.BridgeApplication;
+import uk.gov.ida.eidas.bridge.BridgeConfiguration;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
