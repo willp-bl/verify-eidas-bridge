@@ -19,6 +19,7 @@ import uk.gov.ida.saml.security.SignatureValidator;
 import javax.xml.namespace.QName;
 
 import static junit.framework.TestCase.assertNotNull;
+import static org.mockito.Mockito.when;
 import static uk.gov.ida.eidas.bridge.testhelpers.AuthnRequestBuilder.anAuthnRequest;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -32,6 +33,7 @@ public class AuthnRequestHandlerTest {
 
     @Before
     public void before () {
+        when(configuration.getExpectedEntityId()).thenReturn("https://signin.service.gov.uk");
         IdaSamlBootstrap.bootstrap();
     }
 
@@ -40,6 +42,12 @@ public class AuthnRequestHandlerTest {
         AuthnRequestHandler authnRequestHandler = new AuthnRequestHandler(configuration, signatureValidator(true), stringToAuthnRequest);
         AuthnRequest authnRequest = authnRequestHandler.handleAuthnRequest(anAuthnRequest().buildString());
         assertNotNull(authnRequest);
+    }
+
+    @Test(expected = SecurityException.class)
+    public void shouldThrowSecurityExceptionWhenIssuerIsNotHub() throws Exception {
+        AuthnRequestHandler authnRequestHandler = new AuthnRequestHandler(configuration, signatureValidator(true), stringToAuthnRequest);
+        authnRequestHandler.handleAuthnRequest(anAuthnRequest().withIssuer("https://not.hub.gov.uk").buildString());
     }
 
     @Test(expected = SecurityException.class)

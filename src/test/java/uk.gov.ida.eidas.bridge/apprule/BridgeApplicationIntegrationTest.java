@@ -23,7 +23,7 @@ public class BridgeApplicationIntegrationTest {
 
     public static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         ResourceHelpers.resourceFilePath("eidasbridge.yml"),
-        ConfigOverride.config("metadata.trustStorePath", ResourceHelpers.resourceFilePath("verify_truststore.ts")),
+        ConfigOverride.config("metadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
         ConfigOverride.config("metadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation")
     );
 

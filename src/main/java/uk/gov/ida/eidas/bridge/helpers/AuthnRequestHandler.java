@@ -25,9 +25,15 @@ public class AuthnRequestHandler {
     public AuthnRequest handleAuthnRequest(String base64AuthnRequest) throws SecurityException, SignatureException {
         AuthnRequest authnRequest = stringToAuthnRequest.apply(base64AuthnRequest);
 
+        String expectedEntityId = configuration.getExpectedEntityId();
+        String actualIssuer = authnRequest.getIssuer().getValue();
+        if(!expectedEntityId.equals(actualIssuer)) {
+            throw new SecurityException("Authn request issuer (" + actualIssuer + ") didn't match expected issuer (" + expectedEntityId + ")");
+        }
+        expectedEntityId.equals(actualIssuer);
         boolean validSignature = metadataBackedSignatureValidator.validate(
             authnRequest,
-            configuration.getExpectedEntityId(),
+            expectedEntityId,
             SPSSODescriptor.DEFAULT_ELEMENT_NAME
         );
 

@@ -1,7 +1,7 @@
 server:
   applicationConnectors:
     - type: http
-      port: ${PORT:-8080}
+      port: ${PORT:-50400}
 
 logging:
   level: INFO
@@ -11,9 +11,9 @@ logging:
     - type: console
 
 metadata:
-  uri: http://localhost:9000/SAML2/metadata/federation
-  trustStorePath: verify_truststore.ts
-  trustStorePassword: Password
+  uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
+  trustStorePath: src/main/resources/metadata_truststore.ts
+  trustStorePassword: puppet
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
   expectedEntityId: https://signin.service.gov.uk
