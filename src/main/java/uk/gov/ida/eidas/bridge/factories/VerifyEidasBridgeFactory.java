@@ -8,6 +8,7 @@ import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
+import uk.gov.ida.eidas.bridge.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
@@ -26,11 +27,15 @@ import java.security.KeyStore;
 public class VerifyEidasBridgeFactory {
 
     private final Environment environment;
-    private final MetadataConfiguration metadataConfiguration;
+    private final MetadataConfiguration verifyMetadataConfiguration;
+    private final MetadataConfiguration eidasMetadataConfiguration;
     private final CoreTransformersFactory coreTransformersFactory = new CoreTransformersFactory();
+    private final MetadataModule metadataModule = new MetadataModule();
 
     @Nullable
-    private MetadataResolver metadataResolver;
+    private MetadataResolver verifyMetadataResolver;
+    @Nullable
+    private MetadataResolver eidasMetadataResolver;
     @Nullable
     private MetadataBackedSignatureValidator metadataBackedSignatureValidator;
     @Nullable
@@ -38,9 +43,10 @@ public class VerifyEidasBridgeFactory {
 
     public VerifyEidasBridgeFactory(
         Environment environment,
-        MetadataConfiguration metadataConfiguration) {
+        BridgeConfiguration configuration) {
         this.environment = environment;
-        this.metadataConfiguration = metadataConfiguration;
+        this.verifyMetadataConfiguration = configuration.getVerifyMetadataConfiguration();
+        this.eidasMetadataConfiguration = configuration.getEidasMetadataConfiguration();
     }
 
     public AuthnRequestHandler getAuthnRequestHandler() throws ComponentInitializationException {
@@ -50,34 +56,46 @@ public class VerifyEidasBridgeFactory {
             StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest =
                 coreTransformersFactory.getStringtoOpenSamlObjectTransformer(authnRequestSizeValidator);
             authnRequestHandler = new AuthnRequestHandler(
-                this.metadataConfiguration,
-                getMetadataBackedSignatureValidator(),
+                this.verifyMetadataConfiguration,
+                getVerifyMetadataBackedSignatureValidator(),
                 stringToAuthnRequest);
         }
         return authnRequestHandler;
     }
 
-    public MetadataResolver getMetadataResolver() {
-        if (metadataResolver == null) {
-            KeyStore keyStore = new KeyStoreLoader().load(
-                metadataConfiguration.getTrustStorePath(),
-                metadataConfiguration.getTrustStorePassword());
-            metadataResolver = new MetadataModule().metadataResolver(
-                metadataConfiguration.getUri(),
-                metadataConfiguration.getMaxRefreshDelay(),
-                metadataConfiguration.getMinRefreshDelay(),
-                environment,
-                metadataConfiguration,
-                new ExpiredCertificateMetadataFilter(),
-                new PKIXSignatureValidationFilterProvider(keyStore)
-            );
+    public MetadataResolver getVerifyMetadataResolver() {
+        if (verifyMetadataResolver == null) {
+            verifyMetadataResolver = getMetadataResolver(verifyMetadataConfiguration);
         }
-        return metadataResolver;
+        return verifyMetadataResolver;
     }
 
-    private MetadataBackedSignatureValidator getMetadataBackedSignatureValidator() throws ComponentInitializationException {
+    public MetadataResolver getEidasMetadataResolver() {
+        if (eidasMetadataResolver == null) {
+            eidasMetadataResolver = getMetadataResolver(eidasMetadataConfiguration);
+        }
+        return eidasMetadataResolver;
+    }
+
+    private MetadataResolver getMetadataResolver(MetadataConfiguration metadataConfiguration) {
+        KeyStore keyStore = new KeyStoreLoader().load(
+            metadataConfiguration.getTrustStorePath(),
+            metadataConfiguration.getTrustStorePassword()
+        );
+        return metadataModule.metadataResolver(
+            metadataConfiguration.getUri(),
+            metadataConfiguration.getMaxRefreshDelay(),
+            metadataConfiguration.getMinRefreshDelay(),
+            environment,
+            metadataConfiguration,
+            new ExpiredCertificateMetadataFilter(),
+            new PKIXSignatureValidationFilterProvider(keyStore)
+        );
+    }
+
+    private MetadataBackedSignatureValidator getVerifyMetadataBackedSignatureValidator() throws ComponentInitializationException {
         if (metadataBackedSignatureValidator == null) {
-            BasicRoleDescriptorResolver basicRoleDescriptorResolver = new BasicRoleDescriptorResolver(getMetadataResolver());
+            BasicRoleDescriptorResolver basicRoleDescriptorResolver = new BasicRoleDescriptorResolver(getVerifyMetadataResolver());
             basicRoleDescriptorResolver.initialize();
             MetadataCredentialResolver metadataCredentialResolver = new MetadataCredentialResolver();
             metadataCredentialResolver.setRoleDescriptorResolver(basicRoleDescriptorResolver);

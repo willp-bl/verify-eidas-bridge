@@ -10,13 +10,14 @@ logging:
   appenders:
     - type: console
 
-metadata:
+verifyMetadata:
   uri: http://localhost:9000/SAML2/metadata/federation
   trustStorePath: verify_truststore.ts
   trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
   expectedEntityId: https://signin.service.gov.uk
+  jerseyClientName: VerifyMetadataClient
   client:
     timeout: 2s
     timeToLive: 10m
@@ -31,3 +32,24 @@ metadata:
       verifyHostname: false
       trustSelfSignedCertificates: true
 
+eidasMetadata:
+  uri: http://localhost:9000/ServiceMetadata
+  trustStorePath: eidas_truststore.ts
+  trustStorePassword: Password
+  minRefreshDelay: 60000
+  maxRefreshDelay: 600000
+  expectedEntityId: https://signin.service.gov.uk
+  jerseyClientName: EidasMetadataClient
+  client:
+    timeout: 2s
+    timeToLive: 10m
+    cookiesEnabled: false
+    connectionTimeout: 1s
+    retries: 3
+    keepAlive: 60s
+    chunkedEncodingEnabled: false
+    validateAfterInactivityPeriod: 5s
+    tls:
+      protocol: TLSv1.2
+      verifyHostname: false
+      trustSelfSignedCertificates: true

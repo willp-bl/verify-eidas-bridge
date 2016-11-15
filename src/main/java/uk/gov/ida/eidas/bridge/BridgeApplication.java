@@ -11,7 +11,11 @@ import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
 import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
-import uk.gov.ida.saml.metadata.MetadataConfiguration;
+
+import java.util.Map;
+
+import static com.google.common.collect.ImmutableMap.of;
+
 
 public class BridgeApplication extends Application<BridgeConfiguration> {
     public static void main(String[] args) throws Exception {
@@ -32,13 +36,15 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
 
     @Override
     public void run(BridgeConfiguration configuration, Environment environment) throws ComponentInitializationException {
-        MetadataConfiguration metadataConfiguration = configuration.getMetadataConfiguration();
-        VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, metadataConfiguration);
+        VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
         environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler));
 
-        HealthCheck healthCheck = new MetadataHealthCheck(verifyEidasBridgeFactory.getMetadataResolver(), metadataConfiguration.getExpectedEntityId());
-        environment.healthChecks().register("verify-metadata", healthCheck);
+        Map<String, HealthCheck> healthChecks = of(
+            "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
+            "eidas-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getEidasMetadataResolver(), configuration.getEidasMetadataConfiguration().getExpectedEntityId())
+        );
+        healthChecks.entrySet().stream().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
 }

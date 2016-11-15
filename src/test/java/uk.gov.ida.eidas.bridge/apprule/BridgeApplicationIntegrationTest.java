@@ -23,8 +23,10 @@ public class BridgeApplicationIntegrationTest {
 
     public static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         ResourceHelpers.resourceFilePath("eidasbridge.yml"),
-        ConfigOverride.config("metadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
-        ConfigOverride.config("metadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation")
+        ConfigOverride.config("verifyMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
+        ConfigOverride.config("eidasMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("eidasMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata")
     );
 
     @Before
@@ -39,9 +41,17 @@ public class BridgeApplicationIntegrationTest {
     }
 
     @Test
-    public void shouldRequestMetadataOnStartup() throws Exception {
+    public void shouldRequestMetadataFromVerifyAndEidasOnStartup() throws Exception {
         wireMock.stubFor(
             get(urlEqualTo("/SAML2/metadata/federation"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(new MetadataFactory().defaultMetadata())
+                )
+        );
+        wireMock.stubFor(
+            get(urlEqualTo("/ServiceMetadata"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
@@ -53,5 +63,6 @@ public class BridgeApplicationIntegrationTest {
         dropwizardTestSupport.before();
 
         wireMock.verify(getRequestedFor(urlEqualTo("/SAML2/metadata/federation")));
+        wireMock.verify(getRequestedFor(urlEqualTo("/ServiceMetadata")));
     }
 }

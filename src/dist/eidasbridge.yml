@@ -10,13 +10,36 @@ logging:
   appenders:
     - type: console
 
-metadata:
+verifyMetadata:
   uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
   trustStorePath: src/main/resources/metadata_truststore.ts
   trustStorePassword: puppet
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
   expectedEntityId: https://signin.service.gov.uk
+  jerseyClientName: VerifyMetadataClient
+  client:
+    timeout: 2s
+    timeToLive: 10m
+    cookiesEnabled: false
+    connectionTimeout: 1s
+    retries: 3
+    keepAlive: 60s
+    chunkedEncodingEnabled: false
+    validateAfterInactivityPeriod: 5s
+    tls:
+      protocol: TLSv1.2
+      verifyHostname: false
+      trustSelfSignedCertificates: true
+
+eidasMetadata:
+  uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
+  trustStorePath: src/main/resources/metadata_truststore.ts
+  trustStorePassword: puppet
+  minRefreshDelay: 60000
+  maxRefreshDelay: 600000
+  expectedEntityId: https://signin.service.gov.uk
+  jerseyClientName: EidasMetadataClient
   client:
     timeout: 2s
     timeToLive: 10m

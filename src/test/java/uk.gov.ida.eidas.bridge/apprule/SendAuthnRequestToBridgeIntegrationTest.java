@@ -36,8 +36,10 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     @ClassRule
     public static final DropwizardAppRule<BridgeConfiguration> RULE = new DropwizardAppRule<>(BridgeApplication.class,
         ResourceHelpers.resourceFilePath("eidasbridge.yml"),
-        ConfigOverride.config("metadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
-        ConfigOverride.config("metadata.uri", metadataMock::url)
+        ConfigOverride.config("verifyMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("verifyMetadata.uri", metadataMock::verifyUrl),
+        ConfigOverride.config("eidasMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("eidasMetadata.uri", metadataMock::eidasUrl)
     );
 
     @BeforeClass

@@ -7,10 +7,17 @@ import uk.gov.ida.saml.metadata.MetadataConfiguration;
 public class BridgeConfiguration extends Configuration {
 
     @JsonProperty
-    private MetadataConfiguration metadata;
+    private MetadataConfiguration verifyMetadata;
 
-    public MetadataConfiguration getMetadataConfiguration() {
-        return metadata;
+    @JsonProperty
+    private MetadataConfiguration eidasMetadata;
+
+    public MetadataConfiguration getVerifyMetadataConfiguration() {
+        return verifyMetadata;
+    }
+
+    public MetadataConfiguration getEidasMetadataConfiguration() {
+        return eidasMetadata;
     }
 
 }

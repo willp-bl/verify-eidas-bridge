@@ -23,13 +23,13 @@ dependencies {
             "io.dropwizard:dropwizard-client:$dropwizardVersion",
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-18",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-19",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-349",
             "uk.gov.verify:saml-utils:$openSamlVersion-11",
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
-            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-18",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-19",
             "com.github.tomakehurst:wiremock:2.2.2",
     )
 }
