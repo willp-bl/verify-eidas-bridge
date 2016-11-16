@@ -8,10 +8,15 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
+import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
+import uk.gov.ida.eidas.saml.extensions.SPType;
+import uk.gov.ida.eidas.saml.extensions.SPTypeBuilder;
+import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
 import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 
@@ -30,7 +35,8 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
 
     @Override
     public void initialize(Bootstrap<BridgeConfiguration> bootstrap) {
-        IdaSamlBootstrap.bootstrap();
+        EidasSamlBootstrap.bootstrap();
+
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
@@ -44,7 +50,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
-        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, new EidasAuthnRequestGenerator()));
+        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, new EidasAuthnRequestGenerator("TODO")));
 
         Map<String, HealthCheck> healthChecks = of(
             "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),

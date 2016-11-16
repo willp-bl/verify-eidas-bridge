@@ -6,9 +6,12 @@ import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.views.AuthnRequestFormView;
+import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
+import uk.gov.ida.saml.serializers.XmlObjectToElementTransformer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -55,6 +58,7 @@ public class VerifyAuthnRequestResource {
     @Produces(MediaType.TEXT_HTML)
     public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) {
         AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId);
-        return new AuthnRequestFormView(eidasAuthnRequest.toString());
+
+        return new AuthnRequestFormView(new XmlObjectToBase64EncodedStringTransformer().apply(eidasAuthnRequest));
     }
 }
