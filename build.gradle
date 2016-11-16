@@ -22,6 +22,7 @@ dependencies {
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-client:$dropwizardVersion",
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
+            "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
             "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-19",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-349",
@@ -31,6 +32,7 @@ dependencies {
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
             "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-19",
             "com.github.tomakehurst:wiremock:2.2.2",
+            "org.jsoup:jsoup:1.10.1",
     )
 }
 

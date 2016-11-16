@@ -4,11 +4,18 @@ import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import org.glassfish.jersey.client.ClientProperties;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
@@ -27,6 +34,7 @@ import static uk.gov.ida.eidas.bridge.testhelpers.AuthnRequestBuilder.anAuthnReq
 
 
 public class SendAuthnRequestToBridgeIntegrationTest {
+    private static final Logger LOG = LoggerFactory.getLogger(SendAuthnRequestToBridgeIntegrationTest.class);
 
     private static Client client;
 
@@ -47,8 +55,9 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         client = new JerseyClientBuilder(RULE.getEnvironment()).build("bridge test client");
     }
 
+
     @Test
-    public void testAcceptsAuthnRequestWithValidSignature() throws MarshallingException, SignatureException {
+    public void testAcceptsAuthnRequestWithValidSignatureAndRedirects() throws MarshallingException, SignatureException {
         String authnRequest = anAuthnRequest()
             .withSigningCredentials(TestCertificateStrings.HUB_TEST_PUBLIC_SIGNING_CERT, TestCertificateStrings.HUB_TEST_PRIVATE_SIGNING_KEY)
             .buildString();
@@ -57,13 +66,33 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         form.put("SAMLRequest", singletonList(authnRequest));
 
         Response result = client
-                .target(String.format("http://localhost:%d/SAML2/SSO/POST", RULE.getLocalPort()))
-                .request()
-                .buildPost(Entity.form(form))
-                .invoke();
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d/SAML2/SSO/POST", RULE.getLocalPort()))
+            .request()
+            .buildPost(Entity.form(form))
+            .invoke();
 
-        assertEquals(200, result.getStatus());
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), result.getStatus());
     }
+
+
+    @Test
+    public void testRendersSAMLForm() throws MarshallingException, SignatureException {
+        Response result = client
+                .target(String.format("http://localhost:%d/redirect-to-eidas/anId", RULE.getLocalPort()))
+                .request()
+                .get();
+        String responseString = result.readEntity(String.class);
+
+        Document doc = Jsoup.parseBodyFragment(responseString);
+        Element samlRequest = doc.getElementsByAttributeValue("name", "SAMLRequest").first();
+
+        Assert.assertNotNull(samlRequest);
+        String samlRequestValue = samlRequest.val();
+        Assert.assertNotNull(samlRequestValue);
+        Assert.assertTrue(samlRequestValue.length() > 10);
+    }
+
 
     @Test
     public void testRejectsAuthnRequestWithInvalidSignature() throws MarshallingException, SignatureException {
