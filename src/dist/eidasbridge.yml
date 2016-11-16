@@ -4,7 +4,7 @@ server:
       port: ${PORT:-50400}
 
 logging:
-  level: INFO
+  level: DEBUG
   loggers:
     com.eidas.uk.gov.bridge: DEBUG
   appenders:
@@ -33,9 +33,9 @@ verifyMetadata:
       trustSelfSignedCertificates: true
 
 eidasMetadata:
-  uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
-  trustStorePath: src/main/resources/metadata_truststore.ts
-  trustStorePassword: puppet
+  uri: https://uk-connector-node-reference.cloudapps.digital/ServiceMetadata
+  trustStorePath: src/main/resources/eidas_metadata_truststore.ts
+  trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
   expectedEntityId: https://signin.service.gov.uk
