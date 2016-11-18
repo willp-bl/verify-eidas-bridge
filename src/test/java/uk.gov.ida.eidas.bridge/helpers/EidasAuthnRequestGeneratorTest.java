@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
@@ -17,18 +18,28 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.AttributeImpl;
+import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.security.SecurityException;
+import org.opensaml.security.credential.Credential;
+import org.opensaml.xmlsec.signature.Signature;
+import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttributeImpl;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttributes;
 import uk.gov.ida.eidas.saml.extensions.SPType;
 import uk.gov.ida.eidas.saml.extensions.SPTypeBuilder;
 import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
+import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
 import javax.xml.namespace.QName;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class EidasAuthnRequestGeneratorTest {
 
@@ -39,9 +50,10 @@ public class EidasAuthnRequestGeneratorTest {
     }
     
     @Test
-    public void shouldGenerateAnEidasAuthnRequest() {
+    public void shouldGenerateAnEidasAuthnRequest() throws MarshallingException, SignatureException {
         String entityId = "http://i.am.the.bridge.com";
-        EidasAuthnRequestGenerator earg = new EidasAuthnRequestGenerator(entityId);
+        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
+        EidasAuthnRequestGenerator earg = new EidasAuthnRequestGenerator(entityId, signingCredential);
         AuthnRequest authnRequest = earg.generateAuthnRequest("aTestId");
         Assert.assertNotNull(authnRequest);
         Assert.assertEquals("aTestId", authnRequest.getID());
@@ -99,9 +111,22 @@ public class EidasAuthnRequestGeneratorTest {
         Assert.assertNotNull(reqAttrMap.get("DateOfBirth"));
     }
 
+    @Test
+    public void shouldSignTheEidasAuthnRequest() throws MarshallingException, SignatureException, SecurityException {
+        String entityId = "http://i.am.the.bridge.com";
+        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
+        EidasAuthnRequestGenerator authnRequestGenerator = new EidasAuthnRequestGenerator(entityId, signingCredential);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
+
+        Signature signature = authnRequest.getSignature();
+        Assert.assertNotNull(signature);
+        assertThat(TestSignatureValidator.getSignatureValidator().validate(authnRequest, entityId, SPSSODescriptor.DEFAULT_ELEMENT_NAME)).isTrue();
+    }
+
     private Map<String, RequestedAttributeImpl> getRequestedAttributesByFriendlyName(List<XMLObject> requestedAttributes) {
         return requestedAttributes.stream()
             .map(x -> (RequestedAttributeImpl)x)
             .collect(Collectors.toMap(AttributeImpl::getFriendlyName, x -> x));
     }
+
 }

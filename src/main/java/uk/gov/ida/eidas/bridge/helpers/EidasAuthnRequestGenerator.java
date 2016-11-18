@@ -4,6 +4,7 @@ import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObjectBuilder;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
@@ -13,6 +14,10 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
+import org.opensaml.security.credential.Credential;
+import org.opensaml.xmlsec.signature.Signature;
+import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.opensaml.xmlsec.signature.support.Signer;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.NamespaceConstants;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttribute;
@@ -31,12 +36,14 @@ public class EidasAuthnRequestGenerator {
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
     private final String entityId;
+    private final Credential signingCredential;
 
-    public EidasAuthnRequestGenerator(String entityId) {
+    public EidasAuthnRequestGenerator(String entityId, Credential signingCredential) {
         this.entityId = entityId;
+        this.signingCredential = signingCredential;
     }
 
-    public AuthnRequest generateAuthnRequest(String authnReqeustId) {
+    public AuthnRequest generateAuthnRequest(String authnReqeustId) throws MarshallingException, SignatureException {
         AuthnRequest eidasAuthnRequest = openSamlXmlObjectFactory.createAuthnRequest();
         Namespace eidasSamlExtensionsNamespace = new Namespace(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
         eidasAuthnRequest.getNamespaceManager().registerNamespaceDeclaration(eidasSamlExtensionsNamespace);
@@ -73,6 +80,14 @@ public class EidasAuthnRequestGenerator {
             getRequestedAttribute("CurrentAddress", "CurrentAddress")
         );
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
+
+        Signature signature = openSamlXmlObjectFactory.createSignature();
+        signature.setSigningCredential(signingCredential);
+        eidasAuthnRequest.setSignature(signature);
+
+        //noinspection ConstantConditions
+        XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(eidasAuthnRequest).marshall(eidasAuthnRequest);
+        Signer.signObject(signature);
 
         return eidasAuthnRequest;
     }

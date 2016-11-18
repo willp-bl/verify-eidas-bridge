@@ -6,10 +6,13 @@ import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.impl.BasicRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
+import org.opensaml.security.credential.BasicCredential;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
-import uk.gov.ida.eidas.bridge.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
+import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
@@ -23,12 +26,20 @@ import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 
 import javax.annotation.Nullable;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
 
 public class VerifyEidasBridgeFactory {
+
+    public static final String SIGNING_KEY_ALIAS = "signing";
 
     private final Environment environment;
     private final MetadataConfiguration verifyMetadataConfiguration;
     private final MetadataConfiguration eidasMetadataConfiguration;
+    private BridgeConfiguration configuration;
     private final CoreTransformersFactory coreTransformersFactory = new CoreTransformersFactory();
     private final MetadataModule metadataModule = new MetadataModule();
 
@@ -47,6 +58,7 @@ public class VerifyEidasBridgeFactory {
         this.environment = environment;
         this.verifyMetadataConfiguration = configuration.getVerifyMetadataConfiguration();
         this.eidasMetadataConfiguration = configuration.getEidasMetadataConfiguration();
+        this.configuration = configuration;
     }
 
     public AuthnRequestHandler getAuthnRequestHandler() throws ComponentInitializationException {
@@ -107,5 +119,14 @@ public class VerifyEidasBridgeFactory {
             metadataBackedSignatureValidator = MetadataBackedSignatureValidator.withoutCertificateChainValidation(explicitKeySignatureTrustEngine);
         }
         return metadataBackedSignatureValidator;
+    }
+
+    public EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        SigningKeyStoreConfiguration signingKeyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStore keyStore = signingKeyStoreConfiguration.getKeyStore();
+        PublicKey publicKey = keyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
+        BasicCredential credential = new BasicCredential(publicKey, privateKey);
+        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", credential);
     }
 }

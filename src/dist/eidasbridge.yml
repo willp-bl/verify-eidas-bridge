@@ -10,6 +10,13 @@ logging:
   appenders:
     - type: console
 
+hostname: ${HOST:-'http://localhost:50400'}
+
+signingKeyStore:
+  base64Value: ${SIGNING_KEY_STORE_VALUE}
+  password: ${SIGNING_KEY_STORE_PASSWORD}
+  type: ${SIGNING_KEY_STORE_TYPE}
+
 verifyMetadata:
   uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
   trustStorePath: src/main/resources/metadata_truststore.ts

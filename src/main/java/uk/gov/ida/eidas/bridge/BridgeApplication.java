@@ -8,18 +8,17 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
-import uk.gov.ida.eidas.saml.extensions.SPType;
-import uk.gov.ida.eidas.saml.extensions.SPTypeBuilder;
-import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
-import uk.gov.ida.saml.core.IdaSamlBootstrap;
 import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -40,17 +39,18 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false)
+                        new EnvironmentVariableSubstitutor(true)
                 )
         );
     }
 
     @Override
-    public void run(BridgeConfiguration configuration, Environment environment) throws ComponentInitializationException {
+    public void run(BridgeConfiguration configuration, Environment environment) throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
-        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, new EidasAuthnRequestGenerator("TODO")));
+        EidasAuthnRequestGenerator eidasAuthnRequestGenerator = verifyEidasBridgeFactory.getEidasAuthnRequestGenerator();
+        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, eidasAuthnRequestGenerator));
 
         Map<String, HealthCheck> healthChecks = of(
             "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
@@ -58,4 +58,5 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         );
         healthChecks.entrySet().stream().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
+
 }

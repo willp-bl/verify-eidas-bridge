@@ -1,6 +1,7 @@
 package uk.gov.ida.eidas.bridge.resources;
 
 import io.dropwizard.views.View;
+import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
@@ -56,7 +57,7 @@ public class VerifyAuthnRequestResource {
     @GET
     @Path("/redirect-to-eidas/{authnRequestId: .+}")
     @Produces(MediaType.TEXT_HTML)
-    public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) {
+    public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) throws MarshallingException, SignatureException {
         AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId);
 
         return new AuthnRequestFormView(new XmlObjectToBase64EncodedStringTransformer().apply(eidasAuthnRequest));
