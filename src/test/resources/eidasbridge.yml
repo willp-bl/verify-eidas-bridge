@@ -1,19 +1,19 @@
 server:
   applicationConnectors:
     - type: http
-      port: ${PORT:-50400}
+      port: ${PORT:-0}
 
 logging:
-  level: INFO
+  level: DEBUG
   loggers:
     com.eidas.uk.gov.bridge: DEBUG
   appenders:
     - type: console
 
 metadata:
-  uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
-  trustStorePath: src/main/resources/metadata_truststore.ts
-  trustStorePassword: puppet
+  uri: http://localhost:9000/SAML2/metadata/federation
+  trustStorePath: verify_truststore.ts
+  trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
   expectedEntityId: https://signin.service.gov.uk
@@ -30,3 +30,4 @@ metadata:
       protocol: TLSv1.2
       verifyHostname: false
       trustSelfSignedCertificates: true
+
