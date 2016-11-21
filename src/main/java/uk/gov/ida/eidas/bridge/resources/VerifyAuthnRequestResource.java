@@ -7,12 +7,10 @@ import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
+import uk.gov.ida.eidas.bridge.SamlRequest;
+import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
-import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.views.AuthnRequestFormView;
-import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
-import uk.gov.ida.saml.serializers.XmlObjectToElementTransformer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -32,11 +30,11 @@ public class VerifyAuthnRequestResource {
     private static final Logger LOG = LoggerFactory.getLogger(VerifyAuthnRequestResource.class);
 
     private final AuthnRequestHandler authnRequestHandler;
-    private final EidasAuthnRequestGenerator eidasAuthnRequestGenerator;
+    private AuthnRequestFormGenerator eidasAuthnRequestFormGenerator;
 
-    public VerifyAuthnRequestResource(AuthnRequestHandler authnRequestHandler, EidasAuthnRequestGenerator eidasAuthnRequestGenerator) {
+    public VerifyAuthnRequestResource(AuthnRequestHandler authnRequestHandler, AuthnRequestFormGenerator eidasAuthnRequestFormGenerator) {
         this.authnRequestHandler = authnRequestHandler;
-        this.eidasAuthnRequestGenerator = eidasAuthnRequestGenerator;
+        this.eidasAuthnRequestFormGenerator = eidasAuthnRequestFormGenerator;
     }
 
     @POST
@@ -58,8 +56,8 @@ public class VerifyAuthnRequestResource {
     @Path("/redirect-to-eidas/{authnRequestId: .+}")
     @Produces(MediaType.TEXT_HTML)
     public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) throws MarshallingException, SignatureException {
-        AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId);
-
-        return new AuthnRequestFormView(new XmlObjectToBase64EncodedStringTransformer().apply(eidasAuthnRequest));
+        SamlRequest samlRequest = eidasAuthnRequestFormGenerator.generateAuthnRequestForm(authnRequestId);
+        return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation());
     }
+
 }

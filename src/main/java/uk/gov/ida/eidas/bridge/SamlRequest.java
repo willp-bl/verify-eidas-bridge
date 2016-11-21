@@ -1,13 +1,10 @@
-package uk.gov.ida.eidas.bridge.views;
+package uk.gov.ida.eidas.bridge;
 
-import io.dropwizard.views.View;
-
-public class AuthnRequestFormView extends View {
+public class SamlRequest {
     private final String authnRequest;
     private final String singleSignOnLocation;
 
-    public AuthnRequestFormView(String authnRequest, String singleSignOnLocation) {
-        super("authnRequestForm.mustache");
+    public SamlRequest(String authnRequest, String singleSignOnLocation) {
         this.authnRequest = authnRequest;
         this.singleSignOnLocation = singleSignOnLocation;
     }

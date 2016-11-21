@@ -29,6 +29,7 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
         ConfigOverride.config("eidasMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
         ConfigOverride.config("eidasMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata"),
+        ConfigOverride.config("eidasNodeEntityId", "eidasEntityId"),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
         ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("signingKeyStore.type", PKCS_12),

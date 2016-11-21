@@ -8,31 +8,35 @@ import javax.ws.rs.core.MediaType;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 public class MetadataRule extends WireMockRule {
 
-    private final String metadata;
-    private final String verifyMetadataPath = "/SAML2/metadata/federation";
-    private final String eidasMetadataPath = "/ServiceMetadata";
+    private static final String verifyMetadataPath = "/SAML2/metadata/federation";
+    private static final String eidasMetadataPath = "/ServiceMetadata";
 
-    public MetadataRule(String metadata, WireMockConfiguration wireMockConfiguration) {
+    private final String metadata;
+    private final String path;
+
+    public MetadataRule(String path, String metadata, WireMockConfiguration wireMockConfiguration) {
         super(wireMockConfiguration);
+        this.path = path;
         this.metadata = metadata;
+    }
+
+    public static MetadataRule eidasMetadata(String metadata) {
+        return new MetadataRule(eidasMetadataPath, metadata, wireMockConfig().dynamicPort());
+    }
+
+    public static MetadataRule verifyMetadata(String metadata) {
+        return new MetadataRule(verifyMetadataPath, metadata, wireMockConfig().dynamicPort());
     }
 
     @Override
     protected void before() {
         super.before();
         this.stubFor(
-            get(urlEqualTo(verifyMetadataPath))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", MediaType.APPLICATION_XML)
-                    .withBody(metadata)
-                )
-        );
-        this.stubFor(
-            get(urlEqualTo(eidasMetadataPath))
+            get(urlEqualTo(path))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", MediaType.APPLICATION_XML)
@@ -41,13 +45,8 @@ public class MetadataRule extends WireMockRule {
         );
     }
 
-    public String verifyUrl() {
-        return "http://localhost:" + this.port() + verifyMetadataPath;
+    public String url() {
+        return "http://localhost:" + this.port() + path;
     }
-
-    public String eidasUrl() {
-        return "http://localhost:" + this.port() + eidasMetadataPath;
-    }
-
 }
 

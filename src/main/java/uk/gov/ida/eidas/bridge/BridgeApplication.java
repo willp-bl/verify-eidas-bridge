@@ -10,6 +10,7 @@ import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
+import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
@@ -49,8 +50,8 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         VerifyEidasBridgeFactory verifyEidasBridgeFactory = new VerifyEidasBridgeFactory(environment, configuration);
 
         AuthnRequestHandler authnRequestHandler = verifyEidasBridgeFactory.getAuthnRequestHandler();
-        EidasAuthnRequestGenerator eidasAuthnRequestGenerator = verifyEidasBridgeFactory.getEidasAuthnRequestGenerator();
-        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, eidasAuthnRequestGenerator));
+        AuthnRequestFormGenerator authnRequestFormGenerator = verifyEidasBridgeFactory.getAuthnRequestFormGenerator();
+        environment.jersey().register(new VerifyAuthnRequestResource(authnRequestHandler, authnRequestFormGenerator));
 
         Map<String, HealthCheck> healthChecks = of(
             "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
