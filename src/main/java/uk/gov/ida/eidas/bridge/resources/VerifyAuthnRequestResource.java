@@ -28,6 +28,7 @@ import javax.ws.rs.core.UriBuilder;
 public class VerifyAuthnRequestResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(VerifyAuthnRequestResource.class);
+    public static final String SINGLE_SIGN_ON_PATH = "/SAML2/SSO/POST";
 
     private final AuthnRequestHandler authnRequestHandler;
     private AuthnRequestFormGenerator eidasAuthnRequestFormGenerator;
@@ -38,7 +39,7 @@ public class VerifyAuthnRequestResource {
     }
 
     @POST
-    @Path("/SAML2/SSO/POST")
+    @Path(SINGLE_SIGN_ON_PATH)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response receiveAuthnRequest(@FormParam("SAMLRequest") String authnRequestStr) {
         AuthnRequest authnRequest;

@@ -11,6 +11,7 @@ logging:
     - type: console
 
 hostname: ${HOST:-'http://localhost:50400'}
+bridgeEntityId: ${ENTITY_ID:-'http://localhost:50400/metadata'}
 
 signingKeyStore:
   base64Value: ${SIGNING_KEY_STORE_VALUE}

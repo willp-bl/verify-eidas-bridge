@@ -3,6 +3,8 @@ server:
     - type: http
       port: 0
 
+bridgeEntityId: http://bridge.entity.id
+
 logging:
   level: DEBUG
   loggers:

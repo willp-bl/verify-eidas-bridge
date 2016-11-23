@@ -24,6 +24,10 @@ public class BridgeConfiguration extends Configuration {
 
     @JsonProperty
     @NotNull
+    private String bridgeEntityId;
+
+    @JsonProperty
+    @NotNull
     private String hostname;
 
     @JsonProperty("signingKeyStore")
@@ -48,5 +52,10 @@ public class BridgeConfiguration extends Configuration {
 
     public String getEidasNodeEntityId() {
         return eidasNodeEntityId;
+    }
+
+
+    public String getBridgeEntityId() {
+        return bridgeEntityId;
     }
 }
