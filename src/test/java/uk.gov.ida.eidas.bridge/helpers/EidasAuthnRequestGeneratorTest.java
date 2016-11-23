@@ -3,6 +3,9 @@ package uk.gov.ida.eidas.bridge.helpers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -21,8 +24,13 @@ import org.opensaml.saml.saml2.core.impl.AttributeImpl;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
 import org.opensaml.security.SecurityException;
 import org.opensaml.security.credential.Credential;
+import org.opensaml.security.x509.BasicX509Credential;
+import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
+import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.Signature;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttributeImpl;
@@ -34,28 +42,41 @@ import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
 import javax.xml.namespace.QName;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class EidasAuthnRequestGeneratorTest {
+
+    public static final String EIDAS_SSO_LOCATION = "http://eidas/ssoLocation";
+    private final String EIDAS_ENTITY_ID = "http://eidas";
+
+    @Mock
+    private SingleSignOnServiceLocator singleSignOnServiceLocator;
 
     @Before
     public void bootStrapOpenSaml() {
         EidasSamlBootstrap.bootstrap();
         XMLObjectProviderRegistrySupport.registerObjectProvider(SPType.DEFAULT_ELEMENT_NAME, new SPTypeBuilder(), SPTypeImpl.MARSHALLER, SPTypeImpl.UNMARSHALLER);
+        when(singleSignOnServiceLocator.getSignOnUrl(EIDAS_ENTITY_ID)).thenReturn(EIDAS_SSO_LOCATION);
     }
     
     @Test
-    public void shouldGenerateAnEidasAuthnRequest() throws MarshallingException, SignatureException {
+    public void shouldGenerateAnEidasAuthnRequest() throws MarshallingException, SignatureException, SecurityException {
         String entityId = "http://i.am.the.bridge.com";
-        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
-        EidasAuthnRequestGenerator earg = new EidasAuthnRequestGenerator(entityId, signingCredential);
-        AuthnRequest authnRequest = earg.generateAuthnRequest("aTestId");
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
+
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
         Assert.assertNotNull(authnRequest);
+        Assert.assertNotNull(authnRequest.getIssueInstant());
+        Assert.assertEquals(EIDAS_SSO_LOCATION, authnRequest.getDestination());
         Assert.assertEquals("aTestId", authnRequest.getID());
         Assert.assertEquals(StatusResponseType.UNSPECIFIED_CONSENT, authnRequest.getConsent());
         Assert.assertEquals(true, authnRequest.isForceAuthn());
@@ -109,24 +130,37 @@ public class EidasAuthnRequestGeneratorTest {
         Assert.assertNotNull(reqAttrMap.get("FamilyName"));
         Assert.assertNotNull(reqAttrMap.get("CurrentAddress"));
         Assert.assertNotNull(reqAttrMap.get("DateOfBirth"));
+        Assert.assertNotNull(reqAttrMap.get("PersonIdentifier"));
     }
 
     @Test
     public void shouldSignTheEidasAuthnRequest() throws MarshallingException, SignatureException, SecurityException {
         String entityId = "http://i.am.the.bridge.com";
-        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
-        EidasAuthnRequestGenerator authnRequestGenerator = new EidasAuthnRequestGenerator(entityId, signingCredential);
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
         AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
 
         Signature signature = authnRequest.getSignature();
         Assert.assertNotNull(signature);
         assertThat(TestSignatureValidator.getSignatureValidator().validate(authnRequest, entityId, SPSSODescriptor.DEFAULT_ELEMENT_NAME)).isTrue();
+        Assert.assertEquals(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256, signature.getSignatureAlgorithm());
+        Assert.assertNotNull(signature.getKeyInfo());
     }
 
     private Map<String, RequestedAttributeImpl> getRequestedAttributesByFriendlyName(List<XMLObject> requestedAttributes) {
         return requestedAttributes.stream()
             .map(x -> (RequestedAttributeImpl)x)
             .collect(Collectors.toMap(AttributeImpl::getFriendlyName, x -> x));
+    }
+
+    private EidasAuthnRequestGenerator createEidasAuthnRequestGenerator(String entityId) {
+        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
+        Certificate signingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT);
+        BasicX509Credential x509SigningCredential = new BasicX509Credential((X509Certificate) signingCertificate);
+        X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
+        keyInfoGeneratorFactory.setEmitEntityCertificate(true);
+        KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
+
+        return new EidasAuthnRequestGenerator(entityId, EIDAS_ENTITY_ID, signingCredential, x509SigningCredential, keyInfoGenerator, singleSignOnServiceLocator);
     }
 
 }

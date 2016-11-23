@@ -37,7 +37,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(true)
+                        new EnvironmentVariableSubstitutor(false)
                 )
         );
     }

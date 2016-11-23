@@ -56,7 +56,7 @@ public class VerifyAuthnRequestResource {
     @GET
     @Path("/redirect-to-eidas/{authnRequestId: .+}")
     @Produces(MediaType.TEXT_HTML)
-    public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) throws MarshallingException, SignatureException {
+    public View getRedirectForm(@PathParam("authnRequestId") String authnRequestId) throws MarshallingException, SignatureException, SecurityException {
         SamlRequest samlRequest = eidasAuthnRequestFormGenerator.generateAuthnRequestForm(authnRequestId);
         return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation());
     }

@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.metadata.AssertionConsumerService;
 import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.KeyDescriptor;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BridgeMetadataGeneratorTest {
 
+    public static final String HOSTNAME = "http://bridge.hostname";
     private BridgeMetadataGenerator bridgeMetadataGenerator;
 
     @Before
@@ -40,7 +42,7 @@ public class BridgeMetadataGeneratorTest {
         EidasSamlBootstrap.bootstrap();
         Certificate signingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT);
         Credential credential = new TestCredentialFactory(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, TestCertificateStrings.METADATA_SIGNING_A_PRIVATE_KEY).getSigningCredential();
-        bridgeMetadataGenerator = new BridgeMetadataFactory(signingCertificate, credential.getPrivateKey(), "entityId").getBridgeMetadataGenerator();
+        bridgeMetadataGenerator = new BridgeMetadataFactory(HOSTNAME, signingCertificate, credential.getPrivateKey(), "entityId").getBridgeMetadataGenerator();
     }
 
     @Test
@@ -56,6 +58,11 @@ public class BridgeMetadataGeneratorTest {
         assertNotNull("Should have an SPSSODescriptor", spSsoDescriptor);
         List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
         assertTrue("Should have at least one key descriptor", keyDescriptors.size() > 0);
+        List<AssertionConsumerService> assertionConsumerServices = spSsoDescriptor.getAssertionConsumerServices();
+        assertTrue("Should have at least one assertion consumer service", assertionConsumerServices.size() > 0);
+        AssertionConsumerService assertionConsumerService = assertionConsumerServices.get(0);
+        assertEquals(HOSTNAME + BridgeMetadataGenerator.ASSERTION_CONSUMER_PATH, assertionConsumerService.getLocation());
+        assertEquals(SAMLConstants.SAML2_POST_BINDING_URI, assertionConsumerService.getBinding());
 
         KeyDescriptor keyDescriptor = keyDescriptors.get(0);
         assertEquals("Should have the key use signing", UsageType.SIGNING, keyDescriptor.getUse());

@@ -11,7 +11,6 @@ import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -23,11 +22,13 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 public class BridgeMetadataFactory {
 
+    private final String hostname;
     private final java.security.cert.Certificate certificate;
     private final PrivateKey privateKey;
     private final String entityId;
 
-    public BridgeMetadataFactory(java.security.cert.Certificate certificate, PrivateKey privateKey, String entityId) {
+    public BridgeMetadataFactory(String hostname, java.security.cert.Certificate certificate, PrivateKey privateKey, String entityId) {
+        this.hostname = hostname;
         this.certificate = certificate;
         this.entityId = entityId;
         this.privateKey = privateKey;
@@ -49,6 +50,7 @@ public class BridgeMetadataFactory {
         KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
         return new BridgeMetadataGenerator(
+            hostname,
             entityId,
             keyDescriptorsUnmarshaller,
             signingCertificate,

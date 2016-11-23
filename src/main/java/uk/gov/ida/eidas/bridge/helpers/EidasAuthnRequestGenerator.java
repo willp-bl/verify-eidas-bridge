@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.helpers;
 
+import org.joda.time.DateTime;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObjectBuilder;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
@@ -14,8 +15,12 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
+import org.opensaml.security.SecurityException;
 import org.opensaml.security.credential.Credential;
+import org.opensaml.security.x509.X509Credential;
+import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.signature.Signature;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
@@ -35,24 +40,34 @@ public class EidasAuthnRequestGenerator {
     public static final String NATURAL_PERSON_NAME_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
-    private final String entityId;
+    private final String bridgeEntityId, eidasEntityId;
     private final Credential signingCredential;
+    private final X509Credential x509SigningCredential;
+    private final KeyInfoGenerator keyInfoGenerator;
+    private final SingleSignOnServiceLocator signOnServiceLocator;
 
-    public EidasAuthnRequestGenerator(String entityId, Credential signingCredential) {
-        this.entityId = entityId;
+
+    public EidasAuthnRequestGenerator(String bridgeEntityId, String eidasEntityId, Credential signingCredential, X509Credential x509SigningCredential, KeyInfoGenerator keyInfoGenerator, SingleSignOnServiceLocator signOnServiceLocator) {
+        this.bridgeEntityId = bridgeEntityId;
+        this.eidasEntityId = eidasEntityId;
         this.signingCredential = signingCredential;
+        this.x509SigningCredential = x509SigningCredential;
+        this.keyInfoGenerator = keyInfoGenerator;
+        this.signOnServiceLocator = signOnServiceLocator;
     }
 
-    public AuthnRequest generateAuthnRequest(String authnReqeustId) throws MarshallingException, SignatureException {
+    public AuthnRequest generateAuthnRequest(String authnReqeustId) throws MarshallingException, SignatureException, SecurityException {
         AuthnRequest eidasAuthnRequest = openSamlXmlObjectFactory.createAuthnRequest();
         Namespace eidasSamlExtensionsNamespace = new Namespace(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
         eidasAuthnRequest.getNamespaceManager().registerNamespaceDeclaration(eidasSamlExtensionsNamespace);
 
         eidasAuthnRequest.setID(authnReqeustId);
+        eidasAuthnRequest.setIssueInstant(new DateTime());
         eidasAuthnRequest.setConsent(StatusResponseType.UNSPECIFIED_CONSENT);
+        eidasAuthnRequest.setDestination(signOnServiceLocator.getSignOnUrl(eidasEntityId));
         eidasAuthnRequest.setForceAuthn(true);
         eidasAuthnRequest.setProviderName(PROVIDER_NAME);
-        eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(entityId));
+        eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(bridgeEntityId));
 
         NameIDPolicy nameIdPolicy = openSamlXmlObjectFactory.createNameIdPolicy();
         nameIdPolicy.setFormat(NameIDType.UNSPECIFIED);
@@ -77,12 +92,17 @@ public class EidasAuthnRequestGenerator {
             getRequestedAttribute("FirstName", "CurrentGivenName"),
             getRequestedAttribute("FamilyName", "CurrentFamilyName"),
             getRequestedAttribute("DateOfBirth", "DateOfBirth"),
-            getRequestedAttribute("CurrentAddress", "CurrentAddress")
+            getRequestedAttribute("CurrentAddress", "CurrentAddress"),
+            getRequestedAttribute("PersonIdentifier", "PersonIdentifier")
+
         );
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
 
         Signature signature = openSamlXmlObjectFactory.createSignature();
+        signature.setKeyInfo(keyInfoGenerator.generate(x509SigningCredential));
         signature.setSigningCredential(signingCredential);
+        signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+
         eidasAuthnRequest.setSignature(signature);
 
         //noinspection ConstantConditions

@@ -7,7 +7,10 @@ import org.opensaml.saml.metadata.resolver.impl.BasicRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
 import org.opensaml.security.credential.BasicCredential;
+import org.opensaml.security.x509.BasicX509Credential;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
+import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
+import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
@@ -37,6 +40,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 
 public class VerifyEidasBridgeFactory {
 
@@ -122,7 +126,7 @@ public class VerifyEidasBridgeFactory {
         KeyStore signingKeyStore = configuration.getSigningKeyStoreConfiguration().getKeyStore();
         java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS);
         PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, "fooBar".toCharArray());
-        BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(certificate, privateKey, configuration.getBridgeEntityId());
+        BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), certificate, privateKey, configuration.getBridgeEntityId());
         return bridgeMetadataFactory.getBridgeMetadataResource();
     }
 
@@ -165,7 +169,15 @@ public class VerifyEidasBridgeFactory {
             PublicKey publicKey = keyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
             PrivateKey privateKey = (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
             BasicCredential credential = new BasicCredential(publicKey, privateKey);
-            eidasAuthnRequestGenerator = new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", credential);
+            X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
+            keyInfoGeneratorFactory.setEmitEntityCertificate(true);
+            KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
+
+            KeyStore signingKeyStore = configuration.getSigningKeyStoreConfiguration().getKeyStore();
+            java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS);
+            BasicX509Credential x509SigningCredential = new BasicX509Credential((X509Certificate) certificate);
+
+            eidasAuthnRequestGenerator = new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getEidasNodeEntityId(), credential, x509SigningCredential, keyInfoGenerator, getSingleSignOnServiceLocator());
         }
         return eidasAuthnRequestGenerator;
     }
