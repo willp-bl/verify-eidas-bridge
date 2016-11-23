@@ -2,6 +2,7 @@ package uk.gov.ida.eidas.bridge.resources;
 
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
+import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -28,7 +29,7 @@ public class BridgeMetadataResource {
 
     @GET
     @Path("/metadata")
-    public Document getMetadata() throws SignatureException, MarshallingException {
+    public Document getMetadata() throws SignatureException, MarshallingException, SecurityException {
         EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
         return entitiesDescriptorElementTransformer.apply(entitiesDescriptor).getOwnerDocument();
     }

@@ -8,15 +8,23 @@ import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.KeyDescriptor;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.security.SecurityException;
+import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
+import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.X509Certificate;
 import org.opensaml.xmlsec.signature.X509Data;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import uk.gov.ida.common.shared.security.Certificate;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
+import uk.gov.ida.common.shared.security.X509CertificateFactory;
+import uk.gov.ida.eidas.bridge.factories.BridgeMetadataFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
-import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
+import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -25,22 +33,18 @@ import static org.junit.Assert.assertTrue;
 
 public class BridgeMetadataGeneratorTest {
 
-    private KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller;
-    private Certificate signingCertificate = new Certificate("entityId", TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, Certificate.KeyUse.Signing);
+    private BridgeMetadataGenerator bridgeMetadataGenerator;
 
     @Before
-    public void bootStrapOpenSaml() {
+    public void bootStrapOpenSaml() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
         EidasSamlBootstrap.bootstrap();
-        keyDescriptorsUnmarshaller = new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory());
+        Certificate signingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT);
+        Credential credential = new TestCredentialFactory(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, TestCertificateStrings.METADATA_SIGNING_A_PRIVATE_KEY).getSigningCredential();
+        bridgeMetadataGenerator = new BridgeMetadataFactory(signingCertificate, credential.getPrivateKey(), "entityId").getBridgeMetadataGenerator();
     }
 
     @Test
-    public void shouldGenerateMetadata() throws SignatureException, MarshallingException {
-        BridgeMetadataGenerator bridgeMetadataGenerator = new BridgeMetadataGenerator(
-            "entityId",
-            keyDescriptorsUnmarshaller,
-            signingCertificate);
-
+    public void shouldGenerateMetadata() throws SignatureException, MarshallingException, SecurityException {
         EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
         assertEquals("Should have an entitiesDescriptor", "entitiesDescriptor", entitiesDescriptor.getID());
         assertNotNull("Should have a ValidUntil attribute", entitiesDescriptor.getValidUntil());
@@ -56,7 +60,26 @@ public class BridgeMetadataGeneratorTest {
         KeyDescriptor keyDescriptor = keyDescriptors.get(0);
         assertEquals("Should have the key use signing", UsageType.SIGNING, keyDescriptor.getUse());
         X509Data x509Data = keyDescriptor.getKeyInfo().getX509Datas().get(0);
-        X509Certificate certificate = x509Data.getX509Certificates().get(0);
-        assertNotNull("Should have a certificate", certificate);
+        X509Certificate theCertificate = x509Data.getX509Certificates().get(0);
+        assertNotNull("Should have a certificate", theCertificate);
+    }
+
+    @Test
+    public void shouldSignMetadata() throws SignatureException, MarshallingException, SecurityException {
+        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
+        Signature entitiesDescriptorSignature = entitiesDescriptor.getSignature();
+        assertNotNull("Should have a signature", entitiesDescriptorSignature);
+        assertNotNull("Should have key info", entitiesDescriptorSignature.getKeyInfo());
+
+        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
+        Signature entityDescriptorSignature = entityDescriptor.getSignature();
+        assertNotNull("Should have a signature", entityDescriptorSignature);
+        assertNotNull("Should have key info", entityDescriptorSignature.getKeyInfo());
+
+        SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
+        Signature spSsoDescriptorSignature = spSsoDescriptor.getSignature();
+        assertNotNull("Should have a signature", spSsoDescriptorSignature);
+        assertNotNull("Should have key info", spSsoDescriptorSignature.getKeyInfo());
+
     }
 }
