@@ -8,12 +8,11 @@ targetCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
-    mavenCentral()
     maven { url 'https://artifactory.ida.digital.cabinet-office.gov.uk/artifactory/whitelisted-repos' }
 }
 
 project.ext {
-    dropwizardVersion = '1.0.3'
+    dropwizardVersion = '1.0.5'
     openSamlVersion = '3.2.0'
 }
 
@@ -31,9 +30,9 @@ dependencies {
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
             "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-19",
-            "com.github.tomakehurst:wiremock:2.2.2",
             "org.jsoup:jsoup:1.10.1",
     )
+    testCompile("com.github.tomakehurst:wiremock:2.2.2") { transitive = false }
 }
 
 mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'

@@ -1,4 +1,8 @@
+<!doctype html>
+<noscript>Click submit to continue</noscript>
 <form action="{{singleSignOnLocation}}" method="post">
     <input type="hidden" name="SAMLRequest" value="{{authnRequest}}" />
-    <input type="submit" />
+    <input type="hidden" name="country" value="CB" id="country"  />
+    <input type="submit" value="submit" />
 </form>
+<script>document.forms[0].submit()</script>
