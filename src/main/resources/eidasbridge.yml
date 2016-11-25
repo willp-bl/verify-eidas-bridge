@@ -67,7 +67,7 @@ signingKeyStore:
 
 verifyMetadata:
   uri: https://compliance-tool-reference.ida.digital.cabinet-office.gov.uk/SAML2/metadata/federation
-  trustStorePath: src/main/resources/metadata_truststore.ts
+  trustStorePath: metadata_truststore.ts
   trustStorePassword: puppet
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
@@ -89,7 +89,7 @@ verifyMetadata:
 
 eidasMetadata:
   uri: http://localhost:8080/ConnectorNode/ConnectorResponderMetadata
-  trustStorePath: src/main/resources/eidas_metadata_truststore.ts
+  trustStorePath: eidas_metadata_truststore.ts
   trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000

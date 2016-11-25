@@ -3,6 +3,7 @@ package uk.gov.ida.eidas.bridge;
 import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -24,10 +25,7 @@ import static com.google.common.collect.ImmutableMap.of;
 
 public class BridgeApplication extends Application<BridgeConfiguration> {
     public static void main(String[] args) throws Exception {
-        if (args == null || args.length == 0) {
-            args = new String[] { "server", System.getenv("YML_CONFIG_PATH") };
-        }
-        new BridgeApplication().run(args);
+        new BridgeApplication().run("server", "eidasbridge.yml");
     }
 
     @Override
@@ -36,7 +34,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
 
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
-                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                new SubstitutingSourceProvider(new ResourceConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false)
                 )
         );

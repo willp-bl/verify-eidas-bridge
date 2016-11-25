@@ -50,10 +50,10 @@ public class BridgeMetadataIntegrationTest {
     private static final String HOSTNAME = "hostname";
     @ClassRule
     public static final DropwizardAppRule<BridgeConfiguration> RULE = new DropwizardAppRule<>(BridgeApplication.class,
-        ResourceHelpers.resourceFilePath("eidasbridge.yml"),
-        ConfigOverride.config("verifyMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        "eidasbridge-test.yml",
+        ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("verifyMetadata.uri", verifyMetadata::url),
-        ConfigOverride.config("eidasMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("eidasMetadata.uri", eidasMetadata::url),
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),

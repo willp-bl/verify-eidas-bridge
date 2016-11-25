@@ -4,5 +4,3 @@ applications:
   buildpack: java_buildpack
   services:
     - newrelic
-  env:
-    YML_CONFIG_PATH: "verify-eidas-bridge/eidasbridge.yml"

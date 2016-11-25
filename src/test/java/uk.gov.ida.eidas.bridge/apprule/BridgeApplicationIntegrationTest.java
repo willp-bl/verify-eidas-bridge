@@ -24,10 +24,10 @@ public class BridgeApplicationIntegrationTest {
     private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(KEYSTORE_PASSWORD);
 
     public static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
-        ResourceHelpers.resourceFilePath("eidasbridge.yml"),
-        ConfigOverride.config("verifyMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        "eidasbridge-test.yml",
+        ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
-        ConfigOverride.config("eidasMetadata.trustStorePath", ResourceHelpers.resourceFilePath("test_metadata_truststore.ts")),
+        ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("eidasMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata"),
         ConfigOverride.config("eidasNodeEntityId", "eidasEntityId"),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),

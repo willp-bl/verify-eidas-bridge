@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.factories;
 
+import com.google.common.base.Throwables;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
@@ -33,6 +34,10 @@ import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +45,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.stream.IntStream;
 
 public class VerifyEidasBridgeFactory {
 
@@ -131,8 +138,10 @@ public class VerifyEidasBridgeFactory {
     }
 
     private MetadataResolver getMetadataResolver(MetadataConfiguration metadataConfiguration) {
+        String trustStorePath = metadataConfiguration.getTrustStorePath();
+        InputStream keyStoreResource = getClass().getClassLoader().getResourceAsStream(trustStorePath);
         KeyStore keyStore = new KeyStoreLoader().load(
-            metadataConfiguration.getTrustStorePath(),
+            keyStoreResource,
             metadataConfiguration.getTrustStorePassword()
         );
         return  metadataModule.metadataResolver(
