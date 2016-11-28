@@ -43,3 +43,7 @@ task wrapper(type: Wrapper) {
 run {
   args 'server', 'src/dist/eidasbridge.yml'
 }
+
+distZip {
+  baseName = "verify-eidas-bridge"
+}
