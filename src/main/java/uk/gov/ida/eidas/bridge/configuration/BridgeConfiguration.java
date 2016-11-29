@@ -2,7 +2,7 @@ package uk.gov.ida.eidas.bridge.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
+import org.dhatim.dropwizard.jwt.cookie.authentication.JwtCookieAuthConfiguration;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 
 import javax.validation.Valid;
@@ -34,6 +34,11 @@ public class BridgeConfiguration extends Configuration {
     @Valid
     private SigningKeyStoreConfiguration signingKeyStoreConfiguration;
 
+    @Valid
+    @NotNull
+    private JwtCookieAuthConfiguration sessionCookie = new JwtCookieAuthConfiguration();
+
+
     public MetadataConfiguration getVerifyMetadataConfiguration() {
         return verifyMetadata;
     }
@@ -54,6 +59,9 @@ public class BridgeConfiguration extends Configuration {
         return eidasNodeEntityId;
     }
 
+    public JwtCookieAuthConfiguration getSessionCookie() {
+        return sessionCookie;
+    }
 
     public String getBridgeEntityId() {
         return bridgeEntityId;

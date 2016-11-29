@@ -9,7 +9,7 @@ server:
 bridgeEntityId: http://bridge.entity.id
 
 logging:
-  level: DEBUG
+  level: INFO
   loggers:
     com.eidas.uk.gov.bridge: DEBUG
   appenders:

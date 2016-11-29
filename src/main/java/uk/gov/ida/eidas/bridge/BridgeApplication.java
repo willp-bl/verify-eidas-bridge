@@ -9,6 +9,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import org.dhatim.dropwizard.jwt.cookie.authentication.JwtCookieAuthBundle;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
@@ -33,6 +34,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         EidasSamlBootstrap.bootstrap();
 
         bootstrap.addBundle(new ViewBundle<>());
+        bootstrap.addBundle(JwtCookieAuthBundle.<BridgeConfiguration>getDefault().withConfigurationSupplier(BridgeConfiguration::getSessionCookie));
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(new ResourceConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(true)
