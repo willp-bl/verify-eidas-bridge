@@ -46,13 +46,19 @@ public class BridgeMetadataGeneratorTest {
     }
 
     @Test
-    public void shouldGenerateMetadata() throws SignatureException, MarshallingException, SecurityException {
+    public void shouldGenerateMetadataEntitiesDescriptor() throws SignatureException, MarshallingException, SecurityException {
         EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
         assertEquals("Should have an entitiesDescriptor", "entitiesDescriptor", entitiesDescriptor.getID());
         assertNotNull("Should have a ValidUntil attribute", entitiesDescriptor.getValidUntil());
         EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
         assertNotNull("Should have bridge entity descriptor", entityDescriptor);
         assertEquals("Should have an entityDescriptor ID", "bridgeEntityDescriptor", entityDescriptor.getID());
+    }
+
+    @Test
+    public void shouldGenerateMetadataSPSSODescriptor() throws SignatureException, MarshallingException, SecurityException {
+        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
+        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
 
         SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
         assertNotNull("Should have an SPSSODescriptor", spSsoDescriptor);
@@ -63,7 +69,15 @@ public class BridgeMetadataGeneratorTest {
         AssertionConsumerService assertionConsumerService = assertionConsumerServices.get(0);
         assertEquals(HOSTNAME + BridgeMetadataGenerator.ASSERTION_CONSUMER_PATH, assertionConsumerService.getLocation());
         assertEquals(SAMLConstants.SAML2_POST_BINDING_URI, assertionConsumerService.getBinding());
+    }
 
+    @Test
+    public void shouldGenerateMetadataKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
+        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
+        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
+
+        SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
+        List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
         KeyDescriptor keyDescriptor = keyDescriptors.get(0);
         assertEquals("Should have the key use signing", UsageType.SIGNING, keyDescriptor.getUse());
         X509Data x509Data = keyDescriptor.getKeyInfo().getX509Datas().get(0);

@@ -67,7 +67,7 @@ public class EidasAuthnRequestGeneratorTest {
         XMLObjectProviderRegistrySupport.registerObjectProvider(SPType.DEFAULT_ELEMENT_NAME, new SPTypeBuilder(), SPTypeImpl.MARSHALLER, SPTypeImpl.UNMARSHALLER);
         when(singleSignOnServiceLocator.getSignOnUrl(EIDAS_ENTITY_ID)).thenReturn(EIDAS_SSO_LOCATION);
     }
-    
+
     @Test
     public void shouldGenerateAnEidasAuthnRequest() throws MarshallingException, SignatureException, SecurityException {
         String entityId = "http://i.am.the.bridge.com";
@@ -83,19 +83,47 @@ public class EidasAuthnRequestGeneratorTest {
         Assert.assertEquals(false, authnRequest.isPassive());
         Assert.assertEquals(SAMLVersion.VERSION_20, authnRequest.getVersion());
         Assert.assertEquals(EidasAuthnRequestGenerator.PROVIDER_NAME, authnRequest.getProviderName());
+    }
 
+    @Test
+    public void shouldGenerateAnEidasAuthnRequestIssuer() throws MarshallingException, SignatureException, SecurityException {
+        String entityId = "http://i.am.the.bridge.com";
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
+
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
         Issuer issuer = authnRequest.getIssuer();
         Assert.assertEquals(entityId, issuer.getValue());
+    }
 
+    @Test
+    public void shouldGenerateAnEidasAuthnRequestNameIdPolicy() throws MarshallingException, SignatureException, SecurityException {
+        String entityId = "http://i.am.the.bridge.com";
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
+
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
         NameIDPolicy nameIDPolicy = authnRequest.getNameIDPolicy();
         Assert.assertEquals(true, nameIDPolicy.getAllowCreate());
         Assert.assertEquals(NameIDType.UNSPECIFIED, nameIDPolicy.getFormat());
+    }
 
+    @Test
+    public void shouldGenerateAnEidasAuthnRequestRequestedAuthnContext() throws MarshallingException, SignatureException, SecurityException {
+        String entityId = "http://i.am.the.bridge.com";
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
+
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
         RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
         Assert.assertEquals(AuthnContextComparisonTypeEnumeration.MINIMUM, requestedAuthnContext.getComparison());
         AuthnContextClassRef authnContextClassRef = requestedAuthnContext.getAuthnContextClassRefs().get(0);
         Assert.assertEquals(LevelOfAssurance.SUBSTANTIAL.toString(), authnContextClassRef.getAuthnContextClassRef());
+    }
 
+    @Test
+    public void shouldGenerateAnEidasAuthnRequestExtensions() throws MarshallingException, SignatureException, SecurityException {
+        String entityId = "http://i.am.the.bridge.com";
+        EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
+
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest("aTestId");
         Extensions extensions = authnRequest.getExtensions();
         Assert.assertNotNull(extensions);
         Optional<XMLObject> spType = extensions
