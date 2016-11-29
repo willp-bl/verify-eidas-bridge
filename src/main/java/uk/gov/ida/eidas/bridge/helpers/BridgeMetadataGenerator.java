@@ -23,6 +23,7 @@ import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import uk.gov.ida.common.shared.security.Certificate;
+import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 
@@ -30,7 +31,6 @@ import static java.util.Collections.singletonList;
 
 public class BridgeMetadataGenerator {
 
-    public final static String ASSERTION_CONSUMER_PATH = "/SAML2/SSO/Response/POST";
 
     private final String hostname;
     private final String entityId;
@@ -101,7 +101,7 @@ public class BridgeMetadataGenerator {
         spSsoDescriptor.getKeyDescriptors().addAll(keyDescriptorsUnmarshaller.fromCertificates(singletonList(signingCertificate)));
         spSsoDescriptor.setID("spSsoDescriptor");
         AssertionConsumerService assertionConsumerService = new AssertionConsumerServiceBuilder().buildObject();
-        assertionConsumerService.setLocation(hostname + ASSERTION_CONSUMER_PATH);
+        assertionConsumerService.setLocation(hostname + EidasResponseResource.ASSERTION_CONSUMER_PATH);
         assertionConsumerService.setBinding(SAMLConstants.SAML2_POST_BINDING_URI);
         spSsoDescriptor.getAssertionConsumerServices().add(assertionConsumerService);
         signObject(spSsoDescriptor);

@@ -18,6 +18,7 @@ import org.opensaml.xmlsec.signature.X509Data;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.factories.BridgeMetadataFactory;
+import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
@@ -67,7 +68,7 @@ public class BridgeMetadataGeneratorTest {
         List<AssertionConsumerService> assertionConsumerServices = spSsoDescriptor.getAssertionConsumerServices();
         assertTrue("Should have at least one assertion consumer service", assertionConsumerServices.size() > 0);
         AssertionConsumerService assertionConsumerService = assertionConsumerServices.get(0);
-        assertEquals(HOSTNAME + BridgeMetadataGenerator.ASSERTION_CONSUMER_PATH, assertionConsumerService.getLocation());
+        assertEquals(HOSTNAME + EidasResponseResource.ASSERTION_CONSUMER_PATH, assertionConsumerService.getLocation());
         assertEquals(SAMLConstants.SAML2_POST_BINDING_URI, assertionConsumerService.getBinding());
     }
 

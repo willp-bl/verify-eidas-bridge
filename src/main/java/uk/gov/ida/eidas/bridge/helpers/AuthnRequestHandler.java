@@ -30,7 +30,6 @@ public class AuthnRequestHandler {
         if(!expectedEntityId.equals(actualIssuer)) {
             throw new SecurityException("Authn request issuer (" + actualIssuer + ") didn't match expected issuer (" + expectedEntityId + ")");
         }
-        expectedEntityId.equals(actualIssuer);
         boolean validSignature = metadataBackedSignatureValidator.validate(
             authnRequest,
             expectedEntityId,
