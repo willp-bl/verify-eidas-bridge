@@ -8,12 +8,11 @@ targetCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
-    mavenCentral()
     maven { url 'https://artifactory.ida.digital.cabinet-office.gov.uk/artifactory/whitelisted-repos' }
 }
 
 project.ext {
-    dropwizardVersion = '1.0.3'
+    dropwizardVersion = '1.0.5'
     openSamlVersion = '3.2.0'
 }
 
@@ -22,16 +21,18 @@ dependencies {
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-client:$dropwizardVersion",
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
+            "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-18",
+            "uk.gov.ida:saml-metadata-bindings:3.3.0-24",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-349",
             "uk.gov.verify:saml-utils:$openSamlVersion-11",
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
-            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-18",
-            "com.github.tomakehurst:wiremock:2.2.2",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-19",
+            "org.jsoup:jsoup:1.10.1",
     )
+    testCompile("com.github.tomakehurst:wiremock:2.2.2") { transitive = false }
 }
 
 mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
@@ -40,10 +41,3 @@ task wrapper(type: Wrapper) {
     gradleVersion = '3.1'
 }
 
-run {
-  args 'server', 'src/dist/eidasbridge.yml'
-}
-
-distZip {
-  baseName = "verify-eidas-bridge"
-}
