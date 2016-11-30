@@ -12,9 +12,9 @@ import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.credential.Credential;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
-import uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
@@ -33,13 +33,11 @@ import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.aRespons
 import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.buildString;
 
 public class SendResponseToBridgeIntegrationTest {
-    public static final String KEYSTORE_PASSWORD = "fooBar";
-
     private static Client client;
 
     private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
-    private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
 
+    private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
     @ClassRule
     public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(new MetadataFactory().defaultMetadata());
 
@@ -47,10 +45,10 @@ public class SendResponseToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
         new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(KEYSTORE_PASSWORD);
-
-    public static final String PKCS_12 = "PKCS12";
-
+    public static final String KEYSTORE_PASSWORD = "fooBar";
+    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
 
     @ClassRule
@@ -63,7 +61,10 @@ public class SendResponseToBridgeIntegrationTest {
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
         ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", PKCS_12),
+        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
+        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("hostname", HOSTNAME)
     );
 
@@ -77,7 +78,7 @@ public class SendResponseToBridgeIntegrationTest {
         String responseString = buildString(aResponse());
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
-        form.put("SAMLRequest", singletonList(responseString));
+        form.put("SAMLResponse", singletonList(responseString));
 
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
@@ -97,7 +98,7 @@ public class SendResponseToBridgeIntegrationTest {
         String responseString = buildString(responseBuilder);
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
-        form.put("SAMLRequest", singletonList(responseString));
+        form.put("SAMLResponse", singletonList(responseString));
 
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)

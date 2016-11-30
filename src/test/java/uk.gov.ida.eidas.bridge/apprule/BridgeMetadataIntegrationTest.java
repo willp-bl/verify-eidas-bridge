@@ -15,6 +15,7 @@ import org.opensaml.saml.saml2.metadata.impl.EntitiesDescriptorUnmarshaller;
 import org.w3c.dom.Document;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
@@ -28,8 +29,6 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 public class BridgeMetadataIntegrationTest {
-    public static final String KEYSTORE_PASSWORD = "fooBar";
-
     private static Client client;
 
     private static final String eidasEntityId = "foobar";
@@ -43,11 +42,12 @@ public class BridgeMetadataIntegrationTest {
     @ClassRule
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(eidasMetadataPayload);
 
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(KEYSTORE_PASSWORD);
-
-    public static final String PKCS_12 = "PKCS12";
-
+    private static final String KEYSTORE_PASSWORD = "fooBar";
+    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
+
     @ClassRule
     public static final DropwizardAppRule<BridgeConfiguration> RULE = new DropwizardAppRule<>(BridgeApplication.class,
         "eidasbridge-test.yml",
@@ -58,7 +58,10 @@ public class BridgeMetadataIntegrationTest {
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
         ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", PKCS_12),
+        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
+        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("hostname", HOSTNAME)
     );
 

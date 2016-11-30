@@ -29,6 +29,7 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
@@ -80,10 +81,9 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
         new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(KEYSTORE_PASSWORD);
-
-    public static final String PKCS_12 = "PKCS12";
-
+    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
 
     @ClassRule
@@ -96,7 +96,10 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
         ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", PKCS_12),
+        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
+        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("hostname", HOSTNAME),
         ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
     );
@@ -234,10 +237,10 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     private Response makeRequestForAuthnRequest() {
         return client
-                .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
-                .request()
-                .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(3600, ChronoUnit.SECONDS))).compact())
-                .get();
+            .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
+            .request()
+            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(3600, ChronoUnit.SECONDS))).compact())
+            .get();
     }
 
     @Test
@@ -248,6 +251,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLRequest", singletonList(authnRequest));
+        form.put("RelayState", singletonList(UUID.randomUUID().toString()));
 
         Response result = client
             .target(String.format("http://localhost:%d/SAML2/SSO/POST", RULE.getLocalPort()))

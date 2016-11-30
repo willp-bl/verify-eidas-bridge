@@ -29,7 +29,6 @@ import javax.ws.rs.core.UriBuilder;
 import java.util.UUID;
 
 @Path("/")
-@Produces(MediaType.APPLICATION_JSON)
 public class VerifyAuthnRequestResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(VerifyAuthnRequestResource.class);

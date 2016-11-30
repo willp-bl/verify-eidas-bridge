@@ -5,7 +5,9 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
+import uk.gov.ida.saml.core.validation.SamlTransformationErrorException;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -15,7 +17,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/")
-@Produces(MediaType.APPLICATION_XML)
 public class EidasResponseResource {
     private static final Logger LOG = LoggerFactory.getLogger(EidasResponseResource.class);
     public final static String ASSERTION_CONSUMER_PATH = "/SAML2/SSO/Response/POST";
@@ -29,15 +30,15 @@ public class EidasResponseResource {
     @POST
     @Path(ASSERTION_CONSUMER_PATH)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response receiveResponse(@FormParam("SAMLRequest") String responseStr) {
+    public Response receiveResponse(@FormParam("SAMLResponse") @NotNull String responseStr) {
         try {
             responseHandler.handleResponse(responseStr);
-        } catch (SignatureException | SecurityException e) {
+        } catch (SamlTransformationErrorException | SignatureException | SecurityException e) {
             LOG.error("Could not validate signature on Response", e);
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        return Response.ok().build();
+        return Response.ok("OK").build();
     }
 
 }

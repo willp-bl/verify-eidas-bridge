@@ -14,7 +14,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-public class SigningKeyStoreConfiguration {
+public class KeyStoreConfiguration {
     @JsonProperty
     @NotNull
     @Valid

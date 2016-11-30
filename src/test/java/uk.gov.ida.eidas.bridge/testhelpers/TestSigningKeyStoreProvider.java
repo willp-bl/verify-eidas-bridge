@@ -3,7 +3,6 @@ package uk.gov.ida.eidas.bridge.testhelpers;
 import com.google.common.base.Throwables;
 import org.apache.xml.security.utils.Base64;
 import uk.gov.ida.common.shared.security.X509CertificateFactory;
-import uk.gov.ida.eidas.bridge.apprule.SendAuthnRequestToBridgeIntegrationTest;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
 import javax.crypto.Cipher;
@@ -26,10 +25,13 @@ import java.security.cert.CertificateException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 public class TestSigningKeyStoreProvider {
-    public static KeyStore getSigningKeyStore(String password) {
+
+    private static final String KEYSTORE_TYPE = "PKCS12";
+
+    public static KeyStore getSigningKeyStore(String alias, String password) {
         try {
             Certificate[] certificates = {new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT)};
-            KeyStore keyStore = KeyStore.getInstance(SendAuthnRequestToBridgeIntegrationTest.PKCS_12);
+            KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
             keyStore.load(null, null);
 
             byte[] base64DecodedPem = Base64.decode(TestCertificateStrings.TEST_PRIVATE_KEY);
@@ -65,16 +67,16 @@ public class TestSigningKeyStoreProvider {
             algparms.init(pbeParamSpec);
             EncryptedPrivateKeyInfo encinfo = new EncryptedPrivateKeyInfo(algparms, ciphertext);
 
-            keyStore.setKeyEntry("signing", encinfo.getEncoded(), certificates);
+            keyStore.setKeyEntry(alias, encinfo.getEncoded(), certificates);
             return keyStore;
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
     }
 
-    public static String getBase64EncodedSigningKeyStore(String password)
+    public static String getBase64EncodedSigningKeyStore(String alias, String password)
     {
-        return toBase64String(getSigningKeyStore(password), password);
+        return toBase64String(getSigningKeyStore(alias, password), password);
     }
 
     private static String toBase64String(KeyStore keyStore, String password) {

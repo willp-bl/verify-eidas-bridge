@@ -14,11 +14,12 @@ import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
-import uk.gov.ida.eidas.bridge.configuration.SigningKeyStoreConfiguration;
+import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
+import uk.gov.ida.eidas.bridge.helpers.ResponseSizeValidator;
 import uk.gov.ida.eidas.bridge.helpers.SingleSignOnServiceLocator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
@@ -33,11 +34,19 @@ import uk.gov.ida.saml.metadata.KeyStoreLoader;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 import uk.gov.ida.saml.metadata.modules.MetadataModule;
+import uk.gov.ida.saml.security.AssertionDecrypter;
+import uk.gov.ida.saml.security.DecrypterFactory;
+import uk.gov.ida.saml.security.KeyStoreCredentialRetriever;
 import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
+import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
+import uk.gov.ida.saml.security.SamlMessageSignatureValidator;
+import uk.gov.ida.saml.security.validators.encryptedelementtype.EncryptionAlgorithmValidator;
+import uk.gov.ida.saml.security.validators.signature.SamlResponseSignatureValidator;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -46,10 +55,13 @@ import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 
 public class VerifyEidasBridgeFactory {
 
     public static final String SIGNING_KEY_ALIAS = "signing";
+    public static final String ENCRYPTING_KEY_ALIAS = "encrypting";
+
 
     private final Environment environment;
     private final MetadataConfiguration verifyMetadataConfiguration;
@@ -120,8 +132,29 @@ public class VerifyEidasBridgeFactory {
     }
 
     public EidasResponseResource getEidasResponseResource() throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
-        StringToOpenSamlObjectTransformer<Response> stringToResponse = coreTransformersFactory.getStringtoOpenSamlObjectTransformer((SizeValidator) input -> { });
-        ResponseHandler responseHandler = new ResponseHandler(stringToResponse, this.getMetadataBackedSignatureValidator(getEidasMetadataResolver()), configuration.getEidasNodeEntityId());
+        StringToOpenSamlObjectTransformer<Response> stringToResponse = coreTransformersFactory.getStringtoOpenSamlObjectTransformer(new ResponseSizeValidator(new StringSizeValidator()));
+        MetadataBackedSignatureValidator signatureValidator = this.getMetadataBackedSignatureValidator(getEidasMetadataResolver());
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+
+        KeyStore signingKeyStore = keyStoreConfiguration.getKeyStore();
+        PublicKey publicKey = signingKeyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+        KeyPair signingKeyPair = new KeyPair(publicKey, privateKey);
+
+        KeyStore encryptingKeyStore = configuration.getEncryptingKeyStoreConfiguration().getKeyStore();
+        PublicKey encryptingPublicKey = encryptingKeyStore.getCertificate(ENCRYPTING_KEY_ALIAS).getPublicKey();
+        PrivateKey encryptingPrivateKey = (PrivateKey) encryptingKeyStore.getKey(ENCRYPTING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+        KeyPair encryptingKeyPair = new KeyPair(encryptingPublicKey, encryptingPrivateKey);
+
+        uk.gov.ida.saml.security.KeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.KeyStore(signingKeyPair, Collections.singletonList(encryptingKeyPair));
+        SamlMessageSignatureValidator samlMessageSignatureValidator = new SamlMessageSignatureValidator(signatureValidator);
+        ResponseHandler responseHandler = new ResponseHandler(
+            stringToResponse,
+            configuration.getEidasNodeEntityId(),
+            new SamlResponseSignatureValidator(samlMessageSignatureValidator),
+            new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(), new DecrypterFactory()),
+            new SamlAssertionsSignatureValidator(samlMessageSignatureValidator));
+
         return new EidasResponseResource(responseHandler);
     }
 
@@ -158,10 +191,10 @@ public class VerifyEidasBridgeFactory {
 
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        SigningKeyStoreConfiguration signingKeyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
-        KeyStore keyStore = signingKeyStoreConfiguration.getKeyStore();
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStore keyStore = keyStoreConfiguration.getKeyStore();
         PublicKey publicKey = keyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
         BasicCredential credential = new BasicCredential(publicKey, privateKey);
         X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
         keyInfoGeneratorFactory.setEmitEntityCertificate(true);
