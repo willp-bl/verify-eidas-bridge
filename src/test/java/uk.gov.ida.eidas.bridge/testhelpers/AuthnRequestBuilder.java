@@ -23,6 +23,7 @@ import static uk.gov.ida.saml.core.test.builders.SignatureBuilder.aSignature;
 public class AuthnRequestBuilder {
     private String issuer = "https://signin.service.gov.uk";
     private SignatureBuilder signatureBuilder = aSignature();
+    private String id = UUID.randomUUID().toString();
 
     public static AuthnRequestBuilder anAuthnRequest() {
         return new AuthnRequestBuilder();
@@ -30,6 +31,11 @@ public class AuthnRequestBuilder {
 
     public AuthnRequestBuilder withIssuer(String issuer) {
         this.issuer = issuer;
+        return this;
+    }
+
+    public AuthnRequestBuilder withID(String id) {
+        this.id = id;
         return this;
     }
 
@@ -58,7 +64,7 @@ public class AuthnRequestBuilder {
 
     public IdaAuthnRequestFromHub buildFromHub() {
         return new IdaAuthnRequestFromHub(
-            UUID.randomUUID().toString(),
+            id,
             issuer,
             DateTime.now(),
             AuthnContext.LEVEL_1,

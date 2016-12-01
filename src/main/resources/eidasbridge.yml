@@ -10,6 +10,9 @@ logging:
   appenders:
     - type: console
 
+sessionCookie:
+  secretSeed: ${SECRET_SEED}
+
 hostname: ${HOST}
 bridgeEntityId: ${ENTITY_ID}
 eidasNodeEntityId: ${CONNECTOR_NODE_ENTITY_ID}
