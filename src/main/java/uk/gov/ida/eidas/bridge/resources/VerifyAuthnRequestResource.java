@@ -64,7 +64,7 @@ public class VerifyAuthnRequestResource {
         principal.getClaims().put("inboundID", authnRequestId);
         principal.addInContext(requestContext);
 
-        return Response.seeOther(UriBuilder.fromUri("/redirect-to-eidas" + authnRequestId).build()).build();
+        return Response.seeOther(UriBuilder.fromUri("/redirect-to-eidas").build()).build();
     }
 
     @GET
