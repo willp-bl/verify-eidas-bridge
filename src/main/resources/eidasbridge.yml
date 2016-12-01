@@ -17,6 +17,11 @@ hostname: ${HOST}
 bridgeEntityId: ${ENTITY_ID}
 eidasNodeEntityId: ${CONNECTOR_NODE_ENTITY_ID}
 
+encryptingKeyStore:
+  base64Value: ${ENCRYPTING_KEY_STORE_VALUE}
+  password: ${ENCRYPTING_KEY_STORE_PASSWORD}
+  type: ${ENCRYPTING_KEY_STORE_TYPE:-PKCS12}
+
 signingKeyStore:
   base64Value: ${SIGNING_KEY_STORE_VALUE}
   password: ${SIGNING_KEY_STORE_PASSWORD}

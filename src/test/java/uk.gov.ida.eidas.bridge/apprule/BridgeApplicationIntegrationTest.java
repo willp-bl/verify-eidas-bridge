@@ -9,19 +9,22 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static uk.gov.ida.eidas.bridge.apprule.SendAuthnRequestToBridgeIntegrationTest.PKCS_12;
+
 
 public class BridgeApplicationIntegrationTest {
 
     public static final WireMockServer wireMock = new WireMockServer(wireMockConfig().dynamicPort());
 
     private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(KEYSTORE_PASSWORD);
+    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String KEYSTORE_TYPE = "PKCS12";
 
     public static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         "eidasbridge-test.yml",
@@ -32,7 +35,10 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("eidasNodeEntityId", "eidasEntityId"),
         ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
         ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", PKCS_12),
+        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
+        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("hostname", "www.example.com")
     );
 

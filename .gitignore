@@ -28,6 +28,7 @@ logs/
 # vim files
 .*.sw[a-z]
 *.un~
+.swp
 
 # Java class files
 *.class

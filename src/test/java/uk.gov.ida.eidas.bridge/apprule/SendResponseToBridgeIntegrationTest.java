@@ -2,47 +2,50 @@ package uk.gov.ida.eidas.bridge.apprule;
 
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.opensaml.core.xml.io.UnmarshallingException;
-import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
-import org.opensaml.saml.saml2.metadata.impl.EntitiesDescriptorUnmarshaller;
-import org.w3c.dom.Document;
+import org.opensaml.security.credential.Credential;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
+import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
+import uk.gov.ida.saml.core.test.TestCredentialFactory;
+import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
+import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.aResponse;
+import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.buildString;
 
-public class BridgeMetadataIntegrationTest {
+public class SendResponseToBridgeIntegrationTest {
     private static Client client;
 
-    private static final String eidasEntityId = "foobar";
+    private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
+
     private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
-    private static final String eidasMetadataPayload = new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor)));
-
-
     @ClassRule
     public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(new MetadataFactory().defaultMetadata());
 
     @ClassRule
-    public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(eidasMetadataPayload);
+    public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
+        new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
-    private static final String KEYSTORE_PASSWORD = "fooBar";
+    public static final String KEYSTORE_PASSWORD = "fooBar";
     private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String KEYSTORE_TYPE = "PKCS12";
@@ -71,15 +74,40 @@ public class BridgeMetadataIntegrationTest {
     }
 
     @Test
-    public void shouldServeMetadata() throws UnmarshallingException {
+    public void shouldAcceptsResponseWithValidSignature() throws Exception {
+        String responseString = buildString(aResponse());
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
         Response result = client
-            .target(String.format("http://localhost:%d/metadata", RULE.getLocalPort()))
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
             .request()
-            .get();
+            .buildPost(Entity.form(form))
+            .invoke();
 
-        assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
-
-        EntitiesDescriptor entitiesDescriptor = (EntitiesDescriptor) new EntitiesDescriptorUnmarshaller().unmarshall(result.readEntity(Document.class).getDocumentElement());
-        Assert.assertNotNull("Should have an entitiesDescriptor", entitiesDescriptor);
+        Assert.assertEquals(200, result.getStatus());
     }
+
+    @Test
+    public void shouldRejectsResponseWithInvalidSignature() throws Exception {
+        ResponseBuilder responseBuilder = aResponse();
+        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
+        responseBuilder.withSigningCredential(signingCredential);
+        String responseString = buildString(responseBuilder);
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
+        Response result = client
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
+            .request()
+            .buildPost(Entity.form(form))
+            .invoke();
+
+        Assert.assertEquals(400, result.getStatus());
+    }
+
 }

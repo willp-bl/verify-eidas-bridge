@@ -29,7 +29,6 @@ import javax.ws.rs.core.UriBuilder;
 import java.util.UUID;
 
 @Path("/")
-@Produces(MediaType.APPLICATION_JSON)
 public class VerifyAuthnRequestResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(VerifyAuthnRequestResource.class);
@@ -71,10 +70,19 @@ public class VerifyAuthnRequestResource {
     @Path("/redirect-to-eidas")
     @Produces(MediaType.TEXT_HTML)
     public View getRedirectForm(@Auth DefaultJwtCookiePrincipal principal) throws MarshallingException, SignatureException, SecurityException {
-        String outboundID = UUID.randomUUID().toString();
+        String outboundID = generateRandomId();
         principal.getClaims().put("outboundID",  outboundID);
         SamlRequest samlRequest = eidasAuthnRequestFormGenerator.generateAuthnRequestForm(outboundID);
         return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation());
+    }
+
+    private String generateRandomId(){
+        // The ID needs to conform to the NCName specification. From https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName
+        //
+        //       NCName    ::=    (Letter | '_') (NCNameChar)*
+        //   NCNameChar    ::=    Letter | Digit | '.' | '-' | '_' | CombiningChar | Extender
+
+        return "_" + UUID.randomUUID().toString();
     }
 
 }
