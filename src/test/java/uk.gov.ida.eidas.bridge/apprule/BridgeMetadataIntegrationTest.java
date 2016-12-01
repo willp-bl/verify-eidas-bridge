@@ -1,9 +1,11 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
 import io.dropwizard.client.JerseyClientBuilder;
+import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import io.dropwizard.util.Duration;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -67,7 +69,9 @@ public class BridgeMetadataIntegrationTest {
 
     @BeforeClass
     public static void before() {
-        client = new JerseyClientBuilder(RULE.getEnvironment()).build("bridge test client");
+        JerseyClientConfiguration configuration = new JerseyClientConfiguration();
+        configuration.setTimeout(Duration.microseconds(500));
+        client = new JerseyClientBuilder(RULE.getEnvironment()).using(configuration).build("bridge test client");
     }
 
     @Test
