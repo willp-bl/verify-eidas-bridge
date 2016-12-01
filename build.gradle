@@ -25,6 +25,7 @@ dependencies {
             "org.opensaml:opensaml-core:$openSamlVersion",
             "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-25",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
+            "uk.gov.ida:saml-serializers:$openSamlVersion-10",
             "uk.gov.verify:saml-utils:$openSamlVersion-18",
             "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.0",
             "uk.gov.ida:saml-security:$openSamlVersion-22",

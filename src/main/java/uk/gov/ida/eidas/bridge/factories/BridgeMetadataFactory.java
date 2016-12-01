@@ -8,8 +8,8 @@ import uk.gov.ida.common.shared.security.Certificate;
 import uk.gov.ida.eidas.bridge.helpers.BridgeMetadataGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
+import uk.gov.ida.saml.serializers.XmlObjectToElementTransformer;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +35,7 @@ public class BridgeMetadataFactory {
     }
 
     public BridgeMetadataResource getBridgeMetadataResource() throws KeyStoreException, CertificateEncodingException, UnrecoverableKeyException, NoSuchAlgorithmException {
-        return new BridgeMetadataResource(getBridgeMetadataGenerator(), new CoreTransformersFactory().getXmlObjectToElementTransformer());
+        return new BridgeMetadataResource(getBridgeMetadataGenerator(), new XmlObjectToElementTransformer<>());
     }
 
     public BridgeMetadataGenerator getBridgeMetadataGenerator() throws KeyStoreException, CertificateEncodingException, NoSuchAlgorithmException, UnrecoverableKeyException {
