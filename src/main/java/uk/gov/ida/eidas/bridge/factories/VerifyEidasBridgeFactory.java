@@ -59,8 +59,8 @@ import java.util.Collections;
 
 public class VerifyEidasBridgeFactory {
 
-    public static final String SIGNING_KEY_ALIAS = "signing";
-    public static final String ENCRYPTING_KEY_ALIAS = "encrypting";
+    public static final String SIGNING_KEY_ALIAS = "leaf-stub-sp-metadata-signing";
+    public static final String ENCRYPTING_KEY_ALIAS = "leaf-stub-sp-encryption";
 
 
     private final Environment environment;
@@ -124,9 +124,10 @@ public class VerifyEidasBridgeFactory {
     }
 
     public BridgeMetadataResource getBridgeMetadataResource() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
-        KeyStore signingKeyStore = configuration.getSigningKeyStoreConfiguration().getKeyStore();
+        KeyStoreConfiguration signingKeyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStore signingKeyStore = signingKeyStoreConfiguration.getKeyStore();
         java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS);
-        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, "fooBar".toCharArray());
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
         BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), certificate, privateKey, configuration.getBridgeEntityId());
         return bridgeMetadataFactory.getBridgeMetadataResource();
     }
