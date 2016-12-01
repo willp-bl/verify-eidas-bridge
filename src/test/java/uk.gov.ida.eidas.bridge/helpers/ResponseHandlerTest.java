@@ -63,7 +63,7 @@ public class ResponseHandlerTest {
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         String responseString = buildString(responseBuilder);
-        assertNotNull(responseHandler.handleResponse(responseString));
+        assertNotNull(responseHandler.handleResponse(responseString, "default-response-id"));
     }
 
     @Test(expected = SamlTransformationErrorException.class)
@@ -75,7 +75,7 @@ public class ResponseHandlerTest {
         Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
         responseBuilder.withSigningCredential(signingCredential);
         String responseString = buildString(responseBuilder);
-        responseHandler.handleResponse(responseString);
+        responseHandler.handleResponse(responseString, "default-response-id");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class ResponseHandlerTest {
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         String responseString = buildString(responseBuilder);
-        EidasSamlResponse response = responseHandler.handleResponse(responseString);
+        EidasSamlResponse response = responseHandler.handleResponse(responseString, "default-response-id");
         assertNotNull(response);
 
         assertTrue("Should have at least one assertion that's decrypted", response.getAssertions().size() > 0);
@@ -100,7 +100,7 @@ public class ResponseHandlerTest {
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         responseBuilder.addEncryptedAssertion(anAssertion().buildWithEncrypterCredential(testCredentialFactory.getEncryptingCredential()));
         String responseString = buildString(responseBuilder);
-        EidasSamlResponse response = responseHandler.handleResponse(responseString);
+        EidasSamlResponse response = responseHandler.handleResponse(responseString, "default-response-id");
         assertNotNull(response);
 
         assertTrue("Should have at least one assertion that's decrypted", response.getAssertions().size() > 0);
@@ -116,7 +116,7 @@ public class ResponseHandlerTest {
 
         responseBuilder.addEncryptedAssertion(anAssertion().buildWithEncrypterCredential(testCredentialFactory2.getEncryptingCredential()));
         String responseString = buildString(responseBuilder);
-        EidasSamlResponse response = responseHandler.handleResponse(responseString);
+        EidasSamlResponse response = responseHandler.handleResponse(responseString, "default-response-id");
         assertNotNull(response);
 
         assertTrue("Should have at least one assertion that's decrypted", response.getAssertions().size() > 0);
@@ -127,7 +127,17 @@ public class ResponseHandlerTest {
         ResponseHandler responseHandler = aResponseHandler().build();
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId("not-the-" + EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
-        responseHandler.handleResponse(buildString(responseBuilder));
+        responseHandler.handleResponse(buildString(responseBuilder), "default-response-id");
+    }
+
+    @Test(expected = SecurityException.class)
+    public void shouldThrowSecurityExceptionWhenIdDoesNotMatchExpectedValue() throws Exception {
+        ResponseHandler responseHandler = aResponseHandler().build();
+
+        Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
+        ResponseBuilder responseBuilder = getResponseBuilder(issuer);
+        String responseString = buildString(responseBuilder);
+        assertNotNull(responseHandler.handleResponse(responseString, "NOT-default-response-id"));
     }
 
     private SignatureValidator signatureValidator(final boolean validationShouldSucceed) {

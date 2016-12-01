@@ -1,8 +1,11 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
+import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -23,17 +26,28 @@ import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactor
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
+import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Optional;
+
+import static io.jsonwebtoken.SignatureAlgorithm.HS256;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.aResponse;
 import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.buildString;
 
 public class SendResponseToBridgeIntegrationTest {
     private static Client client;
+
+    public static final String SECRET_SEED = "foobar";
 
     private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
 
@@ -65,7 +79,8 @@ public class SendResponseToBridgeIntegrationTest {
         ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
         ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("hostname", HOSTNAME)
+        ConfigOverride.config("hostname", HOSTNAME),
+        ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
     );
 
     @BeforeClass
@@ -75,15 +90,20 @@ public class SendResponseToBridgeIntegrationTest {
 
     @Test
     public void shouldAcceptsResponseWithValidSignature() throws Exception {
-        String responseString = buildString(aResponse());
+        String responseId = "some-repsonse-id";
+        String responseString = buildString(aResponse().withId(responseId));
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLResponse", singletonList(responseString));
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(3600, ChronoUnit.SECONDS)));
+        jwtBuilder.claim("outboundID", responseId);
 
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
             .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
             .request()
+            .cookie("sessionToken", jwtBuilder.compact())
             .buildPost(Entity.form(form))
             .invoke();
 
@@ -92,7 +112,8 @@ public class SendResponseToBridgeIntegrationTest {
 
     @Test
     public void shouldRejectsResponseWithInvalidSignature() throws Exception {
-        ResponseBuilder responseBuilder = aResponse();
+        String responseId = "some-repsonse-id";
+        ResponseBuilder responseBuilder = aResponse().withId(responseId);
         Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
         responseBuilder.withSigningCredential(signingCredential);
         String responseString = buildString(responseBuilder);
@@ -100,14 +121,24 @@ public class SendResponseToBridgeIntegrationTest {
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLResponse", singletonList(responseString));
 
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(3600, ChronoUnit.SECONDS)));
+        jwtBuilder.claim("outboundID", responseId);
+
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
             .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
             .request()
+            .cookie("sessionToken", jwtBuilder.compact())
             .buildPost(Entity.form(form))
             .invoke();
 
         Assert.assertEquals(400, result.getStatus());
+    }
+
+    private Key getSecretSessionKey() {
+        return Optional.of(SECRET_SEED)
+            .map(seed -> Hashing.sha256().newHasher().putString(seed, UTF_8).hash().asBytes())
+            .map(k -> (Key) new SecretKeySpec(k, HS256.getJcaName())).get();
     }
 
 }

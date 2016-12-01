@@ -35,8 +35,12 @@ public class ResponseHandler {
         this.samlAssertionsSignatureValidator = samlAssertionsSignatureValidator;
     }
 
-    public EidasSamlResponse handleResponse(String base64EncodedResponse) throws SignatureException, SecurityException {
+    public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SignatureException, SecurityException {
         Response response = this.stringToResponse.apply(base64EncodedResponse);
+
+        if(!response.getID().equals(expectedId)) {
+            throw new SecurityException("Response id (" + response.getID() + ") didn't match expected (" + expectedId + ")");
+        }
 
         String actualIssuer = response.getIssuer().getValue();
         if(!this.eidasEntityId.equals(actualIssuer)) {
