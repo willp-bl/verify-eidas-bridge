@@ -91,7 +91,7 @@ public class SendResponseToBridgeIntegrationTest {
     @Test
     public void shouldAcceptsResponseWithValidSignature() throws Exception {
         String responseId = "some-repsonse-id";
-        String responseString = buildString(aResponse().withId(responseId));
+        String responseString = buildString(aResponse().withInResponseTo(responseId));
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLResponse", singletonList(responseString));
@@ -113,7 +113,7 @@ public class SendResponseToBridgeIntegrationTest {
     @Test
     public void shouldRejectsResponseWithInvalidSignature() throws Exception {
         String responseId = "some-repsonse-id";
-        ResponseBuilder responseBuilder = aResponse().withId(responseId);
+        ResponseBuilder responseBuilder = aResponse().withInResponseTo(responseId);
         Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
         responseBuilder.withSigningCredential(signingCredential);
         String responseString = buildString(responseBuilder);

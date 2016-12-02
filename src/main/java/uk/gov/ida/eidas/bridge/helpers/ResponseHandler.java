@@ -38,8 +38,8 @@ public class ResponseHandler {
     public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SignatureException, SecurityException {
         Response response = this.stringToResponse.apply(base64EncodedResponse);
 
-        if(!response.getID().equals(expectedId)) {
-            throw new SecurityException("Response id (" + response.getID() + ") didn't match expected (" + expectedId + ")");
+        if(!response.getInResponseTo().equals(expectedId)) {
+            throw new SecurityException("Response InResponseTo (" + response.getInResponseTo() + ") didn't match expected id (" + expectedId + ")");
         }
 
         String actualIssuer = response.getIssuer().getValue();
