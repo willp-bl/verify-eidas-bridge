@@ -12,6 +12,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.credential.Credential;
@@ -92,6 +93,7 @@ public class SendResponseToBridgeIntegrationTest {
         client = new JerseyClientBuilder(RULE.getEnvironment()).using(configuration).build("bridge test client");
     }
 
+    @Ignore
     @Test
     public void shouldAcceptsResponseWithValidSignature() throws Exception {
         String responseId = "some-repsonse-id";
@@ -114,6 +116,7 @@ public class SendResponseToBridgeIntegrationTest {
         Assert.assertEquals(200, result.getStatus());
     }
 
+    @Ignore
     @Test
     public void shouldRejectsResponseWithInvalidSignature() throws Exception {
         String responseId = "some-repsonse-id";

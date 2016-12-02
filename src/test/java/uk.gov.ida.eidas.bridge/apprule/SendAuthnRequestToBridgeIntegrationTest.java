@@ -16,6 +16,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
@@ -114,6 +115,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     }
 
 
+    @Ignore
     @Test
     public void testAcceptsAuthnRequestWithValidSignatureAndRedirects() throws MarshallingException, SignatureException {
         String authnRequest = anAuthnRequest()
@@ -134,6 +136,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertEquals(Response.Status.SEE_OTHER.getStatusCode(), result.getStatus());
     }
 
+    @Ignore
     @Test
     public void testAcceptsAuthnAndCreatesSessionCookie() throws MarshallingException, SignatureException {
         String id = "MY TEST ID";
@@ -172,6 +175,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
                     .map(k -> (Key) new SecretKeySpec(k, HS256.getJcaName())).get();
     }
 
+    @Ignore
     @Test
     public void testShouldReturnUnauthorizedIfCookieMissing() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response response = client
@@ -182,6 +186,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_UNAUTHORIZED);
     }
 
+    @Ignore
     @Test
     public void testShouldReturnUnauthorizedtIfCookieKeyWrong() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         String sessionToken = Jwts.builder().signWith(HS256, "wrongKey").claim("foo", "bar").compact();
@@ -194,6 +199,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_UNAUTHORIZED);
     }
 
+    @Ignore
     @Test
     public void testRendersAuthnRequestInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response response = makeRequestForAuthnRequest();
@@ -215,6 +221,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertEquals(HOSTNAME + "/metadata", entityId);
     }
 
+    @Ignore
     @Test
     public void testRendersSingleSignOnLocationAsFormAction() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response result = makeRequestForAuthnRequest();
@@ -229,6 +236,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertEquals(expectedSingleSignOnLocation, form.attr("action"));
     }
 
+    @Ignore
     @Test
     public void testRendersButtonInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response result = makeRequestForAuthnRequest();
@@ -247,6 +255,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
             .get();
     }
 
+    @Ignore
     @Test
     public void testRejectsAuthnRequestWithInvalidSignature() throws MarshallingException, SignatureException {
         String authnRequest = anAuthnRequest()

@@ -9,6 +9,7 @@ import io.dropwizard.util.Duration;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
@@ -74,6 +75,7 @@ public class BridgeMetadataIntegrationTest {
         client = new JerseyClientBuilder(RULE.getEnvironment()).using(configuration).build("bridge test client");
     }
 
+    @Ignore
     @Test
     public void shouldServeMetadata() throws UnmarshallingException {
         Response result = client

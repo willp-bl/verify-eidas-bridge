@@ -6,6 +6,7 @@ import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
@@ -53,6 +54,7 @@ public class BridgeApplicationIntegrationTest {
         dropwizardTestSupport.after();
     }
 
+    @Ignore
     @Test
     public void shouldRequestMetadataFromVerifyAndEidasOnStartup() throws Exception {
         wireMock.stubFor(
