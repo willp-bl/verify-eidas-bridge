@@ -44,7 +44,7 @@ public class TestSigningKeyStoreProvider {
             String MYPBEALG = "PBEWithSHA1AndDESede";
 
             int count = 20;// hash iteration count
-            SecureRandom random = SecureRandom.getInstanceStrong();
+            SecureRandom random = new SecureRandom();
             byte[] salt = new byte[8];
             random.nextBytes(salt);
 
