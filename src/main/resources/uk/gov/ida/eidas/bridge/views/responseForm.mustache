@@ -1,0 +1,7 @@
+<!doctype html>
+<noscript>Click submit to continue</noscript>
+<form action="{{assertionConsumerLocation}}" method="post">
+    <input type="hidden" name="SAMLResponse" value="{{response}}" />
+    <input type="submit" value="submit" />
+</form>
+<script>document.forms[0].submit()</script>

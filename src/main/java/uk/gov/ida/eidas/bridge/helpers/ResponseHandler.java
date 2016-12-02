@@ -5,6 +5,7 @@ import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.security.AssertionDecrypter;
@@ -21,18 +22,21 @@ public class ResponseHandler {
     private final SamlResponseSignatureValidator samlResponseSignatureValidator;
     private final AssertionDecrypter assertionDecrypter;
     private final SamlAssertionsSignatureValidator samlAssertionsSignatureValidator;
+    private final EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller;
 
 
     public ResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse,
                            String eidasEntityId,
                            SamlResponseSignatureValidator samlResponseSignatureValidator,
                            AssertionDecrypter assertionDecrypter,
-                           SamlAssertionsSignatureValidator samlAssertionsSignatureValidator) {
+                           SamlAssertionsSignatureValidator samlAssertionsSignatureValidator,
+                           EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller) {
         this.stringToResponse = stringToResponse;
         this.eidasEntityId = eidasEntityId;
         this.samlResponseSignatureValidator = samlResponseSignatureValidator;
         this.assertionDecrypter = assertionDecrypter;
         this.samlAssertionsSignatureValidator = samlAssertionsSignatureValidator;
+        this.eidasIdentityAssertionUnmarshaller = eidasIdentityAssertionUnmarshaller;
     }
 
     public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SignatureException, SecurityException {
@@ -51,6 +55,8 @@ public class ResponseHandler {
         List<Assertion> decryptedAssertions = assertionDecrypter.decryptAssertions(validatedResponse);
         ValidatedAssertions validatedAssertions = samlAssertionsSignatureValidator.validate(decryptedAssertions, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
 
-        return new EidasSamlResponse(validatedAssertions);
+        EidasIdentityAssertion eidasIdentityAssertion = eidasIdentityAssertionUnmarshaller.unmarshallAssertion(validatedAssertions);
+
+        return new EidasSamlResponse(eidasIdentityAssertion);
     }
 }

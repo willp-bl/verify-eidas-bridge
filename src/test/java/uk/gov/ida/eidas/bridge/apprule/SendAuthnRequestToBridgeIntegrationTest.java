@@ -239,7 +239,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         return client
             .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
             .request()
-            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(3600, ChronoUnit.SECONDS))).compact())
+            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS))).compact())
             .get();
     }
 

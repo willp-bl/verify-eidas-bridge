@@ -15,12 +15,17 @@ import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
+import uk.gov.ida.eidas.bridge.helpers.AssertionConsumerServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
+import uk.gov.ida.eidas.bridge.helpers.AuthnStatementAssertionGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
+import uk.gov.ida.eidas.bridge.helpers.EidasIdentityAssertionUnmarshaller;
+import uk.gov.ida.eidas.bridge.helpers.MatchingDatasetAssertionGenerator;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
 import uk.gov.ida.eidas.bridge.helpers.ResponseSizeValidator;
 import uk.gov.ida.eidas.bridge.helpers.SingleSignOnServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
@@ -153,9 +158,17 @@ public class VerifyEidasBridgeFactory {
             configuration.getEidasNodeEntityId(),
             new SamlResponseSignatureValidator(samlMessageSignatureValidator),
             new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(), new DecrypterFactory()),
-            new SamlAssertionsSignatureValidator(samlMessageSignatureValidator));
+            new SamlAssertionsSignatureValidator(samlMessageSignatureValidator),
+            new EidasIdentityAssertionUnmarshaller());
 
-        return new EidasResponseResource(responseHandler);
+        String bridgeEntityId = configuration.getBridgeEntityId();
+        VerifyResponseGenerator responseGenerator = new VerifyResponseGenerator(bridgeEntityId, new MatchingDatasetAssertionGenerator(bridgeEntityId), new AuthnStatementAssertionGenerator());
+        return new EidasResponseResource(
+            configuration.getVerifyMetadataConfiguration().getExpectedEntityId(),
+            new XmlObjectToBase64EncodedStringTransformer(),
+            responseHandler,
+            responseGenerator,
+            new AssertionConsumerServiceLocator(verifyMetadataResolver));
     }
 
     private MetadataResolver getMetadataResolver(MetadataConfiguration metadataConfiguration) {
