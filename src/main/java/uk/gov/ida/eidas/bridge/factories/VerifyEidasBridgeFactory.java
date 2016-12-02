@@ -26,7 +26,6 @@ import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
-import uk.gov.ida.saml.deserializers.validators.SizeValidator;
 import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
 import uk.gov.ida.saml.hub.validators.StringSizeValidator;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;

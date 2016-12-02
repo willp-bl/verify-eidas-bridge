@@ -3,7 +3,6 @@ package uk.gov.ida.eidas.bridge.apprule;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
-import io.dropwizard.testing.ResourceHelpers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

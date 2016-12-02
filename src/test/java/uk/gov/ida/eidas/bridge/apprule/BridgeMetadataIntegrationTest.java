@@ -2,7 +2,6 @@ package uk.gov.ida.eidas.bridge.apprule;
 
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.junit.Assert;
 import org.junit.BeforeClass;
