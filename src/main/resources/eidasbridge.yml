@@ -22,10 +22,15 @@ encryptingKeyStore:
   password: ${ENCRYPTING_KEY_STORE_PASSWORD}
   type: ${ENCRYPTING_KEY_STORE_TYPE:-PKCS12}
 
-signingKeyStore:
-  base64Value: ${SIGNING_KEY_STORE_VALUE}
-  password: ${SIGNING_KEY_STORE_PASSWORD}
-  type: ${SIGNING_KEY_STORE_TYPE:-PKCS12}
+eidasSigningKeyStore:
+  base64Value: ${EIDAS_SIGNING_KEY_STORE_VALUE}
+  password: ${EIDAS_SIGNING_KEY_STORE_PASSWORD}
+  type: ${EIDAS_SIGNING_KEY_STORE_TYPE:-PKCS12}
+
+verifySigningKeyStore:
+  base64Value: ${VERIFY_SIGNING_KEY_STORE_VALUE}
+  password: ${VERIFY_SIGNING_KEY_STORE_PASSWORD}
+  type: ${VERIFY_SIGNING_KEY_STORE_TYPE:-PKCS12}
 
 verifyMetadata:
   uri: ${VERIFY_METADATA_URL}

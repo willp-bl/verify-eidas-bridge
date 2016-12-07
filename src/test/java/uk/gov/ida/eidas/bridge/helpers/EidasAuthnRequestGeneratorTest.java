@@ -23,14 +23,9 @@ import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.AttributeImpl;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
 import org.opensaml.security.SecurityException;
-import org.opensaml.security.credential.Credential;
-import org.opensaml.security.x509.BasicX509Credential;
-import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
-import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttributeImpl;
@@ -38,12 +33,8 @@ import uk.gov.ida.eidas.saml.extensions.RequestedAttributes;
 import uk.gov.ida.eidas.saml.extensions.SPType;
 import uk.gov.ida.eidas.saml.extensions.SPTypeBuilder;
 import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
-import uk.gov.ida.saml.core.test.TestCertificateStrings;
-import uk.gov.ida.saml.core.test.TestCredentialFactory;
 
 import javax.xml.namespace.QName;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,12 +42,13 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.gov.ida.eidas.bridge.testhelpers.SigningHelperBuilder.aSigningHelper;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EidasAuthnRequestGeneratorTest {
 
-    public static final String EIDAS_SSO_LOCATION = "http://eidas/ssoLocation";
-    public static final String AUTHN_REQEUST_ID = "aTestId";
+    private static final String EIDAS_SSO_LOCATION = "http://eidas/ssoLocation";
+    private static final String AUTHN_REQEUST_ID = "aTestId";
     private final String EIDAS_ENTITY_ID = "http://eidas";
 
     @Mock
@@ -182,14 +174,7 @@ public class EidasAuthnRequestGeneratorTest {
     }
 
     private EidasAuthnRequestGenerator createEidasAuthnRequestGenerator(String entityId) {
-        Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getSigningCredential();
-        Certificate signingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT);
-        BasicX509Credential x509SigningCredential = new BasicX509Credential((X509Certificate) signingCertificate);
-        X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
-        keyInfoGeneratorFactory.setEmitEntityCertificate(true);
-        KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
-
-        return new EidasAuthnRequestGenerator(entityId, EIDAS_ENTITY_ID, signingCredential, x509SigningCredential, keyInfoGenerator, singleSignOnServiceLocator);
+        return new EidasAuthnRequestGenerator(entityId, EIDAS_ENTITY_ID, aSigningHelper().build(), singleSignOnServiceLocator);
     }
 
 }

@@ -24,13 +24,18 @@ import uk.gov.ida.eidas.bridge.helpers.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.eidas.bridge.helpers.MatchingDatasetAssertionGenerator;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
 import uk.gov.ida.eidas.bridge.helpers.ResponseSizeValidator;
+import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.helpers.SingleSignOnServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.AssertionSubjectGenerator;
 import uk.gov.ida.eidas.bridge.helpers.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
+import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
+import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
+import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
 import uk.gov.ida.saml.hub.validators.StringSizeValidator;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
@@ -40,6 +45,8 @@ import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 import uk.gov.ida.saml.metadata.modules.MetadataModule;
 import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.DecrypterFactory;
+import uk.gov.ida.saml.security.EncrypterFactory;
+import uk.gov.ida.saml.security.EncryptionCredentialFactory;
 import uk.gov.ida.saml.security.KeyStoreCredentialRetriever;
 import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
@@ -57,13 +64,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 
 public class VerifyEidasBridgeFactory {
 
-    public static final String SIGNING_KEY_ALIAS = "leaf-stub-sp-metadata-signing";
+    public static final String EIDAS_SIGNING_KEY_ALIAS = "leaf-stub-sp-metadata-signing";
+    public static final String VERIFY_SIGNING_KEY_ALIAS = "1";
     public static final String ENCRYPTING_KEY_ALIAS = "leaf-stub-sp-encryption";
 
 
@@ -128,10 +137,10 @@ public class VerifyEidasBridgeFactory {
     }
 
     public BridgeMetadataResource getBridgeMetadataResource() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
-        KeyStoreConfiguration signingKeyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStoreConfiguration signingKeyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
         KeyStore signingKeyStore = signingKeyStoreConfiguration.getKeyStore();
-        java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS);
-        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
+        java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS);
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
         BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), certificate, privateKey, configuration.getBridgeEntityId());
         return bridgeMetadataFactory.getBridgeMetadataResource();
     }
@@ -139,11 +148,11 @@ public class VerifyEidasBridgeFactory {
     public EidasResponseResource getEidasResponseResource() throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         StringToOpenSamlObjectTransformer<Response> stringToResponse = coreTransformersFactory.getStringtoOpenSamlObjectTransformer(new ResponseSizeValidator(new StringSizeValidator()));
         MetadataBackedSignatureValidator signatureValidator = this.getMetadataBackedSignatureValidator(getEidasMetadataResolver());
-        KeyStoreConfiguration keyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
 
         KeyStore signingKeyStore = keyStoreConfiguration.getKeyStore();
-        PublicKey publicKey = signingKeyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
-        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+        PublicKey publicKey = signingKeyStore.getCertificate(EIDAS_SIGNING_KEY_ALIAS).getPublicKey();
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(EIDAS_SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
         KeyPair signingKeyPair = new KeyPair(publicKey, privateKey);
 
         KeyStore encryptingKeyStore = configuration.getEncryptingKeyStoreConfiguration().getKeyStore();
@@ -162,9 +171,24 @@ public class VerifyEidasBridgeFactory {
             new EidasIdentityAssertionUnmarshaller());
 
         String bridgeEntityId = configuration.getBridgeEntityId();
-        VerifyResponseGenerator responseGenerator = new VerifyResponseGenerator(bridgeEntityId, new MatchingDatasetAssertionGenerator(bridgeEntityId), new AuthnStatementAssertionGenerator());
+        OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
+        String verifyEntityId = configuration.getVerifyMetadataConfiguration().getExpectedEntityId();
+
+        AttributeFactory_1_1 attributeFactory_1_1 = new AttributeFactory_1_1(openSamlXmlObjectFactory);
+        AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId, openSamlXmlObjectFactory);
+        SigningHelper verifySigningHelper = getVerifySigningHelper();
+
+        EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(entityId -> encryptingPublicKey);
+
+        VerifyResponseGenerator responseGenerator = new VerifyResponseGenerator(
+            bridgeEntityId,
+            new MatchingDatasetAssertionGenerator(bridgeEntityId, openSamlXmlObjectFactory, attributeFactory_1_1, assertionSubjectGenerator, verifySigningHelper),
+            new AuthnStatementAssertionGenerator(bridgeEntityId, openSamlXmlObjectFactory, attributeFactory_1_1, assertionSubjectGenerator, verifySigningHelper),
+            new SamlResponseAssertionEncrypter(encryptionCredentialFactory, new EncrypterFactory(), requestId -> verifyEntityId),
+            verifySigningHelper);
+
         return new EidasResponseResource(
-            configuration.getVerifyMetadataConfiguration().getExpectedEntityId(),
+            verifyEntityId,
             new XmlObjectToBase64EncodedStringTransformer(),
             responseHandler,
             responseGenerator,
@@ -204,23 +228,32 @@ public class VerifyEidasBridgeFactory {
 
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        KeyStoreConfiguration keyStoreConfiguration = configuration.getSigningKeyStoreConfiguration();
-        KeyStore keyStore = keyStoreConfiguration.getKeyStore();
-        PublicKey publicKey = keyStore.getCertificate(SIGNING_KEY_ALIAS).getPublicKey();
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey(SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getEidasNodeEntityId(), getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
+    }
+
+    private SingleSignOnServiceLocator getEidasSingleSignOnServiceLocator() {
+        return new SingleSignOnServiceLocator(getEidasMetadataResolver());
+    }
+
+    private SigningHelper getEidasSigningHelper() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        return getSigningHelper(configuration.getEidasSigningKeyStoreConfiguration(), EIDAS_SIGNING_KEY_ALIAS);
+    }
+
+    private SigningHelper getVerifySigningHelper() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        return getSigningHelper(configuration.getVerifySigningKeyStoreConfiguration(), VERIFY_SIGNING_KEY_ALIAS);
+    }
+
+    private SigningHelper getSigningHelper(KeyStoreConfiguration signingKeyStoreConfiguration, String signingKeyAlias) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        KeyStore keyStore = signingKeyStoreConfiguration.getKeyStore();
+        Certificate certificate = keyStore.getCertificate(signingKeyAlias);
+        PublicKey publicKey = certificate.getPublicKey();
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(signingKeyAlias, signingKeyStoreConfiguration.getPassword().toCharArray());
         BasicCredential credential = new BasicCredential(publicKey, privateKey);
         X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
         keyInfoGeneratorFactory.setEmitEntityCertificate(true);
         KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
-        KeyStore signingKeyStore = configuration.getSigningKeyStoreConfiguration().getKeyStore();
-        java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS);
         BasicX509Credential x509SigningCredential = new BasicX509Credential((X509Certificate) certificate);
-
-        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getEidasNodeEntityId(), credential, x509SigningCredential, keyInfoGenerator, getEidasSingleSignOnServiceLocator());
-    }
-
-    private SingleSignOnServiceLocator getEidasSingleSignOnServiceLocator() {
-        return new SingleSignOnServiceLocator(getEidasMetadataResolver());
+        return new SigningHelper(credential, x509SigningCredential, keyInfoGenerator);
     }
 }

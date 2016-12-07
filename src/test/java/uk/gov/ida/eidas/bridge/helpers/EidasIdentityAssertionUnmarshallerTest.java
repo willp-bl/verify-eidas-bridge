@@ -4,7 +4,6 @@ import io.dropwizard.testing.ResourceHelpers;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
-import org.opensaml.core.xml.XMLObject;
 import org.opensaml.saml.saml2.core.Assertion;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
 import uk.gov.ida.saml.core.domain.Gender;

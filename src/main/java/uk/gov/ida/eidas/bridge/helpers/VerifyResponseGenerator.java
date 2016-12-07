@@ -1,6 +1,7 @@
 package uk.gov.ida.eidas.bridge.helpers;
 
 import org.joda.time.DateTime;
+import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.Response;
@@ -10,24 +11,33 @@ import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
 import org.opensaml.saml.saml2.core.impl.ResponseBuilder;
 import org.opensaml.saml.saml2.core.impl.StatusBuilder;
 import org.opensaml.saml.saml2.core.impl.StatusCodeBuilder;
+import org.opensaml.security.SecurityException;
+import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
 
 public class VerifyResponseGenerator {
 
     private final String bridgeEntityId;
     private final MatchingDatasetAssertionGenerator matchingDatasetAssertionGenerator;
     private final AuthnStatementAssertionGenerator authnStatementAssertionGenerator;
+    private final SamlResponseAssertionEncrypter samlResponseAssertionEncrypter;
+    private final SigningHelper signingHelper;
+
 
     public VerifyResponseGenerator(
         String bridgeEntityId,
         MatchingDatasetAssertionGenerator matchingDatasetAssertionGenerator,
-        AuthnStatementAssertionGenerator authnStatementAssertionGenerator) {
+        AuthnStatementAssertionGenerator authnStatementAssertionGenerator,
+        SamlResponseAssertionEncrypter samlResponseAssertionEncrypter, SigningHelper signingHelper) {
         this.bridgeEntityId = bridgeEntityId;
         this.matchingDatasetAssertionGenerator = matchingDatasetAssertionGenerator;
         this.authnStatementAssertionGenerator = authnStatementAssertionGenerator;
+        this.samlResponseAssertionEncrypter = samlResponseAssertionEncrypter;
+        this.signingHelper = signingHelper;
     }
 
-    public Response generateResponse(String assertionConsumerServiceLocation, String inResponseTo, EidasIdentityAssertion eidasIdentityAssertion) {
+    public Response generateResponse(String assertionConsumerServiceLocation, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion) throws MarshallingException, SecurityException, SignatureException {
         Response response = new ResponseBuilder().buildObject();
         response.setDestination(assertionConsumerServiceLocation);
         response.setID(RandomIdGenerator.generateRandomId());
@@ -36,9 +46,10 @@ public class VerifyResponseGenerator {
 
         setIssuer(response);
         setStatus(response);
-        setAssertions(response, inResponseTo, eidasIdentityAssertion);
+        setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion);
+        samlResponseAssertionEncrypter.encryptAssertions(response);
 
-        return response;
+        return signingHelper.sign(response);
     }
 
     private void setIssuer(Response response) {
@@ -56,8 +67,8 @@ public class VerifyResponseGenerator {
         response.setStatus(status);
     }
 
-    private void setAssertions(Response response, String inResponseTo, EidasIdentityAssertion eidasIdentityAssertion) {
+    private void setAssertions(Response response, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion) throws MarshallingException, SecurityException, SignatureException {
         response.getAssertions().add(matchingDatasetAssertionGenerator.generate(inResponseTo, eidasIdentityAssertion));
-        response.getAssertions().add(authnStatementAssertionGenerator.generate());
+        response.getAssertions().add(authnStatementAssertionGenerator.generate(inResponseTo, ipAddress));
     }
 }

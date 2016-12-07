@@ -31,9 +31,14 @@ public class BridgeConfiguration extends Configuration {
     private String hostname;
 
     @NotNull
-    @JsonProperty("signingKeyStore")
+    @JsonProperty("eidasSigningKeyStore")
     @Valid
-    private KeyStoreConfiguration signingKeyStoreConfiguration;
+    private KeyStoreConfiguration eidasSigningKeyStoreConfiguration;
+
+    @NotNull
+    @JsonProperty("verifySigningKeyStore")
+    @Valid
+    private KeyStoreConfiguration verifySigningKeyStoreConfiguration;
 
     @NotNull
     @JsonProperty("encryptingKeyStore")
@@ -53,8 +58,12 @@ public class BridgeConfiguration extends Configuration {
         return eidasMetadata;
     }
 
-    public KeyStoreConfiguration getSigningKeyStoreConfiguration() {
-        return signingKeyStoreConfiguration;
+    public KeyStoreConfiguration getEidasSigningKeyStoreConfiguration() {
+        return eidasSigningKeyStoreConfiguration;
+    }
+
+    public KeyStoreConfiguration getVerifySigningKeyStoreConfiguration() {
+        return verifySigningKeyStoreConfiguration;
     }
 
     public KeyStoreConfiguration getEncryptingKeyStoreConfiguration() {

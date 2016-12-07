@@ -10,10 +10,8 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.impl.AttributeBuilder;
@@ -34,7 +32,6 @@ import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.core.test.builders.AssertionBuilder;
 import uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
-import uk.gov.ida.saml.core.test.builders.SimpleMdsValueBuilder;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
@@ -46,14 +43,12 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
-
 import java.security.Key;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.google.common.collect.ImmutableList.of;
 import static io.jsonwebtoken.SignatureAlgorithm.HS256;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
@@ -66,10 +61,10 @@ import static uk.gov.ida.saml.core.test.builders.AssertionBuilder.anAssertion;
 import static uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder.anAttributeStatement;
 
 public class SendResponseToBridgeIntegrationTest {
-    public static final String SOME_RESPONSE_ID = "some-response-id";
+    private static final String SOME_RESPONSE_ID = "some-response-id";
     private static Client client;
 
-    public static final String SECRET_SEED = "foobar";
+    private static final String SECRET_SEED = "foobar";
 
     private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
 
@@ -82,8 +77,9 @@ public class SendResponseToBridgeIntegrationTest {
         new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
     private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String eidasSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
 
@@ -95,15 +91,17 @@ public class SendResponseToBridgeIntegrationTest {
         ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("eidasMetadata.uri", eidasMetadata::url),
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
-        ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
-        ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
+        ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
+        ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
         ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("hostname", HOSTNAME),
         ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)//,
-        //ConfigOverride.config("bridgeEntityId", "")
     );
 
     @BeforeClass

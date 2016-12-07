@@ -16,13 +16,7 @@ import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
 import org.opensaml.security.SecurityException;
-import org.opensaml.security.credential.Credential;
-import org.opensaml.security.x509.X509Credential;
-import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
-import org.opensaml.xmlsec.signature.Signature;
-import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.opensaml.xmlsec.signature.support.Signer;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.NamespaceConstants;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttribute;
@@ -41,18 +35,14 @@ public class EidasAuthnRequestGenerator {
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
     private final String bridgeEntityId, eidasEntityId;
-    private final Credential signingCredential;
-    private final X509Credential x509SigningCredential;
-    private final KeyInfoGenerator keyInfoGenerator;
+    private final SigningHelper signingHelper;
     private final SingleSignOnServiceLocator signOnServiceLocator;
 
 
-    public EidasAuthnRequestGenerator(String bridgeEntityId, String eidasEntityId, Credential signingCredential, X509Credential x509SigningCredential, KeyInfoGenerator keyInfoGenerator, SingleSignOnServiceLocator signOnServiceLocator) {
+    public EidasAuthnRequestGenerator(String bridgeEntityId, String eidasEntityId, SigningHelper signingHelper, SingleSignOnServiceLocator signOnServiceLocator) {
         this.bridgeEntityId = bridgeEntityId;
         this.eidasEntityId = eidasEntityId;
-        this.signingCredential = signingCredential;
-        this.x509SigningCredential = x509SigningCredential;
-        this.keyInfoGenerator = keyInfoGenerator;
+        this.signingHelper = signingHelper;
         this.signOnServiceLocator = signOnServiceLocator;
     }
 
@@ -98,16 +88,7 @@ public class EidasAuthnRequestGenerator {
         );
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
 
-        Signature signature = openSamlXmlObjectFactory.createSignature();
-        signature.setKeyInfo(keyInfoGenerator.generate(x509SigningCredential));
-        signature.setSigningCredential(signingCredential);
-        signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
-
-        eidasAuthnRequest.setSignature(signature);
-
-        //noinspection ConstantConditions
-        XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(eidasAuthnRequest).marshall(eidasAuthnRequest);
-        Signer.signObject(signature);
+        signingHelper.sign(eidasAuthnRequest);
 
         return eidasAuthnRequest;
     }

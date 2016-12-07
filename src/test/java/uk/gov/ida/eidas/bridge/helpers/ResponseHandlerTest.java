@@ -20,8 +20,6 @@ import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
-import uk.gov.ida.saml.core.test.builders.AssertionBuilder;
-import uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder;
 import uk.gov.ida.saml.core.test.builders.IssuerBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
 import uk.gov.ida.saml.core.validation.SamlTransformationErrorException;
@@ -53,7 +51,6 @@ import java.util.List;
 import static org.junit.Assert.assertNotNull;
 import static uk.gov.ida.eidas.bridge.testhelpers.ResponseStringBuilder.buildString;
 import static uk.gov.ida.saml.core.test.builders.AssertionBuilder.anAssertion;
-import static uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder.anAttributeStatement;
 import static uk.gov.ida.saml.core.test.builders.ResponseBuilder.aResponse;
 
 public class ResponseHandlerTest {

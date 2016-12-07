@@ -20,9 +20,9 @@ public class ResponseFormGenerator {
         this.responseToSignedStringTransformer = responseToSignedStringTransformer;
     }
 
-    public SamlResponse generateResponseForm(String inResponseTo) throws MarshallingException, SignatureException, SecurityException {
+    public SamlResponse generateResponseForm(String inResponseTo, String ipAddress) throws MarshallingException, SignatureException, SecurityException {
         String assertionConsumerServiceLocation = assertionConsumerServiceLocator.getAssertionConsumerServiceLocation(verifyEntityId);
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, inResponseTo, null);
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, inResponseTo, ipAddress, null);
         return new SamlResponse(
             responseToSignedStringTransformer.apply(response),
             assertionConsumerServiceLocation
