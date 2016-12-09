@@ -16,8 +16,12 @@ import org.junit.Test;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.impl.AttributeBuilder;
 import org.opensaml.saml.saml2.core.impl.ResponseUnmarshaller;
+import org.opensaml.saml.saml2.encryption.Encrypter;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.credential.Credential;
+import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
+import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
@@ -196,7 +200,7 @@ public class SendResponseToBridgeIntegrationTest {
 
         AssertionBuilder assertionBuilder = anAssertion().addAttributeStatement(attributeStatementBuilder.build());
         return aResponse().withInResponseTo(SOME_RESPONSE_ID)
-            .addEncryptedAssertion(assertionBuilder.build());
+            .addEncryptedAssertion(assertionBuilder.buildWithEncrypterCredential(createEncrypter()));
     }
 
     private Attribute createAttribute(String key, String value) {
@@ -212,6 +216,26 @@ public class SendResponseToBridgeIntegrationTest {
         return Optional.of(SECRET_SEED)
             .map(seed -> Hashing.sha256().newHasher().putString(seed, UTF_8).hash().asBytes())
             .map(k -> (Key) new SecretKeySpec(k, HS256.getJcaName())).get();
+    }
+
+    /**
+     * Build an encrypter to mimic the encryption done by eIDAS.
+     * @return An encrypter using the aes256-gcm cipher (which is the cipher used by the eIDAS node)
+     */
+    private Encrypter createEncrypter() {
+        TestCredentialFactory testCredentialFactory = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, null);
+        DataEncryptionParameters encParams = new DataEncryptionParameters();
+        encParams.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+
+        KeyEncryptionParameters kekParams = new KeyEncryptionParameters();
+        kekParams.setEncryptionCredential(testCredentialFactory.getEncryptingCredential());
+        kekParams.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
+
+        Encrypter encrypter = new Encrypter(encParams, kekParams);
+        encrypter.setKeyPlacement(Encrypter.KeyPlacement.PEER);
+
+        return encrypter;
+
     }
 
 }

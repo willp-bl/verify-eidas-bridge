@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.factories;
 
+import com.google.common.collect.ImmutableSet;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
@@ -10,6 +11,7 @@ import org.opensaml.saml.security.impl.MetadataCredentialResolver;
 import org.opensaml.security.credential.BasicCredential;
 import org.opensaml.security.x509.BasicX509Credential;
 import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
@@ -68,6 +70,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
+import java.util.Set;
 
 public class VerifyEidasBridgeFactory {
 
@@ -139,9 +142,12 @@ public class VerifyEidasBridgeFactory {
     public BridgeMetadataResource getBridgeMetadataResource() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
         KeyStoreConfiguration signingKeyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
         KeyStore signingKeyStore = signingKeyStoreConfiguration.getKeyStore();
-        java.security.cert.Certificate certificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS);
+        java.security.cert.Certificate signingCertificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS);
         PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
-        BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), certificate, privateKey, configuration.getBridgeEntityId());
+
+        java.security.cert.Certificate encryptingCertificate = configuration.getEncryptingKeyStoreConfiguration().getKeyStore().getCertificate(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS);
+
+        BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), signingCertificate, encryptingCertificate, privateKey, configuration.getBridgeEntityId());
         return bridgeMetadataFactory.getBridgeMetadataResource();
     }
 
@@ -162,11 +168,15 @@ public class VerifyEidasBridgeFactory {
 
         uk.gov.ida.saml.security.KeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.KeyStore(signingKeyPair, Collections.singletonList(encryptingKeyPair));
         SamlMessageSignatureValidator samlMessageSignatureValidator = new SamlMessageSignatureValidator(signatureValidator);
+        Set<String> encryptionAlgorithmWhitelist = ImmutableSet.of(
+            EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES128,
+            EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM
+        );
         ResponseHandler responseHandler = new ResponseHandler(
             stringToResponse,
             configuration.getEidasNodeEntityId(),
             new SamlResponseSignatureValidator(samlMessageSignatureValidator),
-            new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(), new DecrypterFactory()),
+            new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(encryptionAlgorithmWhitelist), new DecrypterFactory()),
             new SamlAssertionsSignatureValidator(samlMessageSignatureValidator),
             new EidasIdentityAssertionUnmarshaller());
 

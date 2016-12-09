@@ -27,6 +27,9 @@ import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static java.util.Collections.singletonList;
 
 public class BridgeMetadataGenerator {
@@ -35,7 +38,7 @@ public class BridgeMetadataGenerator {
     private final String hostname;
     private final String entityId;
     private final KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller;
-    private final Certificate signingCertificate;
+    private final Certificate signingCertificate, encryptingCertificate;
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final KeyInfoGenerator keyInfoGenerator;
     private final BasicCredential basicSigningCredential;
@@ -46,6 +49,7 @@ public class BridgeMetadataGenerator {
         String hostname, String entityId,
         KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller,
         Certificate signingCertificate,
+        Certificate encryptingCertificate,
         KeyInfoGenerator keyInfoGenerator,
         BasicCredential signingCredential,
         X509Credential x509SigningCredential) {
@@ -53,6 +57,7 @@ public class BridgeMetadataGenerator {
         this.entityId = entityId;
         this.keyDescriptorsUnmarshaller = keyDescriptorsUnmarshaller;
         this.signingCertificate = signingCertificate;
+        this.encryptingCertificate = encryptingCertificate;
         this.keyInfoGenerator = keyInfoGenerator;
         this.basicSigningCredential = signingCredential;
         this.x509SigningCredential = x509SigningCredential;
@@ -98,7 +103,10 @@ public class BridgeMetadataGenerator {
         SPSSODescriptor spSsoDescriptor = openSamlXmlObjectFactory.createSPSSODescriptor();
         spSsoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 
-        spSsoDescriptor.getKeyDescriptors().addAll(keyDescriptorsUnmarshaller.fromCertificates(singletonList(signingCertificate)));
+        List<Certificate> signingAndEncryptionCerts = new ArrayList<>();
+        signingAndEncryptionCerts.add(signingCertificate);
+        signingAndEncryptionCerts.add(encryptingCertificate);
+        spSsoDescriptor.getKeyDescriptors().addAll(keyDescriptorsUnmarshaller.fromCertificates(signingAndEncryptionCerts));
         spSsoDescriptor.setID("spSsoDescriptor");
         AssertionConsumerService assertionConsumerService = new AssertionConsumerServiceBuilder().buildObject();
         assertionConsumerService.setLocation(hostname + EidasResponseResource.ASSERTION_CONSUMER_PATH);

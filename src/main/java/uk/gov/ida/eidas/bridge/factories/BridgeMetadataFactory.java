@@ -23,13 +23,17 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 public class BridgeMetadataFactory {
 
     private final String hostname;
-    private final java.security.cert.Certificate certificate;
+    private final java.security.cert.Certificate signingCertificate, encryptingCertificate;
     private final PrivateKey privateKey;
     private final String entityId;
 
-    public BridgeMetadataFactory(String hostname, java.security.cert.Certificate certificate, PrivateKey privateKey, String entityId) {
+    public BridgeMetadataFactory(String hostname,
+                                 java.security.cert.Certificate signingCertificate,
+                                 java.security.cert.Certificate encryptingCertificate,
+                                 PrivateKey privateKey, String entityId) {
         this.hostname = hostname;
-        this.certificate = certificate;
+        this.signingCertificate = signingCertificate;
+        this.encryptingCertificate = encryptingCertificate;
         this.entityId = entityId;
         this.privateKey = privateKey;
     }
@@ -40,10 +44,10 @@ public class BridgeMetadataFactory {
 
     public BridgeMetadataGenerator getBridgeMetadataGenerator() throws KeyStoreException, CertificateEncodingException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller = new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory());
-        Certificate signingCertificate = getSigningCertificate();
+        Certificate verifyCertificate = getSigningCertificate();
 
-        BasicCredential basicSigningCredential = new BasicCredential(certificate.getPublicKey(), privateKey);
-        BasicX509Credential x509Credential = new BasicX509Credential((X509Certificate) certificate);
+        BasicCredential basicSigningCredential = new BasicCredential(this.signingCertificate.getPublicKey(), privateKey);
+        BasicX509Credential x509Credential = new BasicX509Credential((X509Certificate) this.signingCertificate);
 
         X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
         keyInfoGeneratorFactory.setEmitEntityCertificate(true);
@@ -53,13 +57,18 @@ public class BridgeMetadataFactory {
             hostname,
             entityId,
             keyDescriptorsUnmarshaller,
-            signingCertificate,
+            verifyCertificate,
+            getEncryptingCertificate(),
             keyInfoGenerator,
             basicSigningCredential,
             x509Credential);
     }
 
     private Certificate getSigningCertificate() throws KeyStoreException, CertificateEncodingException {
-        return new Certificate(entityId, encodeBase64String(certificate.getEncoded()), Certificate.KeyUse.Signing);
+        return new Certificate(entityId, encodeBase64String(signingCertificate.getEncoded()), Certificate.KeyUse.Signing);
+    }
+
+    private Certificate getEncryptingCertificate() throws KeyStoreException, CertificateEncodingException {
+        return new Certificate(entityId, encodeBase64String(encryptingCertificate.getEncoded()), Certificate.KeyUse.Encryption);
     }
 }
