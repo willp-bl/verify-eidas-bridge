@@ -1,8 +1,10 @@
 package uk.gov.ida.eidas.bridge.factories;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.resolver.ResolverException;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.impl.BasicRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
@@ -18,17 +20,18 @@ import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngin
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.AssertionConsumerServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.AssertionSubjectGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.AuthnStatementAssertionGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasAuthnRequestGenerator;
 import uk.gov.ida.eidas.bridge.helpers.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.eidas.bridge.helpers.MatchingDatasetAssertionGenerator;
+import uk.gov.ida.eidas.bridge.helpers.MetadataBackedEncryptionPublicKeyRetriever;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
 import uk.gov.ida.eidas.bridge.helpers.ResponseSizeValidator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.helpers.SingleSignOnServiceLocator;
-import uk.gov.ida.eidas.bridge.helpers.AssertionSubjectGenerator;
 import uk.gov.ida.eidas.bridge.helpers.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
@@ -188,7 +191,8 @@ public class VerifyEidasBridgeFactory {
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId, openSamlXmlObjectFactory);
         SigningHelper verifySigningHelper = getVerifySigningHelper();
 
-        EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(entityId -> encryptingPublicKey);
+        MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(getVerifyMetadataResolver());
+        EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(metadataBackedEncryptionPublicKeyRetriever::retrieveKey);
 
         VerifyResponseGenerator responseGenerator = new VerifyResponseGenerator(
             bridgeEntityId,

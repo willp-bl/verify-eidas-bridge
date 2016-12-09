@@ -74,37 +74,6 @@
         <saml2:Attribute FriendlyName="D-2012-17-EUIdentifier" Name="http://eidas.europa.eu/attributes/legalperson/D-2012-17-EUIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
             <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:D-2012-17-EUIdentifierType">Directive 2012/17/EU Identifier</saml2:AttributeValue>
         </saml2:Attribute>
-        <saml2:Attribute FriendlyName="EORI" Name="http://eidas.europa.eu/attributes/legalperson/EORI" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:EORIType">Economic Operator Registration and Identification (EORI)</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="LEI" Name="http://eidas.europa.eu/attributes/legalperson/LEI" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:LEIType">Legal Entity Identifier (LEI)</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="LegalAddress" Name="http://eidas.europa.eu/attributes/legalperson/LegalAddress" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:LegalPersonAddressType">PGVpZGFzLWxlZ2FsOkZ1bGxDdmFkZHJlc3M+TGVnYWwgYWRkcmVzczwvZWlkYXMtbGVnYWw6RnVsbEN2YWRkcmVzcz4K</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="LegalName" Name="http://eidas.europa.eu/attributes/legalperson/LegalName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:LegalNameType">Current Legal Name</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="LegalPersonIdentifier" Name="http://eidas.europa.eu/attributes/legalperson/LegalPersonIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:LegalPersonIdentifierType">CA/UK/125457487Company</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="SEED" Name="http://eidas.europa.eu/attributes/legalperson/SEED" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:SEEDType">System for Exchange of Excise Data (SEED)</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="SIC" Name="http://eidas.europa.eu/attributes/legalperson/SIC" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:SICType">Standard Industrial Classification (SIC)</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="TaxReference" Name="http://eidas.europa.eu/attributes/legalperson/TaxReference" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:TaxReferenceType">Taxe</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="VATRegistration" Name="http://eidas.europa.eu/attributes/legalperson/VATRegistration" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:VATRegistrationNumberType">VAT Registration Number</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="BirthName" Name="http://eidas.europa.eu/attributes/naturalperson/BirthName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" eidas-natural:LatinScript="false" xsi:type="eidas-natural:BirthNameType">&#x3A9;&#x3BD;&#x3AC;&#x3C3;&#x3B7;&#x3C2;</saml2:AttributeValue>
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:BirthNameType">Onases</saml2:AttributeValue>
-        </saml2:Attribute>
         <saml2:Attribute FriendlyName="CurrentAddress" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentAddress" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
             <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:CurrentAddressType">PGVpZGFzLW5hdHVyYWw6RnVsbEN2YWRkcmVzcz5DdXJyZW50IEFkZHJlc3M8L2VpZGFzLW5hdHVyYWw6RnVsbEN2YWRkcmVzcz4K</saml2:AttributeValue>
         </saml2:Attribute>
@@ -118,17 +87,11 @@
         <saml2:Attribute FriendlyName="DateOfBirth" Name="http://eidas.europa.eu/attributes/naturalperson/DateOfBirth" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
             <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:DateOfBirthType">1965-01-01</saml2:AttributeValue>
         </saml2:Attribute>
-        <saml2:Attribute FriendlyName="EidasAdditionalAttribute" Name="http://eidas.europa.eu/attributes/naturalperson/EidasAdditionalAttribute" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">Natural additional attribute value</saml2:AttributeValue>
-        </saml2:Attribute>
         <saml2:Attribute FriendlyName="Gender" Name="http://eidas.europa.eu/attributes/naturalperson/Gender" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
             <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:GenderType">Male</saml2:AttributeValue>
         </saml2:Attribute>
         <saml2:Attribute FriendlyName="PersonIdentifier" Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
             <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:PersonIdentifierType">CA/UK/12345</saml2:AttributeValue>
-        </saml2:Attribute>
-        <saml2:Attribute FriendlyName="PlaceOfBirth" Name="http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:PlaceOfBirthType">Place of Birth</saml2:AttributeValue>
         </saml2:Attribute>
     </saml2:AttributeStatement>
 </saml2:Assertion>

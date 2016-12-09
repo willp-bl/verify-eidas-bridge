@@ -69,6 +69,7 @@ public class EidasResponseResource {
         String inboundID = principal.getClaims().get("inboundID", String.class);
         String assertionConsumerServiceLocation = assertionConsumerServiceLocator.getAssertionConsumerServiceLocation(verifyEntityId);
         org.opensaml.saml.saml2.core.Response response = responseGenerator.generateResponse(assertionConsumerServiceLocation, inboundID, req.getRemoteAddr(), eidasSamlResponse.getIdentityAssertion());
-        return new ResponseFormView(xmlObjectToBase64EncodedStringTransformer.apply(response), assertionConsumerServiceLocation);
+
+        return new ResponseFormView(xmlObjectToBase64EncodedStringTransformer.apply(response), assertionConsumerServiceLocation, principal.getClaims().get("inboundRelayState", String.class));
     }
 }
