@@ -83,8 +83,8 @@ public class EidasAuthnRequestGenerator {
             getRequestedAttribute("FamilyName", "CurrentFamilyName"),
             getRequestedAttribute("DateOfBirth", "DateOfBirth"),
             getRequestedAttribute("CurrentAddress", "CurrentAddress"),
-            getRequestedAttribute("PersonIdentifier", "PersonIdentifier")
-
+            getRequestedAttribute("PersonIdentifier", "PersonIdentifier"),
+            getRequestedAttribute("Gender", "Gender")
         );
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
 
