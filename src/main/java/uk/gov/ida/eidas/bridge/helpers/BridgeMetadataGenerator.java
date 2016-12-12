@@ -30,8 +30,6 @@ import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-
 public class BridgeMetadataGenerator {
 
 

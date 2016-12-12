@@ -1,20 +1,16 @@
 package uk.gov.ida.eidas.bridge.resources;
 
-import com.google.common.base.Throwables;
 import io.dropwizard.auth.Auth;
 import io.dropwizard.views.View;
 import org.dhatim.dropwizard.jwt.cookie.authentication.DefaultJwtCookiePrincipal;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.AssertionConsumerServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
 import uk.gov.ida.eidas.bridge.helpers.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.views.ResponseFormView;
-import uk.gov.ida.saml.core.validation.SamlTransformationErrorException;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +24,6 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/")
 public class EidasResponseResource {
-    private static final Logger LOG = LoggerFactory.getLogger(EidasResponseResource.class);
     public final static String ASSERTION_CONSUMER_PATH = "/SAML2/SSO/Response/POST";
 
     private final String verifyEntityId;
@@ -52,20 +47,13 @@ public class EidasResponseResource {
     @POST
     @Path(ASSERTION_CONSUMER_PATH)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public View handleEidasResponseAndTranslateIntoVerifyResponse(
+    public View handleEidasResponseAndTranslateIntoVerifyResponse (
         @Context HttpServletRequest req,
         @FormParam("SAMLResponse") @NotNull String responseStr,
         @Auth DefaultJwtCookiePrincipal principal) throws MarshallingException, SecurityException, SignatureException {
         String outboundID = principal.getClaims().get("outboundID", String.class);
 
-        EidasSamlResponse eidasSamlResponse;
-        try {
-            eidasSamlResponse = responseHandler.handleResponse(responseStr, outboundID);
-        } catch (SamlTransformationErrorException | SignatureException | SecurityException e) {
-            LOG.error("Could not validate signature on Response", e);
-            throw Throwables.propagate(e);
-        }
-
+        EidasSamlResponse eidasSamlResponse = responseHandler.handleResponse(responseStr, outboundID);
         String inboundID = principal.getClaims().get("inboundID", String.class);
         String assertionConsumerServiceLocation = assertionConsumerServiceLocator.getAssertionConsumerServiceLocation(verifyEntityId);
         org.opensaml.saml.saml2.core.Response response = responseGenerator.generateResponse(assertionConsumerServiceLocation, inboundID, req.getRemoteAddr(), eidasSamlResponse.getIdentityAssertion());
