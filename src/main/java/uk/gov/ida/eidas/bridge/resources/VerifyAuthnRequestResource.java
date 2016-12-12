@@ -9,8 +9,8 @@ import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.SamlRequest;
-import uk.gov.ida.eidas.bridge.helpers.AuthnRequestFormGenerator;
-import uk.gov.ida.eidas.bridge.helpers.AuthnRequestHandler;
+import uk.gov.ida.eidas.bridge.helpers.requestToEidas.AuthnRequestFormGenerator;
+import uk.gov.ida.eidas.bridge.helpers.requestFromVerify.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.views.AuthnRequestFormView;
 

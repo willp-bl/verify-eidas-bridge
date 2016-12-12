@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseFromEidas;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Level;

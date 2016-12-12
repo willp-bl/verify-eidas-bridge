@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseToVerify;
 
 import org.joda.time.DateTime;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -11,6 +11,8 @@ import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
+import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.hub.factories.AttributeFactory;
 

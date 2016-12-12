@@ -25,7 +25,7 @@ import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
-import uk.gov.ida.eidas.bridge.helpers.EidasIdentityAssertionUnmarshaller;
+import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;

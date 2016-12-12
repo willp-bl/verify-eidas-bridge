@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseToVerify;
 
 import io.dropwizard.testing.ResourceHelpers;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -9,6 +9,7 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.impl.FilesystemMetadataResolver;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MetadataBackedEncryptionPublicKeyRetriever;
 
 import java.io.File;
 import java.security.PublicKey;

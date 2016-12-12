@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseToVerify;
 
 import org.joda.time.DateTime;
 import org.opensaml.saml.saml2.core.NameID;

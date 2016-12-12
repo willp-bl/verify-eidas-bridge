@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseFromEidas;
 
 import uk.gov.ida.saml.deserializers.validators.SizeValidator;
 import uk.gov.ida.saml.hub.validators.StringSizeValidator;

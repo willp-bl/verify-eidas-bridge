@@ -7,9 +7,9 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
-import uk.gov.ida.eidas.bridge.helpers.AssertionConsumerServiceLocator;
-import uk.gov.ida.eidas.bridge.helpers.ResponseHandler;
-import uk.gov.ida.eidas.bridge.helpers.VerifyResponseGenerator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.views.ResponseFormView;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 

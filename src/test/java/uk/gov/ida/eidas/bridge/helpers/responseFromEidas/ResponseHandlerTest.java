@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.responseFromEidas;
 
 
 import io.dropwizard.testing.ResourceHelpers;
@@ -17,6 +17,9 @@ import uk.gov.ida.common.shared.security.PrivateKeyFactory;
 import uk.gov.ida.common.shared.security.PublicKeyFactory;
 import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
+import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
+import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
+import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
