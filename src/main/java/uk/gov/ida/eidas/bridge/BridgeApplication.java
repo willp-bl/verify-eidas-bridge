@@ -29,6 +29,11 @@ import static com.google.common.collect.ImmutableMap.of;
 
 
 public class BridgeApplication extends Application<BridgeConfiguration> {
+
+    static {
+        System.setProperty("org.jboss.logging.provider", "slf4j");
+    }
+
     public static void main(String[] args) throws Exception {
         new BridgeApplication().run("server", "eidasbridge.yml");
     }
