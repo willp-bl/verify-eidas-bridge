@@ -17,7 +17,6 @@ import uk.gov.ida.eidas.bridge.exceptions.SecurityExceptionMapper;
 import uk.gov.ida.eidas.bridge.exceptions.SignatureExceptionMapper;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -65,10 +64,10 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         environment.jersey().register(new MarshallingExceptionMapper());
 
         Map<String, HealthCheck> healthChecks = of(
-            "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
-            "eidas-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getEidasMetadataResolver(), configuration.getEidasMetadataConfiguration().getExpectedEntityId())
+            "verify-metadata", verifyEidasBridgeFactory.getVerifyMetadataHealthcheck(),
+            "eidas-metadata", verifyEidasBridgeFactory.getEidasMetadataHealthcheck()
         );
-        healthChecks.entrySet().stream().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
+        healthChecks.entrySet().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
 
 }
