@@ -34,6 +34,7 @@ public class MatchingDatasetAssertionGeneratorTest {
     private static final String CURRENT_ADDRESS = "holborn";
     private static final Gender GENDER = Gender.MALE;
     private static final String DATE_OF_BIRTH = "1965-01-01";
+    private static final String PERSON_IDENTIFIER = "anId";
 
     private MatchingDatasetAssertionGenerator assertionGenerator;
 
@@ -50,7 +51,7 @@ public class MatchingDatasetAssertionGeneratorTest {
 
     @Test
     public void generateIssuerAndSubject() throws Exception {
-        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, new DateTime(1965, 1, 1, 0, 0));
+        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
         Assertion assertion = assertionGenerator.generate(IN_RESPONSE_TO, eidasIdentityAssertion);
 
         assertEquals(BRIDGE_ENTITY_ID, assertion.getIssuer().getValue());
@@ -65,7 +66,7 @@ public class MatchingDatasetAssertionGeneratorTest {
     @Test
     public void generateAttributeStatement() throws Exception {
         DateTime dateOfBirth = new DateTime(1965, 1, 1, 0, 0);
-        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, dateOfBirth);
+        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, dateOfBirth, PERSON_IDENTIFIER);
 
         Assertion assertion = assertionGenerator.generate(IN_RESPONSE_TO, eidasIdentityAssertion);
 
@@ -83,7 +84,7 @@ public class MatchingDatasetAssertionGeneratorTest {
     @Test
     public void shouldSignAssertion() throws Exception {
         DateTime dateOfBirth = new DateTime(1965, 1, 1, 0, 0);
-        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, dateOfBirth);
+        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, CURRENT_ADDRESS, GENDER, dateOfBirth, PERSON_IDENTIFIER);
 
         Assertion assertion = assertionGenerator.generate(IN_RESPONSE_TO, eidasIdentityAssertion);
         assertNotNull(assertion.getSignature());

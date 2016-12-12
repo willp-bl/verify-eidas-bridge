@@ -69,6 +69,6 @@ public class VerifyResponseGenerator {
 
     private void setAssertions(Response response, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion) throws MarshallingException, SecurityException, SignatureException {
         response.getAssertions().add(matchingDatasetAssertionGenerator.generate(inResponseTo, eidasIdentityAssertion));
-        response.getAssertions().add(authnStatementAssertionGenerator.generate(inResponseTo, ipAddress));
+        response.getAssertions().add(authnStatementAssertionGenerator.generate(inResponseTo, ipAddress, eidasIdentityAssertion.getPersonIdentifier()));
     }
 }

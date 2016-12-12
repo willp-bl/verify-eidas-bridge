@@ -18,10 +18,10 @@ public class AssertionSubjectGenerator {
         this.openSamlXmlObjectFactory = openSamlXmlObjectFactory;
     }
 
-    public Subject generateSubject(String inResponseTo) {
+    public Subject generateSubject(String inResponseTo, String persistentIdentifier) {
         Subject subject = openSamlXmlObjectFactory.createSubject();
-        NameID nameId = openSamlXmlObjectFactory.createNameId(null);
 
+        NameID nameId = openSamlXmlObjectFactory.createNameId(persistentIdentifier);
         nameId.setFormat(NameIDType.PERSISTENT);
         subject.setNameID(nameId);
 

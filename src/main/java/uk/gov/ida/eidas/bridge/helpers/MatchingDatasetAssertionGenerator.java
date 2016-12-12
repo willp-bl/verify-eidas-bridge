@@ -48,7 +48,7 @@ public class MatchingDatasetAssertionGenerator {
         Issuer transformedIssuer = openSamlXmlObjectFactory.createIssuer(bridgeEntityId);
         assertion.setIssuer(transformedIssuer);
         assertion.setID(RandomIdGenerator.generateRandomId());
-        assertion.setSubject(assertionSubjectGenerator.generateSubject(inResponseTo));
+        assertion.setSubject(assertionSubjectGenerator.generateSubject(inResponseTo, eidasIdentityAssertion.getPersonIdentifier()));
         assertion.getAttributeStatements().add(buildMatchingDatasetAttributeStatement(eidasIdentityAssertion));
 
         return signingHelper.sign(assertion);
@@ -87,7 +87,12 @@ public class MatchingDatasetAssertionGenerator {
     }
 
     private <T> SimpleMdsValue<T> buildMdsValue(T input) {
-        return new SimpleMdsValue<>(input, null, null, false);
+        return new SimpleMdsValue<>(
+            input,
+            null, // "From" not required - attributes in eIDAS don't have validity dates
+            null, // "To" not required - attributes in eIDAS don't have validity dates
+            false // Assume "verified" is false for all eIDAS attributes
+        );
     }
 
     private <T> List<SimpleMdsValue<T>> buildMdsValueList(T input) {

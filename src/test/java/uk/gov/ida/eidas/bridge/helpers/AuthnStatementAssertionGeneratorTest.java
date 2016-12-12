@@ -32,6 +32,8 @@ public class AuthnStatementAssertionGeneratorTest {
 
     private static final String IN_RESPONSE_TO = "guid";
     private static final String IP_ADDRESS = "127.0.0.1";
+    private static final String PERSON_IDENTIFIER = "aPersonId";
+
     private AuthnStatementAssertionGenerator authnStatementAssertionGenerator;
 
     @Before
@@ -46,16 +48,17 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void shouldGenerateAnAuthnStatementAssertion() throws MarshallingException, SecurityException, SignatureException {
-        assertNotNull(authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS));
+        assertNotNull(authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER));
     }
 
 
     @Test
     public void generateIssuerAndSubject() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
 
         assertEquals(BRIDGE_ENTITY_ID, assertion.getIssuer().getValue());
         Subject subject = assertion.getSubject();
+        assertEquals(PERSON_IDENTIFIER, subject.getNameID().getValue());
         List<SubjectConfirmation> subjectConfirmations = subject.getSubjectConfirmations();
         SubjectConfirmation subjectConfirmation = subjectConfirmations.get(0);
         SubjectConfirmationData subjectConfirmationData = subjectConfirmation.getSubjectConfirmationData();
@@ -65,7 +68,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void generateAttributeStatementWithIpAddress() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
         List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
         assertNotNull(attributeStatements);
         assertTrue(attributeStatements.size() == 1);
@@ -83,7 +86,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void generateLoa2AuthnStatement() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
         List<AuthnStatement> authnStatements = assertion.getAuthnStatements();
         assertNotNull(authnStatements);
         assertTrue(authnStatements.size() == 1);
@@ -96,7 +99,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void shouldSignAssertion() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
         assertNotNull(assertion.getSignature());
     }
 }

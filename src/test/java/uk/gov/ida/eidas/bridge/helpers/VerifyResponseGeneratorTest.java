@@ -38,6 +38,7 @@ public class VerifyResponseGeneratorTest {
     private final String BRIDGE_ENTITY_ID = "bridge-entity-id";
     private final String VERIFY_ENTITY_ID = "verify-entity-id";
     private static final String IP_ADDRESS = "127.0.0.1";
+    private static final String PERSON_IDENTIFIER = "aPersonId";
 
     private final String assertionConsumerServiceLocation = "http://some-destination";
     private EidasIdentityAssertion eidasIdentityAssertion;
@@ -46,7 +47,7 @@ public class VerifyResponseGeneratorTest {
     @Before
     public void before() {
         EidasSamlBootstrap.bootstrap();
-        eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", "holborn", Gender.FEMALE, new DateTime(1965, 1, 1, 0, 0));
+        eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", "holborn", Gender.FEMALE, new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
         OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory);
         AttributeFactory_1_1 attributeFactory = new AttributeFactory_1_1(openSamlXmlObjectFactory);

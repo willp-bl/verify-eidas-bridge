@@ -35,7 +35,7 @@ public class AuthnStatementAssertionGenerator {
         this.signingHelper = signingHelper;
     }
 
-    public Assertion generate(String inResponseTo, String ipAddress) throws MarshallingException, SecurityException, SignatureException {
+    public Assertion generate(String inResponseTo, String ipAddress, String persistentId) throws MarshallingException, SecurityException, SignatureException {
         Assertion assertion = openSamlXmlObjectFactory.createAssertion();
 
         assertion.setIssueInstant(new DateTime());
@@ -43,7 +43,7 @@ public class AuthnStatementAssertionGenerator {
         assertion.setIssuer(transformedIssuer);
         assertion.setID(RandomIdGenerator.generateRandomId());
 
-        assertion.setSubject(assertionSubjectGenerator.generateSubject(inResponseTo));
+        assertion.setSubject(assertionSubjectGenerator.generateSubject(inResponseTo, persistentId));
 
         AttributeStatement attributeStatement = openSamlXmlObjectFactory.createAttributeStatement();
         Attribute ipAddressAttribute = attributeFactory.createUserIpAddressAttribute(ipAddress);

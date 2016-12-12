@@ -197,6 +197,7 @@ public class SendResponseToBridgeIntegrationTest {
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.CURRENT_ADDRESS_URI, eidasAddress));
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.GENDER_URI, "Female"));
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.DATE_OF_BIRTH_URI, "1960-01-01"));
+        attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.PERSON_IDENTIFIER_URI, "personNumber1337"));
 
         AssertionBuilder assertionBuilder = anAssertion().addAttributeStatement(attributeStatementBuilder.build());
         return aResponse().withInResponseTo(SOME_RESPONSE_ID)

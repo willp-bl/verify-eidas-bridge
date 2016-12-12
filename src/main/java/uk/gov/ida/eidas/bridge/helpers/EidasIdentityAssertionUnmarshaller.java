@@ -38,6 +38,7 @@ public class EidasIdentityAssertionUnmarshaller {
     public static final String GENDER_URI = NATURAL_PERSON_PREFIX + "Gender";
     public static final String DATE_OF_BIRTH_URI = NATURAL_PERSON_PREFIX + "DateOfBirth";
     public static final String CURRENT_ADDRESS_URI = NATURAL_PERSON_PREFIX + "CurrentAddress";
+    public static final String PERSON_IDENTIFIER_URI = NATURAL_PERSON_PREFIX + "PersonIdentifier";
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-DD");
 
     public EidasIdentityAssertion unmarshallAssertion(ValidatedAssertions validatedAssertions) {
@@ -62,7 +63,8 @@ public class EidasIdentityAssertionUnmarshaller {
             getOrThrow(attributesByName, FAMILY_NAME_URI),
             extractAddressFromBase64EncodedXml(getOrThrow(attributesByName, CURRENT_ADDRESS_URI)),
             Gender.fromString(getOrThrow(attributesByName, GENDER_URI)),
-            parseDate(getOrThrow(attributesByName, DATE_OF_BIRTH_URI))
+            parseDate(getOrThrow(attributesByName, DATE_OF_BIRTH_URI)),
+            getOrThrow(attributesByName, PERSON_IDENTIFIER_URI)
         );
     }
 
