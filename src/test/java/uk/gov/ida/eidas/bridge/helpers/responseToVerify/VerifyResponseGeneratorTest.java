@@ -36,7 +36,7 @@ import static uk.gov.ida.eidas.bridge.testhelpers.SigningHelperBuilder.aSigningH
 
 public class VerifyResponseGeneratorTest {
 
-    public static final String IN_RESPONSE_TO = "responseTo";
+    private static final String IN_RESPONSE_TO = "responseTo";
     private final String BRIDGE_ENTITY_ID = "bridge-entity-id";
     private final String VERIFY_ENTITY_ID = "verify-entity-id";
     private static final String IP_ADDRESS = "127.0.0.1";

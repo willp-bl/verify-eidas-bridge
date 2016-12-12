@@ -28,8 +28,8 @@ import static uk.gov.ida.eidas.bridge.testhelpers.SigningHelperBuilder.aSigningH
 
 public class AuthnStatementAssertionGeneratorTest {
 
-    public static final String BRIDGE_ENTITY_ID = "bridgeEntitiyId";
-    public static final String VERIFY_ENTITY_ID = "verifyEntityId";
+    private static final String BRIDGE_ENTITY_ID = "bridgeEntitiyId";
+    private static final String VERIFY_ENTITY_ID = "verifyEntityId";
 
     private static final String IN_RESPONSE_TO = "guid";
     private static final String IP_ADDRESS = "127.0.0.1";

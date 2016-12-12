@@ -28,10 +28,10 @@ import javax.ws.rs.core.UriBuilder;
 
 @Path("/")
 public class VerifyAuthnRequestResource {
-    public static final String SINGLE_SIGN_ON_PATH = "/SAML2/SSO/POST";
+    private static final String SINGLE_SIGN_ON_PATH = "/SAML2/SSO/POST";
 
     private final AuthnRequestHandler authnRequestHandler;
-    private AuthnRequestFormGenerator eidasAuthnRequestFormGenerator;
+    private final AuthnRequestFormGenerator eidasAuthnRequestFormGenerator;
 
     public VerifyAuthnRequestResource(AuthnRequestHandler authnRequestHandler, AuthnRequestFormGenerator eidasAuthnRequestFormGenerator) {
         this.authnRequestHandler = authnRequestHandler;

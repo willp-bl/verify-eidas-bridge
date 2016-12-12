@@ -62,7 +62,7 @@ public class AuthnRequestBuilder {
         return toBase64EncodedStringTransformer.apply(authnRequest);
     }
 
-    public IdaAuthnRequestFromHub buildFromHub() {
+    private IdaAuthnRequestFromHub buildFromHub() {
         return new IdaAuthnRequestFromHub(
             id,
             issuer,

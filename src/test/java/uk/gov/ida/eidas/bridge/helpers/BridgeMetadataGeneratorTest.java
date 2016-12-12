@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BridgeMetadataGeneratorTest {
 
-    public static final String HOSTNAME = "http://bridge.hostname";
+    private static final String HOSTNAME = "http://bridge.hostname";
     private BridgeMetadataGenerator bridgeMetadataGenerator;
 
     @Before

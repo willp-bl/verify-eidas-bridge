@@ -59,7 +59,7 @@ import static uk.gov.ida.saml.core.test.builders.ResponseBuilder.aResponse;
 public class ResponseHandlerTest {
     private static final String EIDAS_ENTITY_ID = "an-entity-id";
     private static final String IN_RESPONSE_TO_ID = "anInReponseToId";
-    private StringToOpenSamlObjectTransformer<Response> stringToResponse =
+    private final StringToOpenSamlObjectTransformer<Response> stringToResponse =
         new CoreTransformersFactory().getStringtoOpenSamlObjectTransformer((SizeValidator) input -> { });
 
     @Before

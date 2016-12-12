@@ -15,14 +15,7 @@ public class ResponseSizeValidator implements SizeValidator {
 
     @Override
     public void validate(String input) {
-        validator.validate(input, getLowerBound(), getUpperBound());
+        validator.validate(input, LOWER_BOUND, UPPER_BOUND);
     }
 
-    private int getUpperBound() {
-        return UPPER_BOUND;
-    }
-
-    protected int getLowerBound() {
-        return LOWER_BOUND;
-    }
 }

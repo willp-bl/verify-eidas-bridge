@@ -9,7 +9,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +19,7 @@ import static org.mockito.Mockito.when;
 public class SingleSignOnServiceLocatorTest {
 
     @Mock
-    MetadataResolver metadataResolver;
+    private MetadataResolver metadataResolver;
 
     @Before
     public void before() {

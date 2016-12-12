@@ -10,7 +10,7 @@ public class RequestedAttributeImpl extends AttributeImpl implements RequestedAt
     public static final Marshaller MARSHALLER = new RequestedAttributeMarshaller();
     public static final Unmarshaller UNMARSHALLER = new RequestedAttributeUnmarshaller();
 
-    protected RequestedAttributeImpl(String namespaceURI, String elementLocalName, String namespacePrefix) {
+    RequestedAttributeImpl(String namespaceURI, String elementLocalName, String namespacePrefix) {
         super(namespaceURI, elementLocalName, namespacePrefix);
     }
 

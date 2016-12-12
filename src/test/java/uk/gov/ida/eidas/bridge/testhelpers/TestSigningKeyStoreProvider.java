@@ -28,7 +28,7 @@ public class TestSigningKeyStoreProvider {
 
     private static final String KEYSTORE_TYPE = "PKCS12";
 
-    public static KeyStore getKeyStore(String alias, String password) {
+    private static KeyStore getKeyStore(String alias, String password) {
         try {
             Certificate[] certificates = {new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT)};
             KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);

@@ -6,15 +6,13 @@ import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import uk.gov.ida.common.shared.security.Certificate;
 import uk.gov.ida.eidas.bridge.helpers.BridgeMetadataGenerator;
+import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
 
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
@@ -38,11 +36,11 @@ public class BridgeMetadataFactory {
         this.privateKey = privateKey;
     }
 
-    public BridgeMetadataResource getBridgeMetadataResource() throws KeyStoreException, CertificateEncodingException, UnrecoverableKeyException, NoSuchAlgorithmException {
+    public BridgeMetadataResource getBridgeMetadataResource() throws CertificateEncodingException {
         return new BridgeMetadataResource(getBridgeMetadataGenerator(), new CoreTransformersFactory().getXmlObjectToElementTransformer());
     }
 
-    public BridgeMetadataGenerator getBridgeMetadataGenerator() throws KeyStoreException, CertificateEncodingException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public BridgeMetadataGenerator getBridgeMetadataGenerator() throws CertificateEncodingException {
         KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller = new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory());
         Certificate verifyCertificate = getSigningCertificate();
 
@@ -59,16 +57,14 @@ public class BridgeMetadataFactory {
             keyDescriptorsUnmarshaller,
             verifyCertificate,
             getEncryptingCertificate(),
-            keyInfoGenerator,
-            basicSigningCredential,
-            x509Credential);
+            new SigningHelper(basicSigningCredential, x509Credential, keyInfoGenerator));
     }
 
-    private Certificate getSigningCertificate() throws KeyStoreException, CertificateEncodingException {
+    private Certificate getSigningCertificate() throws CertificateEncodingException {
         return new Certificate(entityId, encodeBase64String(signingCertificate.getEncoded()), Certificate.KeyUse.Signing);
     }
 
-    private Certificate getEncryptingCertificate() throws KeyStoreException, CertificateEncodingException {
+    private Certificate getEncryptingCertificate() throws CertificateEncodingException {
         return new Certificate(entityId, encodeBase64String(encryptingCertificate.getEncoded()), Certificate.KeyUse.Encryption);
     }
 }

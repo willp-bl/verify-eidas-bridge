@@ -29,7 +29,7 @@ public class AuthnRequestHandlerTest {
     @Mock
     private MetadataConfiguration configuration;
 
-    private StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest = new CoreTransformersFactory()
+    private final StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest = new CoreTransformersFactory()
         .getStringtoOpenSamlObjectTransformer(new AuthnRequestSizeValidator(new StringSizeValidator()));
 
     @Before

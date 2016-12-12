@@ -32,16 +32,17 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class EidasIdentityAssertionUnmarshaller {
-    public static final String NATURAL_PERSON_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
+    private static final String NATURAL_PERSON_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-DD");
+
     public static final String FIRST_NAME_URI = NATURAL_PERSON_PREFIX + "CurrentGivenName";
     public static final String FAMILY_NAME_URI = NATURAL_PERSON_PREFIX + "CurrentFamilyName";
     public static final String GENDER_URI = NATURAL_PERSON_PREFIX + "Gender";
     public static final String DATE_OF_BIRTH_URI = NATURAL_PERSON_PREFIX + "DateOfBirth";
     public static final String CURRENT_ADDRESS_URI = NATURAL_PERSON_PREFIX + "CurrentAddress";
     public static final String PERSON_IDENTIFIER_URI = NATURAL_PERSON_PREFIX + "PersonIdentifier";
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-DD");
 
-    public EidasIdentityAssertion unmarshallAssertion(ValidatedAssertions validatedAssertions) {
+    EidasIdentityAssertion unmarshallAssertion(ValidatedAssertions validatedAssertions) {
 
         List<Assertion> assertions = validatedAssertions.getAssertions();
         if (assertions.size() != 1) {

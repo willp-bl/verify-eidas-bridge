@@ -4,10 +4,8 @@ import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.security.SecurityException;
-import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
-import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
@@ -40,7 +38,7 @@ public class ResponseHandler {
         this.eidasIdentityAssertionUnmarshaller = eidasIdentityAssertionUnmarshaller;
     }
 
-    public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SignatureException, SecurityException {
+    public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SecurityException {
         Response response = this.stringToResponse.apply(base64EncodedResponse);
 
         if(!response.getInResponseTo().equals(expectedId)) {
