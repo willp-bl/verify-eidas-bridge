@@ -18,7 +18,7 @@ public class MetadataRule extends WireMockRule {
     private final String metadata;
     private final String path;
 
-    public MetadataRule(String path, String metadata, WireMockConfiguration wireMockConfiguration) {
+    private MetadataRule(String path, String metadata, WireMockConfiguration wireMockConfiguration) {
         super(wireMockConfiguration);
         this.path = path;
         this.metadata = metadata;

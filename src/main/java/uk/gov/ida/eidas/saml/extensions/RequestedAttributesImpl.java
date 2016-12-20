@@ -19,7 +19,7 @@ public class RequestedAttributesImpl extends AbstractSAMLObject implements Reque
 
     private XMLObject[] requestedAttributeObjects = new XMLObject[]{};
 
-    protected RequestedAttributesImpl(@Nullable String namespaceURI, @Nonnull String elementLocalName, @Nullable String namespacePrefix) {
+    RequestedAttributesImpl(@Nullable String namespaceURI, @Nonnull String elementLocalName, @Nullable String namespacePrefix) {
         super(namespaceURI, elementLocalName, namespacePrefix);
     }
 

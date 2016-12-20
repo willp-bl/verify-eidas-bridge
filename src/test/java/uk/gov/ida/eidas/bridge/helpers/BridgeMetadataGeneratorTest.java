@@ -35,15 +35,16 @@ import static org.junit.Assert.assertTrue;
 
 public class BridgeMetadataGeneratorTest {
 
-    public static final String HOSTNAME = "http://bridge.hostname";
+    private static final String HOSTNAME = "http://bridge.hostname";
     private BridgeMetadataGenerator bridgeMetadataGenerator;
 
     @Before
     public void bootStrapOpenSaml() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
         EidasSamlBootstrap.bootstrap();
         Certificate signingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT);
+        Certificate encryptingCertificate =  new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT);
         Credential credential = new TestCredentialFactory(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, TestCertificateStrings.METADATA_SIGNING_A_PRIVATE_KEY).getSigningCredential();
-        bridgeMetadataGenerator = new BridgeMetadataFactory(HOSTNAME, signingCertificate, credential.getPrivateKey(), "entityId").getBridgeMetadataGenerator();
+        bridgeMetadataGenerator = new BridgeMetadataFactory(HOSTNAME, signingCertificate, encryptingCertificate, credential.getPrivateKey(), "entityId").getBridgeMetadataGenerator();
     }
 
     @Test
@@ -73,7 +74,7 @@ public class BridgeMetadataGeneratorTest {
     }
 
     @Test
-    public void shouldGenerateMetadataKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
+    public void shouldGenerateMetadataSigningKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
         EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
         EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
 
@@ -85,6 +86,21 @@ public class BridgeMetadataGeneratorTest {
         X509Certificate theCertificate = x509Data.getX509Certificates().get(0);
         assertNotNull("Should have a certificate", theCertificate);
     }
+
+    @Test
+    public void shouldGenerateMetadataEncryptionKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
+        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
+        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
+
+        SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
+        List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
+        KeyDescriptor keyDescriptor = keyDescriptors.get(1);
+        assertEquals("Should have the key use encryption", UsageType.ENCRYPTION, keyDescriptor.getUse());
+        X509Data x509Data = keyDescriptor.getKeyInfo().getX509Datas().get(0);
+        X509Certificate theCertificate = x509Data.getX509Certificates().get(0);
+        assertNotNull("Should have a certificate", theCertificate);
+    }
+
 
     @Test
     public void shouldSignMetadata() throws SignatureException, MarshallingException, SecurityException {

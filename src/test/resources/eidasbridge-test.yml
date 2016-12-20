@@ -15,6 +15,28 @@ logging:
   appenders:
     - type: console
 
+sessionCookie:
+  secretSeed: OVERRIDE_ME
+
+hostname: OVERRIDE_ME
+bridgeEntityId: OVERRIDE_ME
+eidasNodeEntityId: OVERRIDE_ME
+
+encryptingKeyStore:
+  base64Value: OVERRIDE_ME
+  password: OVERRIDE_ME
+  type: OVERRIDE_ME
+
+eidasSigningKeyStore:
+  base64Value: OVERRIDE_ME
+  password: OVERRIDE_ME
+  type: OVERRIDE_ME
+
+verifySigningKeyStore:
+  base64Value: OVERRIDE_ME
+  password: OVERRIDE_ME
+  type: OVERRIDE_ME
+
 verifyMetadata:
   uri: http://localhost:9000/SAML2/metadata/federation
   trustStorePath: verify_truststore.ts

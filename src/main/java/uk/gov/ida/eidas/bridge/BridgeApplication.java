@@ -11,9 +11,12 @@ import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.dhatim.dropwizard.jwt.cookie.authentication.JwtCookieAuthBundle;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.exceptions.MarshallingExceptionMapper;
+import uk.gov.ida.eidas.bridge.exceptions.SamlTransformationErrorMapper;
+import uk.gov.ida.eidas.bridge.exceptions.SecurityExceptionMapper;
+import uk.gov.ida.eidas.bridge.exceptions.SignatureExceptionMapper;
 import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -25,6 +28,11 @@ import static com.google.common.collect.ImmutableMap.of;
 
 
 public class BridgeApplication extends Application<BridgeConfiguration> {
+
+    static {
+        System.setProperty("org.jboss.logging.provider", "slf4j");
+    }
+
     public static void main(String[] args) throws Exception {
         new BridgeApplication().run("server", "eidasbridge.yml");
     }
@@ -50,11 +58,16 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         environment.jersey().register(verifyEidasBridgeFactory.getBridgeMetadataResource());
         environment.jersey().register(verifyEidasBridgeFactory.getEidasResponseResource());
 
+        environment.jersey().register(new SamlTransformationErrorMapper());
+        environment.jersey().register(new SecurityExceptionMapper());
+        environment.jersey().register(new SignatureExceptionMapper());
+        environment.jersey().register(new MarshallingExceptionMapper());
+
         Map<String, HealthCheck> healthChecks = of(
-            "verify-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId()),
-            "eidas-metadata", new MetadataHealthCheck(verifyEidasBridgeFactory.getEidasMetadataResolver(), configuration.getEidasMetadataConfiguration().getExpectedEntityId())
+            "verify-metadata", verifyEidasBridgeFactory.getVerifyMetadataHealthcheck(),
+            "eidas-metadata", verifyEidasBridgeFactory.getEidasMetadataHealthcheck()
         );
-        healthChecks.entrySet().stream().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
+        healthChecks.entrySet().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
 
 }

@@ -42,8 +42,9 @@ public class BridgeMetadataIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(eidasMetadataPayload);
 
     private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String eidasSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
 
@@ -55,9 +56,12 @@ public class BridgeMetadataIntegrationTest {
         ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("eidasMetadata.uri", eidasMetadata::url),
         ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
-        ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
-        ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
+        ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
+        ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
         ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),

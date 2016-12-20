@@ -18,23 +18,27 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 public class BridgeApplicationIntegrationTest {
 
-    public static final WireMockServer wireMock = new WireMockServer(wireMockConfig().dynamicPort());
+    private static final WireMockServer wireMock = new WireMockServer(wireMockConfig().dynamicPort());
 
     private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String encodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedSigningKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String eidasEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String verifyEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String KEYSTORE_TYPE = "PKCS12";
 
-    public static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
+    private static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         "eidasbridge-test.yml",
         ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
         ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("eidasMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata"),
         ConfigOverride.config("eidasNodeEntityId", "eidasEntityId"),
-        ConfigOverride.config("signingKeyStore.base64Value", encodedSigningKeyStore),
-        ConfigOverride.config("signingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("signingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasEncodedSigningKeyStore),
+        ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("verifySigningKeyStore.base64Value", verifyEncodedSigningKeyStore),
+        ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
         ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
         ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),

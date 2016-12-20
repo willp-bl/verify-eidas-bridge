@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.requestToEidas;
 
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;

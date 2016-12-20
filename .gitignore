@@ -32,3 +32,7 @@ logs/
 
 # Java class files
 *.class
+
+authn-assertion.xml
+matching-dataset-assertion.xml
+verify-response-from-idp.xml

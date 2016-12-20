@@ -9,11 +9,11 @@ import uk.gov.ida.saml.core.domain.IdaSamlMessage;
 
 import java.util.function.Function;
 
-public abstract class IdaAuthnRequestToAuthnRequestTransformer<TInput extends IdaSamlMessage> implements Function<TInput,AuthnRequest> {
-    private OpenSamlXmlObjectFactory samlObjectFactory;
+abstract class IdaAuthnRequestToAuthnRequestTransformer<TInput extends IdaSamlMessage> implements Function<TInput,AuthnRequest> {
+    private final OpenSamlXmlObjectFactory samlObjectFactory;
 
     @Inject
-    protected IdaAuthnRequestToAuthnRequestTransformer(OpenSamlXmlObjectFactory samlObjectFactory) {
+    IdaAuthnRequestToAuthnRequestTransformer(OpenSamlXmlObjectFactory samlObjectFactory) {
         this.samlObjectFactory = samlObjectFactory;
     }
 
@@ -35,7 +35,7 @@ public abstract class IdaAuthnRequestToAuthnRequestTransformer<TInput extends Id
 
     protected abstract void supplementAuthnRequestWithDetails(TInput originalRequestToIdp, AuthnRequest authnRequest);
 
-    protected OpenSamlXmlObjectFactory getSamlObjectFactory() {
+    OpenSamlXmlObjectFactory getSamlObjectFactory() {
         return samlObjectFactory;
     }
 

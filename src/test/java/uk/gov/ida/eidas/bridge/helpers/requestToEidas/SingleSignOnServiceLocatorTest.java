@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.requestToEidas;
 
 import com.google.common.base.Throwables;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 public class SingleSignOnServiceLocatorTest {
 
     @Mock
-    MetadataResolver metadataResolver;
+    private MetadataResolver metadataResolver;
 
     @Before
     public void before() {

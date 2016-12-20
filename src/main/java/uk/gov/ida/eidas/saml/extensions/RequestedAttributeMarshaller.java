@@ -5,7 +5,7 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.impl.AttributeMarshaller;
 import org.w3c.dom.Element;
 
-public class RequestedAttributeMarshaller extends AttributeMarshaller {
+class RequestedAttributeMarshaller extends AttributeMarshaller {
 
     protected void marshallAttributes(XMLObject samlObject, Element domElement) throws MarshallingException {
         RequestedAttribute requestedAttribute = (RequestedAttribute) samlObject;

@@ -27,7 +27,7 @@ dependencies {
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
             "uk.gov.verify:saml-utils:$openSamlVersion-18",
             "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.0",
-            "uk.gov.ida:saml-security:$openSamlVersion-22",
+            "uk.gov.ida:saml-security:$openSamlVersion-23",
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",

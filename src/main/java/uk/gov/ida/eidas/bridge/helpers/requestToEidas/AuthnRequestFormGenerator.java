@@ -1,4 +1,4 @@
-package uk.gov.ida.eidas.bridge.helpers;
+package uk.gov.ida.eidas.bridge.helpers.requestToEidas;
 
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.AuthnRequest;

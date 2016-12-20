@@ -28,7 +28,7 @@ public class TestSigningKeyStoreProvider {
 
     private static final String KEYSTORE_TYPE = "PKCS12";
 
-    public static KeyStore getSigningKeyStore(String alias, String password) {
+    private static KeyStore getKeyStore(String alias, String password) {
         try {
             Certificate[] certificates = {new X509CertificateFactory().createCertificate(TestCertificateStrings.TEST_PUBLIC_CERT)};
             KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
@@ -74,9 +74,9 @@ public class TestSigningKeyStoreProvider {
         }
     }
 
-    public static String getBase64EncodedSigningKeyStore(String alias, String password)
+    public static String getBase64EncodedKeyStore(String alias, String password)
     {
-        return toBase64String(getSigningKeyStore(alias, password), password);
+        return toBase64String(getKeyStore(alias, password), password);
     }
 
     private static String toBase64String(KeyStore keyStore, String password) {
