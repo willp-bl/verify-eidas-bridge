@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
-import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
@@ -21,11 +20,12 @@ public class BridgeApplicationIntegrationTest {
     private static final WireMockServer wireMock = new WireMockServer(wireMockConfig().dynamicPort());
 
     private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String eidasEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String verifyEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String KEYSTORE_TYPE = "PKCS12";
+    private static final String ALIAS = "key-alias";
+    private static final String eidasEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
+    private static final String verifyEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
+    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
 
+    private static final String KEYSTORE_TYPE = "PKCS12";
     private static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         "eidasbridge-test.yml",
         ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
@@ -36,12 +36,15 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasEncodedSigningKeyStore),
         ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("eidasSigningKeyStore.alias", ALIAS),
         ConfigOverride.config("verifySigningKeyStore.base64Value", verifyEncodedSigningKeyStore),
         ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("verifySigningKeyStore.alias", ALIAS),
         ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
         ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
+        ConfigOverride.config("encryptingKeyStore.alias", ALIAS),
         ConfigOverride.config("hostname", "www.example.com")
     );
 

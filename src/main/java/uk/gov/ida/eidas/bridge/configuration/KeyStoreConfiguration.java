@@ -30,6 +30,11 @@ public class KeyStoreConfiguration {
     @Valid
     private String type = KeyStore.getDefaultType();
 
+    @JsonProperty
+    @NotNull
+    @Valid
+    private String alias;
+
     public String getPassword() {
         return password;
     }
@@ -42,5 +47,9 @@ public class KeyStoreConfiguration {
         } catch (IOException | NoSuchAlgorithmException | KeyStoreException | CertificateException | Base64DecodingException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    public String getAlias() {
+        return alias;
     }
 }

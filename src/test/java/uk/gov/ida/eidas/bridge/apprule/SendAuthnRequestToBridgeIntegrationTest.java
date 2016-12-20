@@ -2,8 +2,6 @@ package uk.gov.ida.eidas.bridge.apprule;
 
 import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.junit.DropwizardAppRule;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.apache.http.HttpStatus;
@@ -27,12 +25,9 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
-import uk.gov.ida.eidas.bridge.BridgeApplication;
-import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
-import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
+import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
-import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
@@ -81,32 +76,8 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
         new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
-    private static final String eidasSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String KEYSTORE_TYPE = "PKCS12";
-    private static final String HOSTNAME = "hostname";
-
     @ClassRule
-    public static final DropwizardAppRule<BridgeConfiguration> RULE = new DropwizardAppRule<>(BridgeApplication.class,
-        "eidasbridge-test.yml",
-        ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("verifyMetadata.uri", verifyMetadata::url),
-        ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("eidasMetadata.uri", eidasMetadata::url),
-        ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
-        ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
-        ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
-        ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
-        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("hostname", HOSTNAME),
-        ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
-    );
+    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url, eidasEntityId);
 
     @BeforeClass
     public static void before() {
@@ -167,7 +138,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     }
 
     private Key getSecretSessionKey() {
-        return Optional.of(SECRET_SEED)
+        return Optional.of(RULE.getSecretSeed())
                     .map(seed -> Hashing.sha256().newHasher().putString(seed, UTF_8).hash().asBytes())
                     .map(k -> (Key) new SecretKeySpec(k, HS256.getJcaName())).get();
     }
@@ -212,7 +183,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
         assertThat(TestSignatureValidator.getSignatureValidator().validate(authnRequest, null, SPSSODescriptor.DEFAULT_ELEMENT_NAME)).isTrue();
         String entityId = authnRequest.getIssuer().getValue();
-        assertEquals(HOSTNAME + "/metadata", entityId);
+        assertEquals(RULE.getHostname() + "/metadata", entityId);
     }
 
     @Test

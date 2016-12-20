@@ -77,11 +77,6 @@ import static java.util.Collections.singletonList;
 
 public class VerifyEidasBridgeFactory {
 
-    public static final String EIDAS_SIGNING_KEY_ALIAS = "leaf-stub-sp-metadata-signing";
-    public static final String VERIFY_SIGNING_KEY_ALIAS = "1";
-    public static final String ENCRYPTING_KEY_ALIAS = "leaf-stub-sp-encryption";
-
-
     private final Environment environment;
     private final MetadataConfiguration verifyMetadataConfiguration;
     private final MetadataConfiguration eidasMetadataConfiguration;
@@ -112,10 +107,12 @@ public class VerifyEidasBridgeFactory {
     public BridgeMetadataResource getBridgeMetadataResource() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
         KeyStoreConfiguration signingKeyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
         KeyStore signingKeyStore = signingKeyStoreConfiguration.getKeyStore();
-        java.security.cert.Certificate signingCertificate = signingKeyStore.getCertificate(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS);
-        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, signingKeyStoreConfiguration.getPassword().toCharArray());
+        String signingKeyAlias = signingKeyStoreConfiguration.getAlias();
+        java.security.cert.Certificate signingCertificate = signingKeyStore.getCertificate(signingKeyAlias);
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(signingKeyAlias, signingKeyStoreConfiguration.getPassword().toCharArray());
 
-        java.security.cert.Certificate encryptingCertificate = configuration.getEncryptingKeyStoreConfiguration().getKeyStore().getCertificate(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS);
+        KeyStoreConfiguration encryptingKeyStoreConfiguration = configuration.getEncryptingKeyStoreConfiguration();
+        java.security.cert.Certificate encryptingCertificate = encryptingKeyStoreConfiguration.getKeyStore().getCertificate(encryptingKeyStoreConfiguration.getAlias());
 
         BridgeMetadataFactory bridgeMetadataFactory = new BridgeMetadataFactory(configuration.getHostname(), signingCertificate, encryptingCertificate, privateKey, configuration.getBridgeEntityId());
         return bridgeMetadataFactory.getBridgeMetadataResource();
@@ -203,7 +200,7 @@ public class VerifyEidasBridgeFactory {
     private ResponseHandler getResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse, MetadataBackedSignatureValidator signatureValidator, KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
         uk.gov.ida.saml.security.KeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.KeyStore(
             getSigningKeyPair(keyStoreConfiguration),
-            singletonList(getEncryptingKeyPair(keyStoreConfiguration))
+            singletonList(getEncryptingKeyPair())
         );
         SamlMessageSignatureValidator samlMessageSignatureValidator = new SamlMessageSignatureValidator(signatureValidator);
         Set<String> encryptionAlgorithmWhitelist = ImmutableSet.of(
@@ -219,17 +216,18 @@ public class VerifyEidasBridgeFactory {
             new EidasIdentityAssertionUnmarshaller());
     }
 
-    private KeyPair getEncryptingKeyPair(KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        KeyStore encryptingKeyStore = configuration.getEncryptingKeyStoreConfiguration().getKeyStore();
-        PublicKey encryptingPublicKey = encryptingKeyStore.getCertificate(ENCRYPTING_KEY_ALIAS).getPublicKey();
-        PrivateKey encryptingPrivateKey = (PrivateKey) encryptingKeyStore.getKey(ENCRYPTING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+    private KeyPair getEncryptingKeyPair() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        KeyStoreConfiguration encryptingKeyStoreConfiguration = configuration.getEncryptingKeyStoreConfiguration();
+        KeyStore encryptingKeyStore = encryptingKeyStoreConfiguration.getKeyStore();
+        PublicKey encryptingPublicKey = encryptingKeyStore.getCertificate(encryptingKeyStoreConfiguration.getAlias()).getPublicKey();
+        PrivateKey encryptingPrivateKey = (PrivateKey) encryptingKeyStore.getKey(encryptingKeyStoreConfiguration.getAlias(), encryptingKeyStoreConfiguration.getPassword().toCharArray());
         return new KeyPair(encryptingPublicKey, encryptingPrivateKey);
     }
 
     private KeyPair getSigningKeyPair(KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore signingKeyStore = keyStoreConfiguration.getKeyStore();
-        PublicKey publicKey = signingKeyStore.getCertificate(EIDAS_SIGNING_KEY_ALIAS).getPublicKey();
-        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(EIDAS_SIGNING_KEY_ALIAS, keyStoreConfiguration.getPassword().toCharArray());
+        PublicKey publicKey = signingKeyStore.getCertificate(keyStoreConfiguration.getAlias()).getPublicKey();
+        PrivateKey privateKey = (PrivateKey) signingKeyStore.getKey(keyStoreConfiguration.getAlias(), keyStoreConfiguration.getPassword().toCharArray());
         return new KeyPair(publicKey, privateKey);
     }
 
@@ -274,15 +272,16 @@ public class VerifyEidasBridgeFactory {
     }
 
     private SigningHelper getEidasSigningHelper() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
-        return getSigningHelper(configuration.getEidasSigningKeyStoreConfiguration(), EIDAS_SIGNING_KEY_ALIAS);
+        return getSigningHelper(configuration.getEidasSigningKeyStoreConfiguration());
     }
 
     private SigningHelper getVerifySigningHelper() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
-        return getSigningHelper(configuration.getVerifySigningKeyStoreConfiguration(), VERIFY_SIGNING_KEY_ALIAS);
+        return getSigningHelper(configuration.getVerifySigningKeyStoreConfiguration());
     }
 
-    private SigningHelper getSigningHelper(KeyStoreConfiguration signingKeyStoreConfiguration, String signingKeyAlias) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+    private SigningHelper getSigningHelper(KeyStoreConfiguration signingKeyStoreConfiguration) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
         KeyStore keyStore = signingKeyStoreConfiguration.getKeyStore();
+        String signingKeyAlias = signingKeyStoreConfiguration.getAlias();
         Certificate certificate = keyStore.getCertificate(signingKeyAlias);
         PublicKey publicKey = certificate.getPublicKey();
         PrivateKey privateKey = (PrivateKey) keyStore.getKey(signingKeyAlias, signingKeyStoreConfiguration.getPassword().toCharArray());

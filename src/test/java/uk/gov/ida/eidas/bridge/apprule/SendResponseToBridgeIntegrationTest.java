@@ -2,8 +2,6 @@ package uk.gov.ida.eidas.bridge.apprule;
 
 import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.junit.DropwizardAppRule;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import org.glassfish.jersey.client.ClientProperties;
@@ -22,13 +20,10 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
 import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
-import uk.gov.ida.eidas.bridge.BridgeApplication;
-import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
-import uk.gov.ida.eidas.bridge.factories.VerifyEidasBridgeFactory;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
+import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
-import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
 import uk.gov.ida.saml.core.extensions.impl.StringBasedMdsAttributeValueBuilder;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
@@ -68,8 +63,6 @@ public class SendResponseToBridgeIntegrationTest {
     private static final String SOME_RESPONSE_ID = "some-response-id";
     private static Client client;
 
-    private static final String SECRET_SEED = "foobar";
-
     private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
 
     private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
@@ -80,33 +73,8 @@ public class SendResponseToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
         new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
 
-    private static final String KEYSTORE_PASSWORD = "fooBar";
-    private static final String eidasSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.EIDAS_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VerifyEidasBridgeFactory.ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
-    private static final String KEYSTORE_TYPE = "PKCS12";
-    private static final String HOSTNAME = "hostname";
-
     @ClassRule
-    public static final DropwizardAppRule<BridgeConfiguration> RULE = new DropwizardAppRule<>(BridgeApplication.class,
-        "eidasbridge-test.yml",
-        ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("verifyMetadata.uri", verifyMetadata::url),
-        ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("eidasMetadata.uri", eidasMetadata::url),
-        ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
-        ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
-        ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
-        ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
-        ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
-        ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
-        ConfigOverride.config("hostname", HOSTNAME),
-        ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)//,
-    );
+    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url, eidasEntityId);
 
     @BeforeClass
     public static void before() {
@@ -214,7 +182,7 @@ public class SendResponseToBridgeIntegrationTest {
     }
 
     private Key getSecretSessionKey() {
-        return Optional.of(SECRET_SEED)
+        return Optional.of(RULE.getSecretSeed())
             .map(seed -> Hashing.sha256().newHasher().putString(seed, UTF_8).hash().asBytes())
             .map(k -> (Key) new SecretKeySpec(k, HS256.getJcaName())).get();
     }
