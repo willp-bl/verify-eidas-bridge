@@ -226,7 +226,8 @@ public class SendResponseToBridgeIntegrationTest {
     private Encrypter createEncrypter() {
         TestCredentialFactory testCredentialFactory = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, null);
         DataEncryptionParameters encParams = new DataEncryptionParameters();
-        encParams.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+        //TODO support JCE on jenkins
+        encParams.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES128_GCM);
 
         KeyEncryptionParameters kekParams = new KeyEncryptionParameters();
         kekParams.setEncryptionCredential(testCredentialFactory.getEncryptingCredential());

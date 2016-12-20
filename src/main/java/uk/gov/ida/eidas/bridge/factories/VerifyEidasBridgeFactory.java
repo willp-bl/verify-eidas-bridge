@@ -207,7 +207,7 @@ public class VerifyEidasBridgeFactory {
         );
         SamlMessageSignatureValidator samlMessageSignatureValidator = new SamlMessageSignatureValidator(signatureValidator);
         Set<String> encryptionAlgorithmWhitelist = ImmutableSet.of(
-            EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES128,
+            EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES128_GCM,
             EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM
         );
         return new ResponseHandler(
