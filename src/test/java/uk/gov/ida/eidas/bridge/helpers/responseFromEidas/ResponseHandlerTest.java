@@ -18,17 +18,16 @@ import uk.gov.ida.common.shared.security.PublicKeyFactory;
 import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
-import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
-import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.core.test.builders.IssuerBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
 import uk.gov.ida.saml.core.validation.SamlTransformationErrorException;
+import uk.gov.ida.saml.deserializers.OpenSamlXMLObjectUnmarshaller;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.deserializers.parser.SamlObjectParser;
-import uk.gov.ida.saml.deserializers.validators.SizeValidator;
+import uk.gov.ida.saml.deserializers.validators.Base64StringDecoder;
+import uk.gov.ida.saml.deserializers.validators.NotNullSamlStringValidator;
 import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.DecrypterFactory;
 import uk.gov.ida.saml.security.EncrypterFactory;
@@ -59,8 +58,12 @@ import static uk.gov.ida.saml.core.test.builders.ResponseBuilder.aResponse;
 public class ResponseHandlerTest {
     private static final String EIDAS_ENTITY_ID = "an-entity-id";
     private static final String IN_RESPONSE_TO_ID = "anInReponseToId";
-    private final StringToOpenSamlObjectTransformer<Response> stringToResponse =
-        new CoreTransformersFactory().getStringtoOpenSamlObjectTransformer((SizeValidator) input -> { });
+    private final StringToOpenSamlObjectTransformer<Response> stringToResponse = new StringToOpenSamlObjectTransformer<>(
+        new NotNullSamlStringValidator(),
+        new Base64StringDecoder(),
+        new ResponseSizeValidator(),
+        new OpenSamlXMLObjectUnmarshaller<>(new SamlObjectParser())
+    );
 
     @Before
     public void bootStrapOpenSaml() {

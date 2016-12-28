@@ -8,12 +8,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.security.SecurityException;
-import uk.gov.ida.eidas.bridge.helpers.requestFromVerify.AuthnRequestHandler;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
-import uk.gov.ida.saml.core.api.CoreTransformersFactory;
+import uk.gov.ida.saml.deserializers.OpenSamlXMLObjectUnmarshaller;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
-import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
-import uk.gov.ida.saml.hub.validators.StringSizeValidator;
+import uk.gov.ida.saml.deserializers.parser.SamlObjectParser;
+import uk.gov.ida.saml.deserializers.validators.Base64StringDecoder;
+import uk.gov.ida.saml.deserializers.validators.NotNullSamlStringValidator;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 import uk.gov.ida.saml.security.SignatureValidator;
 
@@ -29,8 +29,12 @@ public class AuthnRequestHandlerTest {
     @Mock
     private MetadataConfiguration configuration;
 
-    private final StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest = new CoreTransformersFactory()
-        .getStringtoOpenSamlObjectTransformer(new AuthnRequestSizeValidator(new StringSizeValidator()));
+    private final StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest = new StringToOpenSamlObjectTransformer<>(
+        new NotNullSamlStringValidator(),
+        new Base64StringDecoder(),
+        new AuthnRequestSizeValidator(),
+        new OpenSamlXMLObjectUnmarshaller<>(new SamlObjectParser())
+    );
 
     @Before
     public void before () {

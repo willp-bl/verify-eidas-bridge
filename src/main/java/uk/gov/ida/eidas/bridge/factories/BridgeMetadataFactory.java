@@ -8,9 +8,7 @@ import uk.gov.ida.common.shared.security.Certificate;
 import uk.gov.ida.eidas.bridge.helpers.BridgeMetadataGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.core.api.CoreTransformersFactory;
-import uk.gov.ida.saml.metadata.transformers.KeyDescriptorsUnmarshaller;
+import uk.gov.ida.saml.serializers.XmlObjectToElementTransformer;
 
 import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
@@ -37,11 +35,10 @@ public class BridgeMetadataFactory {
     }
 
     public BridgeMetadataResource getBridgeMetadataResource() throws CertificateEncodingException {
-        return new BridgeMetadataResource(getBridgeMetadataGenerator(), new CoreTransformersFactory().getXmlObjectToElementTransformer());
+        return new BridgeMetadataResource(getBridgeMetadataGenerator(), new XmlObjectToElementTransformer<>());
     }
 
     public BridgeMetadataGenerator getBridgeMetadataGenerator() throws CertificateEncodingException {
-        KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller = new KeyDescriptorsUnmarshaller(new OpenSamlXmlObjectFactory());
         Certificate verifyCertificate = getSigningCertificate();
 
         BasicCredential basicSigningCredential = new BasicCredential(this.signingCertificate.getPublicKey(), privateKey);
@@ -54,7 +51,6 @@ public class BridgeMetadataFactory {
         return new BridgeMetadataGenerator(
             hostname,
             entityId,
-            keyDescriptorsUnmarshaller,
             verifyCertificate,
             getEncryptingCertificate(),
             new SigningHelper(basicSigningCredential, x509Credential, keyInfoGenerator));

@@ -15,6 +15,8 @@ import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
+import uk.gov.ida.duplicates.AttributeFactory;
+import uk.gov.ida.duplicates.SamlResponseAssertionEncrypter;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
@@ -34,14 +36,12 @@ import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.core.api.CoreTransformersFactory;
-import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
+import uk.gov.ida.saml.deserializers.OpenSamlXMLObjectUnmarshaller;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
+import uk.gov.ida.saml.deserializers.parser.SamlObjectParser;
+import uk.gov.ida.saml.deserializers.validators.Base64StringDecoder;
+import uk.gov.ida.saml.deserializers.validators.NotNullSamlStringValidator;
 import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
-import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
-import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
-import uk.gov.ida.saml.hub.validators.StringSizeValidator;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
 import uk.gov.ida.saml.metadata.KeyStoreLoader;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
@@ -81,7 +81,6 @@ public class VerifyEidasBridgeFactory {
     private final MetadataConfiguration verifyMetadataConfiguration;
     private final MetadataConfiguration eidasMetadataConfiguration;
     private final BridgeConfiguration configuration;
-    private final CoreTransformersFactory coreTransformersFactory = new CoreTransformersFactory();
     private final MetadataModule metadataModule = new MetadataModule();
 
     @Nullable
@@ -119,7 +118,12 @@ public class VerifyEidasBridgeFactory {
     }
 
     public EidasResponseResource getEidasResponseResource() throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
-        StringToOpenSamlObjectTransformer<Response> stringToResponse = coreTransformersFactory.getStringtoOpenSamlObjectTransformer(new ResponseSizeValidator(new StringSizeValidator()));
+        StringToOpenSamlObjectTransformer<Response> stringToResponse = new StringToOpenSamlObjectTransformer<>(
+                new NotNullSamlStringValidator(),
+                new Base64StringDecoder(),
+                new ResponseSizeValidator(),
+                new OpenSamlXMLObjectUnmarshaller<>(new SamlObjectParser())
+        );
         MetadataBackedSignatureValidator signatureValidator = this.getMetadataBackedSignatureValidator(getEidasMetadataResolver());
         KeyStoreConfiguration keyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
 
@@ -161,10 +165,12 @@ public class VerifyEidasBridgeFactory {
     }
 
     private AuthnRequestHandler getAuthnRequestHandler() throws ComponentInitializationException {
-        StringSizeValidator stringSizeValidator = new StringSizeValidator();
-        AuthnRequestSizeValidator authnRequestSizeValidator = new AuthnRequestSizeValidator(stringSizeValidator);
-        StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest =
-            coreTransformersFactory.getStringtoOpenSamlObjectTransformer(authnRequestSizeValidator);
+        StringToOpenSamlObjectTransformer<AuthnRequest> stringToAuthnRequest = new StringToOpenSamlObjectTransformer<>(
+            new NotNullSamlStringValidator(),
+            new Base64StringDecoder(),
+            new ResponseSizeValidator(),
+            new OpenSamlXMLObjectUnmarshaller<>(new SamlObjectParser())
+        );
         return new AuthnRequestHandler(
             this.verifyMetadataConfiguration,
             getMetadataBackedSignatureValidator(getVerifyMetadataResolver()),
@@ -180,10 +186,9 @@ public class VerifyEidasBridgeFactory {
     }
 
     private VerifyResponseGenerator getVerifyResponseGenerator(String bridgeEntityId, String verifyEntityId) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
-        OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
 
-        AttributeFactory_1_1 attributeFactory_1_1 = new AttributeFactory_1_1(openSamlXmlObjectFactory);
-        AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId, openSamlXmlObjectFactory);
+        AttributeFactory attributeFactory = new AttributeFactory();
+        AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId);
         SigningHelper verifySigningHelper = getVerifySigningHelper();
 
         MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(getVerifyMetadataResolver());
@@ -191,8 +196,8 @@ public class VerifyEidasBridgeFactory {
 
         return new VerifyResponseGenerator(
             bridgeEntityId,
-            new MatchingDatasetAssertionGenerator(bridgeEntityId, openSamlXmlObjectFactory, attributeFactory_1_1, assertionSubjectGenerator, verifySigningHelper),
-            new AuthnStatementAssertionGenerator(bridgeEntityId, openSamlXmlObjectFactory, attributeFactory_1_1, assertionSubjectGenerator, verifySigningHelper),
+            new MatchingDatasetAssertionGenerator(bridgeEntityId, attributeFactory, assertionSubjectGenerator, verifySigningHelper),
+            new AuthnStatementAssertionGenerator(bridgeEntityId, attributeFactory, assertionSubjectGenerator, verifySigningHelper),
             new SamlResponseAssertionEncrypter(encryptionCredentialFactory, new EncrypterFactory(), requestId -> verifyEntityId),
             verifySigningHelper);
     }

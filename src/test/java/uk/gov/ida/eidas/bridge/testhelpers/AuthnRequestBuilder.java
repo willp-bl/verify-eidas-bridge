@@ -11,13 +11,12 @@ import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.AuthnContext;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.core.test.builders.SignatureBuilder;
-import uk.gov.ida.saml.hub.domain.IdaAuthnRequestFromHub;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
-import static com.google.common.base.Optional.absent;
 import static uk.gov.ida.saml.core.test.builders.SignatureBuilder.aSignature;
 
 public class AuthnRequestBuilder {
@@ -69,7 +68,7 @@ public class AuthnRequestBuilder {
             DateTime.now(),
             AuthnContext.LEVEL_1,
             AuthnContext.LEVEL_1,
-            absent(),
+            Optional.empty(),
             DateTime.now().plusHours(20),
             URI.create("/location"));
     }

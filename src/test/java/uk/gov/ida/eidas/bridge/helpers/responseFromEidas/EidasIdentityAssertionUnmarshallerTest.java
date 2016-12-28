@@ -6,8 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opensaml.saml.saml2.core.Assertion;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.domain.Gender;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.deserializers.parser.SamlObjectParser;
 import uk.gov.ida.saml.security.validators.ValidatedAssertions;
 

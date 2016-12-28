@@ -10,13 +10,13 @@ import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.Subject;
 import org.opensaml.saml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml.saml2.core.SubjectConfirmationData;
+import uk.gov.ida.duplicates.AttributeFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.domain.Gender;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.extensions.Address;
+import uk.gov.ida.saml.core.extensions.Line;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
-import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 
 import java.util.List;
 
@@ -42,11 +42,10 @@ public class MatchingDatasetAssertionGeneratorTest {
     @Before
     public void before() {
         EidasSamlBootstrap.bootstrap();
-        OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
 
-        assertionGenerator = new MatchingDatasetAssertionGenerator(BRIDGE_ENTITY_ID, openSamlXmlObjectFactory,
-            new AttributeFactory_1_1(openSamlXmlObjectFactory),
-            new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory),
+        assertionGenerator = new MatchingDatasetAssertionGenerator(BRIDGE_ENTITY_ID,
+            new AttributeFactory(),
+            new AssertionSubjectGenerator(VERIFY_ENTITY_ID),
             aSigningHelper().build());
     }
 
@@ -78,7 +77,10 @@ public class MatchingDatasetAssertionGeneratorTest {
         assertEquals(FIRST_NAME, getAttributeValueString(attributes, "MDS_firstname"));
         assertEquals(FAMILY_NAME, getAttributeValueString(attributes, "MDS_surname"));
         assertEquals(GENDER.getValue(), getAttributeValueString(attributes, "MDS_gender"));
-        assertEquals(CURRENT_ADDRESS, ((Address)getAttributeValue(attributes, "MDS_currentaddress")).getLines().get(0).getValue());
+        Address currentAddress = (Address) getAttributeValue(attributes, "MDS_currentaddress");
+        List<Line> lines = currentAddress.getLines();
+        Line line = lines.get(0);
+        assertEquals(CURRENT_ADDRESS, line.getValue());
         assertEquals(DATE_OF_BIRTH, getAttributeValueString(attributes, "MDS_dateofbirth"));
     }
 
@@ -95,8 +97,8 @@ public class MatchingDatasetAssertionGeneratorTest {
         return attributes.stream()
             .filter(x -> x.getName().equals(name))
             .findFirst()
-            .flatMap(x -> (x.getAttributeValues().stream().findFirst()))
-            .orElse(null);
+            .flatMap(x -> x.getAttributeValues().stream().findFirst())
+            .orElseThrow(() -> new IllegalStateException("Could not find an attribute value for the attribute with name " + name));
     }
 
     private String getAttributeValueString(List<Attribute> attributes, String name) {

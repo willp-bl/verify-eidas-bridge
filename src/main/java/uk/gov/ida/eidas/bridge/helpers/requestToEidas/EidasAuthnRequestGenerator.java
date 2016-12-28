@@ -7,14 +7,21 @@ import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Extensions;
+import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.NameIDPolicy;
 import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.RequestedAuthnContext;
 import org.opensaml.saml.saml2.core.StatusResponseType;
+import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnRequestBuilder;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
+import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
+import org.opensaml.saml.saml2.core.impl.NameIDPolicyBuilder;
+import org.opensaml.saml.saml2.core.impl.RequestedAuthnContextBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
@@ -26,14 +33,12 @@ import uk.gov.ida.eidas.saml.extensions.RequestedAttributes;
 import uk.gov.ida.eidas.saml.extensions.RequestedAttributesImpl;
 import uk.gov.ida.eidas.saml.extensions.SPType;
 import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 
 import javax.annotation.Nonnull;
 
 public class EidasAuthnRequestGenerator {
     public static final String PROVIDER_NAME = "PROVIDER_NAME";
     public static final String NATURAL_PERSON_NAME_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
-    private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
     private final String bridgeEntityId, eidasEntityId;
     private final SigningHelper signingHelper;
@@ -48,7 +53,7 @@ public class EidasAuthnRequestGenerator {
     }
 
     public AuthnRequest generateAuthnRequest(String authnReqeustId) throws MarshallingException, SignatureException, SecurityException {
-        AuthnRequest eidasAuthnRequest = openSamlXmlObjectFactory.createAuthnRequest();
+        AuthnRequest eidasAuthnRequest = new AuthnRequestBuilder().buildObject();
         Namespace eidasSamlExtensionsNamespace = new Namespace(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
         eidasAuthnRequest.getNamespaceManager().registerNamespaceDeclaration(eidasSamlExtensionsNamespace);
 
@@ -58,15 +63,21 @@ public class EidasAuthnRequestGenerator {
         eidasAuthnRequest.setDestination(signOnServiceLocator.getSignOnUrl(eidasEntityId));
         eidasAuthnRequest.setForceAuthn(true);
         eidasAuthnRequest.setProviderName(PROVIDER_NAME);
-        eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(bridgeEntityId));
+        Issuer issuer = new IssuerBuilder().buildObject();
+        issuer.setFormat(Issuer.ENTITY);
+        issuer.setValue(bridgeEntityId);
+        eidasAuthnRequest.setIssuer(issuer);
 
-        NameIDPolicy nameIdPolicy = openSamlXmlObjectFactory.createNameIdPolicy();
+        NameIDPolicy nameIdPolicy = new NameIDPolicyBuilder().buildObject();
         nameIdPolicy.setFormat(NameIDType.UNSPECIFIED);
         nameIdPolicy.setAllowCreate(true);
         eidasAuthnRequest.setNameIDPolicy(nameIdPolicy);
 
-        RequestedAuthnContext requestedAuthnContext = openSamlXmlObjectFactory.createRequestedAuthnContext(AuthnContextComparisonTypeEnumeration.MINIMUM);
-        requestedAuthnContext.getAuthnContextClassRefs().add(openSamlXmlObjectFactory.createAuthnContextClassReference(LevelOfAssurance.SUBSTANTIAL.toString()));
+        RequestedAuthnContext requestedAuthnContext = new RequestedAuthnContextBuilder().buildObject();
+        requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
+        AuthnContextClassRef authnContextClassReference = new AuthnContextClassRefBuilder().buildObject();
+        authnContextClassReference.setAuthnContextClassRef(LevelOfAssurance.SUBSTANTIAL.toString());
+        requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassReference);
         eidasAuthnRequest.setRequestedAuthnContext(requestedAuthnContext);
 
         Extensions extensions = new ExtensionsBuilder().buildObject();

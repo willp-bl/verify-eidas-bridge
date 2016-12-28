@@ -6,28 +6,30 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.Subject;
 import org.opensaml.saml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml.saml2.core.SubjectConfirmationData;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
+import org.opensaml.saml.saml2.core.impl.NameIDBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectConfirmationBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectConfirmationDataBuilder;
 
 public class AssertionSubjectGenerator {
     private final int VALIDITY_PERIOD_MINUTES = 15;
     private final String verifyEntityId;
-    private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory;
 
-    public AssertionSubjectGenerator(String verifyEntityId, OpenSamlXmlObjectFactory openSamlXmlObjectFactory) {
+    public AssertionSubjectGenerator(String verifyEntityId) {
         this.verifyEntityId = verifyEntityId;
-        this.openSamlXmlObjectFactory = openSamlXmlObjectFactory;
     }
 
     public Subject generateSubject(String inResponseTo, String persistentIdentifier) {
-        Subject subject = openSamlXmlObjectFactory.createSubject();
+        Subject subject = new SubjectBuilder().buildObject();
 
-        NameID nameId = openSamlXmlObjectFactory.createNameId(persistentIdentifier);
+        NameID nameId = new NameIDBuilder().buildObject();
+        nameId.setValue(persistentIdentifier);
         nameId.setFormat(NameIDType.PERSISTENT);
         subject.setNameID(nameId);
 
-        SubjectConfirmation subjectConfirmation = openSamlXmlObjectFactory.createSubjectConfirmation();
+        SubjectConfirmation subjectConfirmation = new SubjectConfirmationBuilder().buildObject();
         subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);
-        SubjectConfirmationData subjectConfirmationData = openSamlXmlObjectFactory.createSubjectConfirmationData();
+        SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
 
         subjectConfirmationData.setNotOnOrAfter(new DateTime().plusMinutes(VALIDITY_PERIOD_MINUTES));
         subjectConfirmationData.setInResponseTo(inResponseTo);

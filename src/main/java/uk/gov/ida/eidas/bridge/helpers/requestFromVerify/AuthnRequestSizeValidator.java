@@ -1,13 +1,13 @@
-package uk.gov.ida.eidas.bridge.helpers.responseFromEidas;
+package uk.gov.ida.eidas.bridge.helpers.requestFromVerify;
 
 import uk.gov.ida.saml.core.validation.SamlTransformationErrorException;
 import uk.gov.ida.saml.core.validation.SamlValidationSpecificationFailure;
 import uk.gov.ida.saml.core.validation.errors.SamlTransformationErrorFactory;
 import uk.gov.ida.saml.deserializers.validators.SizeValidator;
 
-public class ResponseSizeValidator implements SizeValidator {
-    private static final int LOWER_BOUND = 1400;
-    private static final int UPPER_BOUND = 50000;
+public class AuthnRequestSizeValidator implements SizeValidator {
+    private static final int LOWER_BOUND = 1200;
+    private static final int UPPER_BOUND = 3500;
 
     @Override
     public void validate(String input) {

@@ -1,7 +1,6 @@
 package uk.gov.ida.eidas.bridge.domain;
 
 import org.joda.time.DateTime;
-import uk.gov.ida.saml.core.domain.Gender;
 
 public class EidasIdentityAssertion {
     private final String firstName;

@@ -13,11 +13,10 @@ import org.opensaml.saml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml.saml2.core.SubjectConfirmationData;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.duplicates.AttributeFactory;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.AuthnContext;
 import uk.gov.ida.saml.core.extensions.IPAddress;
-import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 
 import java.util.List;
 
@@ -40,11 +39,9 @@ public class AuthnStatementAssertionGeneratorTest {
     @Before
     public void before() {
         EidasSamlBootstrap.bootstrap();
-        OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
         authnStatementAssertionGenerator = new AuthnStatementAssertionGenerator(BRIDGE_ENTITY_ID,
-            openSamlXmlObjectFactory,
-            new AttributeFactory_1_1(openSamlXmlObjectFactory),
-            new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory), aSigningHelper().build());
+            new AttributeFactory(),
+            new AssertionSubjectGenerator(VERIFY_ENTITY_ID), aSigningHelper().build());
     }
 
     @Test

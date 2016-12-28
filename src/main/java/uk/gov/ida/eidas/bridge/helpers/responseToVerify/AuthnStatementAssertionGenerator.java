@@ -9,17 +9,22 @@ import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.impl.AssertionBuilder;
+import org.opensaml.saml.saml2.core.impl.AttributeStatementBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnContextBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnStatementBuilder;
+import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.duplicates.AttributeFactory;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.hub.factories.AttributeFactory;
+import uk.gov.ida.saml.core.extensions.IdaAuthnContext;
 
 public class AuthnStatementAssertionGenerator {
 
     private final String bridgeEntityId;
-    private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory;
     private final AttributeFactory attributeFactory;
     private final AssertionSubjectGenerator assertionSubjectGenerator;
     private final SigningHelper signingHelper;
@@ -27,27 +32,27 @@ public class AuthnStatementAssertionGenerator {
 
     public AuthnStatementAssertionGenerator(
         String bridgeEntityId,
-        OpenSamlXmlObjectFactory openSamlXmlObjectFactory,
         AttributeFactory attributeFactory,
         AssertionSubjectGenerator assertionSubjectGenerator, SigningHelper signingHelper) {
         this.bridgeEntityId = bridgeEntityId;
-        this.openSamlXmlObjectFactory = openSamlXmlObjectFactory;
         this.attributeFactory = attributeFactory;
         this.assertionSubjectGenerator = assertionSubjectGenerator;
         this.signingHelper = signingHelper;
     }
 
     public Assertion generate(String inResponseTo, String ipAddress, String persistentId) throws MarshallingException, SecurityException, SignatureException {
-        Assertion assertion = openSamlXmlObjectFactory.createAssertion();
+        Assertion assertion = new AssertionBuilder().buildObject();
 
         assertion.setIssueInstant(new DateTime());
-        Issuer transformedIssuer = openSamlXmlObjectFactory.createIssuer(bridgeEntityId);
+        Issuer transformedIssuer = new IssuerBuilder().buildObject();
+        transformedIssuer.setFormat(Issuer.ENTITY);
+        transformedIssuer.setValue(bridgeEntityId);
         assertion.setIssuer(transformedIssuer);
         assertion.setID(RandomIdGenerator.generateRandomId());
 
         assertion.setSubject(assertionSubjectGenerator.generateSubject(inResponseTo, persistentId));
 
-        AttributeStatement attributeStatement = openSamlXmlObjectFactory.createAttributeStatement();
+        AttributeStatement attributeStatement = new AttributeStatementBuilder().buildObject();
         Attribute ipAddressAttribute = attributeFactory.createUserIpAddressAttribute(ipAddress);
         attributeStatement.getAttributes().add(ipAddressAttribute);
         assertion.getAttributeStatements().add(attributeStatement);
@@ -62,11 +67,10 @@ public class AuthnStatementAssertionGenerator {
      * see uk.gov.ida.saml.idp.stub.transformers.outbound.IdentityProviderAuthnStatementToAuthnStatementTransformer#transform
      **/
     private AuthnStatement buildAuthnStatement() {
-        AuthnStatement authnStatement = openSamlXmlObjectFactory.createAuthnStatement();
-        AuthnContext authnContext = openSamlXmlObjectFactory.createAuthnContext();
-        AuthnContextClassRef authnContextClassReference = openSamlXmlObjectFactory.createAuthnContextClassReference(
-            uk.gov.ida.saml.core.domain.AuthnContext.LEVEL_2.getUri()
-        );
+        AuthnStatement authnStatement = new AuthnStatementBuilder().buildObject();
+        AuthnContext authnContext = new AuthnContextBuilder().buildObject();
+        AuthnContextClassRef authnContextClassReference = new AuthnContextClassRefBuilder().buildObject();
+        authnContextClassReference.setAuthnContextClassRef(IdaAuthnContext.LEVEL_2_AUTHN_CTX);
         authnContext.setAuthnContextClassRef(authnContextClassReference);
         authnStatement.setAuthnContext(authnContext);
         authnStatement.setAuthnInstant(DateTime.now());

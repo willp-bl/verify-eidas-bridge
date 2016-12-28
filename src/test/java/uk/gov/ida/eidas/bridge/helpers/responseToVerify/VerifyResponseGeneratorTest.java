@@ -14,16 +14,16 @@ import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.duplicates.AttributeFactory;
+import uk.gov.ida.duplicates.SamlResponseAssertionEncrypter;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.domain.Gender;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
-import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
-import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
-import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 import uk.gov.ida.saml.security.EncrypterFactory;
 import uk.gov.ida.saml.security.EncryptionCredentialFactory;
 
@@ -50,12 +50,11 @@ public class VerifyResponseGeneratorTest {
     public void before() {
         EidasSamlBootstrap.bootstrap();
         eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", "holborn", Gender.FEMALE, new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
-        OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
-        AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory);
-        AttributeFactory_1_1 attributeFactory = new AttributeFactory_1_1(openSamlXmlObjectFactory);
-        AuthnStatementAssertionGenerator authnStatementAssertionGenerator = new AuthnStatementAssertionGenerator(BRIDGE_ENTITY_ID, openSamlXmlObjectFactory, attributeFactory, assertionSubjectGenerator, aSigningHelper().build());
+        AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID);
+        AttributeFactory attributeFactory = new AttributeFactory();
+        AuthnStatementAssertionGenerator authnStatementAssertionGenerator = new AuthnStatementAssertionGenerator(BRIDGE_ENTITY_ID, attributeFactory, assertionSubjectGenerator, aSigningHelper().build());
         SigningHelper signingHelper = aSigningHelper().build();
-        MatchingDatasetAssertionGenerator matchingDatasetAssertionGenerator = new MatchingDatasetAssertionGenerator(BRIDGE_ENTITY_ID, openSamlXmlObjectFactory, attributeFactory, assertionSubjectGenerator, signingHelper);
+        MatchingDatasetAssertionGenerator matchingDatasetAssertionGenerator = new MatchingDatasetAssertionGenerator(BRIDGE_ENTITY_ID, attributeFactory, assertionSubjectGenerator, signingHelper);
         PublicKey encryptionPublicKey = new TestCredentialFactory(TestCertificateStrings.TEST_PUBLIC_CERT, TestCertificateStrings.TEST_PRIVATE_KEY).getEncryptingCredential().getPublicKey();
         EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(keyStore -> encryptionPublicKey);
         SamlResponseAssertionEncrypter samlResponseAssertionEncrypter = new SamlResponseAssertionEncrypter(encryptionCredentialFactory, new EncrypterFactory(), requestId -> VERIFY_ENTITY_ID);

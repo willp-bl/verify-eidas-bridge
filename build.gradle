@@ -23,11 +23,13 @@ dependencies {
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
             "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-25",
-            "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
-            "uk.gov.verify:saml-utils:$openSamlVersion-18",
             "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.0",
-            "uk.gov.ida:saml-security:$openSamlVersion-23",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-25",   // Used for fetching metadata from verify and eIDAS
+            "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",         // Used for the Metadata healthchecks
+            "uk.gov.ida:ida-saml-extensions:$openSamlVersion-1.2a-16", // Used for verify saml extensions (e.g. matching dataset) and eIDAS saml extensions (which extend StringValueSamlObject)
+            "uk.gov.ida:saml-security:$openSamlVersion-23",            // Used to encrypt, decrypt, sign and validate messages and assertions
+            "uk.gov.ida:saml-serializers:$openSamlVersion-10",         // Used to transform saml messages from domain objects to strings (and vice versa)
+            "uk.gov.ida:security-utils:2.0.0-273",                     // Used for working with certificates (fairly simple, could probably be inlined)
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
