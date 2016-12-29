@@ -21,7 +21,6 @@ import uk.gov.ida.eidas.bridge.domain.Gender;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
-import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.security.EncrypterFactory;

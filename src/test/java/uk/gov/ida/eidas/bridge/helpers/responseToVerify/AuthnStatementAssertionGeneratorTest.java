@@ -15,8 +15,8 @@ import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.duplicates.AttributeFactory;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.saml.core.domain.AuthnContext;
 import uk.gov.ida.saml.core.extensions.IPAddress;
+import uk.gov.ida.saml.core.extensions.IdaAuthnContext;
 
 import java.util.List;
 
@@ -90,7 +90,7 @@ public class AuthnStatementAssertionGeneratorTest {
         assertTrue(authnStatements.size() == 1);
         AuthnStatement authnStatement = authnStatements.get(0);
         assertEquals(
-            AuthnContext.LEVEL_2.getUri(),
+            IdaAuthnContext.LEVEL_2_AUTHN_CTX,
             authnStatement.getAuthnContext().getAuthnContextClassRef().getAuthnContextClassRef()
         );
     }
