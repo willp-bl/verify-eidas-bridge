@@ -32,11 +32,15 @@ dependencies {
             "uk.gov.ida:security-utils:2.0.0-273",                     // Used for working with certificates (fairly simple, could probably be inlined)
     )
     testCompile(
+            "com.github.tomakehurst:wiremock:2.2.2",
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
-            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-25",
             "org.jsoup:jsoup:1.10.1",
+            "uk.gov.ida:common-utils:2.0.0-279",
+            "uk.gov.ida:ida-dev-pki:1.1.0-13",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-25",
+            "uk.gov.verify:saml-domain-objects:$openSamlVersion-18",
+            "uk.gov.verify:saml-test-utils:$openSamlVersion-14",
     )
-    testCompile("com.github.tomakehurst:wiremock:2.2.2") { transitive = false }
 }
 
 mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
