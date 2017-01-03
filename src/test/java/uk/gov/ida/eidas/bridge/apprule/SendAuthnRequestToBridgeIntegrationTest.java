@@ -10,6 +10,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -25,6 +26,7 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
+import sun.plugin.dom.exception.InvalidStateException;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
@@ -61,11 +63,9 @@ import static uk.gov.ida.eidas.bridge.testhelpers.AuthnRequestBuilder.anAuthnReq
 
 
 public class SendAuthnRequestToBridgeIntegrationTest {
-    private static final String KEYSTORE_PASSWORD = "fooBar";
 
     private static Client client;
 
-    private static final String SECRET_SEED = "foobar";
     private static final String eidasEntityId = "foobar";
     private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
 
@@ -103,6 +103,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
             .invoke();
 
         assertEquals(Response.Status.SEE_OTHER.getStatusCode(), result.getStatus());
+        assertEquals("/choose-a-country", result.getLocation().getPath());
     }
 
     @Test
@@ -167,7 +168,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void testRendersAuthnRequestInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response response = makeRequestForAuthnRequest();
+        Response response = makeRequestForAuthnRequest("FR");
         String responseString = response.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -187,8 +188,46 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     }
 
     @Test
+    public void testRendersCountryPicker() throws Exception {
+        Response response = client
+            .target(String.format("http://localhost:%d/choose-a-country", RULE.getLocalPort()))
+            .request()
+            .get();
+        String responseString = response.readEntity(String.class);
+
+        Document doc = Jsoup.parseBodyFragment(responseString);
+        Elements countryInputs = doc.getElementsByAttributeValue("name", "country");
+        Element franceButton = countryInputs.stream().filter(x -> x.val().equals("FR")).findAny().get();
+        Element netherlandsButton = countryInputs.stream().filter(x -> x.val().equals("NL")).findAny().get();
+        assertNotNull(franceButton);
+        assertNotNull(netherlandsButton);
+
+        for (Element inputForm: doc.getElementsByTag("form")) {
+            assertEquals("/choose-a-country", inputForm.attr("action"));
+        }
+    }
+
+    @Test
+    public void testSubmitsCountryPicker() throws Exception {
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("country", singletonList("FR"));
+
+        Response result = client
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d/choose-a-country", RULE.getLocalPort()))
+            .request()
+            .buildPost(Entity.form(form))
+            .invoke();
+
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), result.getStatus());
+        String[] pathComponents = result.getLocation().getPath().split("/");
+        assertEquals("redirect-to-eidas", pathComponents[1]);
+        assertEquals("FR", pathComponents[2]);
+    }
+
+    @Test
     public void testRendersSingleSignOnLocationAsFormAction() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest();
+        Response result = makeRequestForAuthnRequest("FR");
         String responseString = result.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -202,7 +241,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void testRendersButtonInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest();
+        Response result = makeRequestForAuthnRequest("FR");
         String responseString = result.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -210,9 +249,22 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertNotNull(doc.getElementsByAttributeValue("type", "submit").first());
     }
 
-    private Response makeRequestForAuthnRequest() {
+    @Test
+    public void testRendersCountryInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
+        Response result = makeRequestForAuthnRequest("NL");
+        String responseString = result.readEntity(String.class);
+
+        Document doc = Jsoup.parseBodyFragment(responseString);
+
+        Element countryInput = doc.getElementsByAttributeValue("name", "country").first();
+        assertNotNull(countryInput);
+        assertEquals("NL", countryInput.val());
+
+    }
+
+    private Response makeRequestForAuthnRequest(String countryCode) {
         return client
-            .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
+            .target(String.format("http://localhost:%d/redirect-to-eidas/%s", RULE.getLocalPort(), countryCode))
             .request()
             .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS))).compact())
             .get();
