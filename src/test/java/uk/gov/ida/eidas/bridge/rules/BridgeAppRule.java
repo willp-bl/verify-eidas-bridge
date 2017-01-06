@@ -30,14 +30,14 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
         return SECRET_SEED;
     }
 
-    public BridgeAppRule(Supplier<String> verifyMetadataUri, Supplier<String> eidasMetadataUri, String eidasEntityId) {
+    public BridgeAppRule(Supplier<String> verifyMetadataUri, Supplier<String> eidasMetadataUri) {
         super(BridgeApplication.class,
                 "eidasbridge-test.yml",
                 ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
                 ConfigOverride.config("verifyMetadata.uri", verifyMetadataUri),
                 ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
                 ConfigOverride.config("eidasMetadata.uri", eidasMetadataUri),
-                ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
+                ConfigOverride.config("eidasNodeEntityId", eidasMetadataUri),
                 ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
                 ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
                 ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),

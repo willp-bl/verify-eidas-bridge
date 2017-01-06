@@ -12,10 +12,10 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.impl.AttributeBuilder;
 import org.opensaml.saml.saml2.core.impl.ResponseUnmarshaller;
 import org.opensaml.saml.saml2.encryption.Encrypter;
-import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
 import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
@@ -24,15 +24,15 @@ import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionU
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
+import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
 import uk.gov.ida.saml.core.extensions.impl.StringBasedMdsAttributeValueBuilder;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.core.test.builders.AssertionBuilder;
 import uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder;
+import uk.gov.ida.saml.core.test.builders.IssuerBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
-import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
-import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -63,18 +63,15 @@ public class SendResponseToBridgeIntegrationTest {
     private static final String SOME_RESPONSE_ID = "some-response-id";
     private static Client client;
 
-    private static final String eidasEntityId = TestCertificateStrings.TEST_ENTITY_ID;
-
-    private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
     @ClassRule
-    public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(new MetadataFactory().defaultMetadata());
+    public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(uri -> new MetadataFactory().defaultMetadata());
+
 
     @ClassRule
-    public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
-        new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
+    public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
     @ClassRule
-    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url, eidasEntityId);
+    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url);
 
     @BeforeClass
     public static void before() {
@@ -168,8 +165,11 @@ public class SendResponseToBridgeIntegrationTest {
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.PERSON_IDENTIFIER_URI, "personNumber1337"));
 
         AssertionBuilder assertionBuilder = anAssertion().addAttributeStatement(attributeStatementBuilder.build());
+        Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
+        Issuer issuerAssertion = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
         return aResponse().withInResponseTo(SOME_RESPONSE_ID)
-            .addEncryptedAssertion(assertionBuilder.buildWithEncrypterCredential(createEncrypter()));
+                .withIssuer(issuer)
+                .addEncryptedAssertion(assertionBuilder.withIssuer(issuerAssertion).buildWithEncrypterCredential(createEncrypter()));
     }
 
     private Attribute createAttribute(String key, String value) {

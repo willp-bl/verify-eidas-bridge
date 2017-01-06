@@ -28,10 +28,9 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
+import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
-import uk.gov.ida.saml.metadata.test.factories.metadata.EntitiesDescriptorFactory;
-import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -65,18 +64,22 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     private static Client client;
 
-    private static final String eidasEntityId = "foobar";
-    private static final EntityDescriptor eidasEntityDescriptor = new EntityDescriptorFactory().idpEntityDescriptor(eidasEntityId);
-
     @ClassRule
-    public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(new MetadataFactory().defaultMetadata());
+    public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(uri-> new MetadataFactory().defaultMetadata());
+
+    private static EntityDescriptor eidasEntityDescriptor;
 
     @ClassRule
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
-        new MetadataFactory().metadata(new EntitiesDescriptorFactory().entitiesDescriptor(singletonList(eidasEntityDescriptor))));
+            uri -> {
+                eidasEntityDescriptor = NodeMetadataFactory.createIdpEntityDescriptor(uri);
+                return NodeMetadataFactory.createMetadata(eidasEntityDescriptor);
+            });
+
 
     @ClassRule
-    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url, eidasEntityId);
+    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url);
+
 
     @BeforeClass
     public static void before() {

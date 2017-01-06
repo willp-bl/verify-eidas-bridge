@@ -11,6 +11,8 @@ import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
+import java.util.function.Supplier;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
@@ -31,8 +33,8 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
         ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("eidasMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata"),
-        ConfigOverride.config("eidasNodeEntityId", "eidasEntityId"),
+        ConfigOverride.config("eidasMetadata.uri", nodeMetadataUri()),
+        ConfigOverride.config("eidasNodeEntityId", nodeMetadataUri()),
         ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasEncodedSigningKeyStore),
         ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
@@ -47,6 +49,10 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("encryptingKeyStore.alias", ALIAS),
         ConfigOverride.config("hostname", "www.example.com")
     );
+
+    private static Supplier<String> nodeMetadataUri() {
+        return () -> "http://localhost:" + wireMock.port() + "/ServiceMetadata";
+    }
 
     @Before
     public void before() {
