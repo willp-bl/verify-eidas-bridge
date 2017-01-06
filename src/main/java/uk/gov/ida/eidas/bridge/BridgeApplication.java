@@ -2,6 +2,7 @@ package uk.gov.ida.eidas.bridge;
 
 import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -42,6 +43,7 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         EidasSamlBootstrap.bootstrap();
 
         bootstrap.addBundle(new ViewBundle<>());
+        bootstrap.addBundle(new AssetsBundle("/assets"));
         bootstrap.addBundle(JwtCookieAuthBundle.<BridgeConfiguration>getDefault().withConfigurationSupplier(BridgeConfiguration::getSessionCookie));
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(new ResourceConfigurationSourceProvider(),

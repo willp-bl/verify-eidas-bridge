@@ -13,12 +13,14 @@ import uk.gov.ida.eidas.bridge.helpers.requestToEidas.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.requestFromVerify.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.views.AuthnRequestFormView;
+import uk.gov.ida.eidas.bridge.views.ChooseACountryView;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
@@ -54,16 +56,31 @@ public class VerifyAuthnRequestResource {
         principal.getClaims().put("inboundID", authnRequestId);
         principal.addInContext(requestContext);
 
-        return Response.seeOther(UriBuilder.fromUri("/redirect-to-eidas").build()).build();
+        return Response.seeOther(UriBuilder.fromUri("/choose-a-country").build()).build();
     }
 
     @GET
-    @Path("/redirect-to-eidas")
+    @Path("/choose-a-country")
     @Produces(MediaType.TEXT_HTML)
-    public View getRedirectForm(@Auth DefaultJwtCookiePrincipal principal) throws MarshallingException, SignatureException, SecurityException {
+    public View getCountryPicker() {
+        return new ChooseACountryView();
+    }
+
+    @POST
+    @Path("/choose-a-country")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response postCountryPicker(
+        @NotBlank @FormParam("country") String country) {
+        return Response.seeOther(UriBuilder.fromUri("/redirect-to-eidas/" + country).build()).build();
+    }
+
+    @GET
+    @Path("/redirect-to-eidas/{country}")
+    @Produces(MediaType.TEXT_HTML)
+    public View getRedirectForm(@Auth DefaultJwtCookiePrincipal principal, @PathParam("country") String country) throws MarshallingException, SignatureException, SecurityException {
         String outboundID = RandomIdGenerator.generateRandomId();
         principal.getClaims().put("outboundID",  outboundID);
         SamlRequest samlRequest = eidasAuthnRequestFormGenerator.generateAuthnRequestForm(outboundID);
-        return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation());
+        return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation(), country);
     }
 }

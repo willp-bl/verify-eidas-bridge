@@ -22,6 +22,7 @@ dependencies {
             "io.dropwizard:dropwizard-client:$dropwizardVersion",
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
             "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
+            "io.dropwizard:dropwizard-assets:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
             "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-25",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
