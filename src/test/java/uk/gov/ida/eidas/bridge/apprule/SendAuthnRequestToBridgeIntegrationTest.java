@@ -26,7 +26,6 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
-import sun.plugin.dom.exception.InvalidStateException;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
@@ -147,7 +146,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     @Test
     public void testShouldReturnUnauthorizedIfCookieMissing() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response response = client
-                .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
+                .target(String.format("http://localhost:%d/redirect-to-eidas/ES", RULE.getLocalPort()))
                 .request()
                 .get();
 
@@ -158,7 +157,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     public void testShouldReturnUnauthorizedtIfCookieKeyWrong() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         String sessionToken = Jwts.builder().signWith(HS256, "wrongKey").claim("foo", "bar").compact();
         Response response = client
-                .target(String.format("http://localhost:%d/redirect-to-eidas", RULE.getLocalPort()))
+                .target(String.format("http://localhost:%d/redirect-to-eidas/NL", RULE.getLocalPort()))
                 .request()
                 .cookie("sessionToken", sessionToken)
                 .get();
@@ -196,11 +195,11 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         String responseString = response.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
-        Elements countryInputs = doc.getElementsByAttributeValue("name", "country");
-        Element franceButton = countryInputs.stream().filter(x -> x.val().equals("FR")).findAny().get();
-        Element netherlandsButton = countryInputs.stream().filter(x -> x.val().equals("NL")).findAny().get();
-        assertNotNull(franceButton);
-        assertNotNull(netherlandsButton);
+        Elements countryInputs = doc.getElementsByTag("option");
+        Element spainOption = countryInputs.stream().filter(x -> x.val().equals("ES")).findAny().get();
+        Element netherlandsOption = countryInputs.stream().filter(x -> x.val().equals("NL")).findAny().get();
+        assertNotNull(spainOption);
+        assertNotNull(netherlandsOption);
 
         for (Element inputForm: doc.getElementsByTag("form")) {
             assertEquals("/choose-a-country", inputForm.attr("action"));
