@@ -1,5 +1,7 @@
 package uk.gov.ida.eidas.bridge.factories;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -15,21 +17,23 @@ import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
+import uk.gov.ida.eidas.bridge.security.MetadataBackedCountrySignatureValidator;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionSubjectGenerator;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.AuthnRequestFormGenerator;
+import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.helpers.requestFromVerify.AuthnRequestHandler;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AuthnStatementAssertionGenerator;
+import uk.gov.ida.eidas.bridge.helpers.requestToEidas.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.requestToEidas.EidasAuthnRequestGenerator;
+import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
+import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MatchingDatasetAssertionGenerator;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MetadataBackedEncryptionPublicKeyRetriever;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseSizeValidator;
-import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionSubjectGenerator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AuthnStatementAssertionGenerator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MatchingDatasetAssertionGenerator;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MetadataBackedEncryptionPublicKeyRetriever;
 import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
@@ -55,6 +59,7 @@ import uk.gov.ida.saml.security.KeyStoreCredentialRetriever;
 import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
 import uk.gov.ida.saml.security.SamlMessageSignatureValidator;
+import uk.gov.ida.saml.security.SignatureValidator;
 import uk.gov.ida.saml.security.validators.encryptedelementtype.EncryptionAlgorithmValidator;
 import uk.gov.ida.saml.security.validators.signature.SamlResponseSignatureValidator;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
@@ -71,7 +76,9 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 
@@ -79,22 +86,21 @@ public class VerifyEidasBridgeFactory {
 
     private final Environment environment;
     private final MetadataConfiguration verifyMetadataConfiguration;
-    private final MetadataConfiguration eidasMetadataConfiguration;
     private final BridgeConfiguration configuration;
     private final CoreTransformersFactory coreTransformersFactory = new CoreTransformersFactory();
     private final MetadataModule metadataModule = new MetadataModule();
 
     @Nullable
     private MetadataResolver verifyMetadataResolver;
+
     @Nullable
-    private MetadataResolver eidasMetadataResolver;
+    private MetadataResolverRepository metadataResolverRepository;
 
     public VerifyEidasBridgeFactory(
         Environment environment,
         BridgeConfiguration configuration) {
         this.environment = environment;
         this.verifyMetadataConfiguration = configuration.getVerifyMetadataConfiguration();
-        this.eidasMetadataConfiguration = configuration.getEidasMetadataConfiguration();
         this.configuration = configuration;
     }
 
@@ -120,7 +126,7 @@ public class VerifyEidasBridgeFactory {
 
     public EidasResponseResource getEidasResponseResource() throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         StringToOpenSamlObjectTransformer<Response> stringToResponse = coreTransformersFactory.getStringtoOpenSamlObjectTransformer(new ResponseSizeValidator(new StringSizeValidator()));
-        MetadataBackedSignatureValidator signatureValidator = this.getMetadataBackedSignatureValidator(getEidasMetadataResolver());
+        SignatureValidator signatureValidator = this.getEidasSignatureValidator();
         KeyStoreConfiguration keyStoreConfiguration = configuration.getEidasSigningKeyStoreConfiguration();
 
         ResponseHandler responseHandler = getResponseHandler(stringToResponse, signatureValidator, keyStoreConfiguration);
@@ -138,12 +144,22 @@ public class VerifyEidasBridgeFactory {
             new AssertionConsumerServiceLocator(verifyMetadataResolver));
     }
 
-    public MetadataHealthCheck getVerifyMetadataHealthcheck() {
+    private MetadataHealthCheck getVerifyMetadataHealthcheck() {
         return new MetadataHealthCheck(getVerifyMetadataResolver(), configuration.getVerifyMetadataConfiguration().getExpectedEntityId());
     }
 
-    public MetadataHealthCheck getEidasMetadataHealthcheck() {
-        return new MetadataHealthCheck(getEidasMetadataResolver(), configuration.getEidasMetadataConfiguration().getExpectedEntityId());
+    private Map<String, MetadataHealthCheck> getCountryMetadataHealthchecks() {
+        return getCountryMetadataResolverRepository().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                entry -> new MetadataHealthCheck(entry.getValue(), entry.getKey())
+        ));
+    }
+
+    public Map<String, MetadataHealthCheck> getMetadataHealthchecks() {
+        return ImmutableMap.<String, MetadataHealthCheck>builder()
+                .putAll(getCountryMetadataHealthchecks().entrySet())
+                .put("verify-metadata", getVerifyMetadataHealthcheck())
+                .build();
     }
 
     private MetadataResolver getVerifyMetadataResolver() {
@@ -153,11 +169,11 @@ public class VerifyEidasBridgeFactory {
         return verifyMetadataResolver;
     }
 
-    private MetadataResolver getEidasMetadataResolver() {
-        if (eidasMetadataResolver == null) {
-            eidasMetadataResolver = getMetadataResolver(eidasMetadataConfiguration);
+    private MetadataResolverRepository getCountryMetadataResolverRepository() {
+        if (metadataResolverRepository == null) {
+            metadataResolverRepository = new CountryMetadataResolverRepositoryFactory().createRepository(environment, configuration.getEidasMetadataConfiguration());
         }
-        return eidasMetadataResolver;
+        return metadataResolverRepository;
     }
 
     private AuthnRequestHandler getAuthnRequestHandler() throws ComponentInitializationException {
@@ -176,7 +192,7 @@ public class VerifyEidasBridgeFactory {
             getEidasAuthnRequestGenerator(),
             getEidasSingleSignOnServiceLocator(),
             new XmlObjectToBase64EncodedStringTransformer(),
-            configuration.getEidasNodeEntityId());
+            configuration.getDestinationNodeEntityId());
     }
 
     private VerifyResponseGenerator getVerifyResponseGenerator(String bridgeEntityId, String verifyEntityId) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
@@ -197,7 +213,7 @@ public class VerifyEidasBridgeFactory {
             verifySigningHelper);
     }
 
-    private ResponseHandler getResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse, MetadataBackedSignatureValidator signatureValidator, KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    private ResponseHandler getResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse, SignatureValidator signatureValidator, KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
         uk.gov.ida.saml.security.KeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.KeyStore(
             getSigningKeyPair(keyStoreConfiguration),
             singletonList(getEncryptingKeyPair())
@@ -209,7 +225,7 @@ public class VerifyEidasBridgeFactory {
         );
         return new ResponseHandler(
             stringToResponse,
-            configuration.getEidasNodeEntityId(),
+            configuration.getDestinationNodeEntityId(),
             new SamlResponseSignatureValidator(samlMessageSignatureValidator),
             new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(encryptionAlgorithmWhitelist), new DecrypterFactory()),
             new SamlAssertionsSignatureValidator(samlMessageSignatureValidator),
@@ -242,33 +258,41 @@ public class VerifyEidasBridgeFactory {
             metadataConfiguration.getUri(),
             metadataConfiguration.getMaxRefreshDelay(),
             metadataConfiguration.getMinRefreshDelay(),
-            environment,
-            metadataConfiguration,
+            metadataModule.getClient(environment, metadataConfiguration),
             new ExpiredCertificateMetadataFilter(),
             new PKIXSignatureValidationFilterProvider(keyStore)
         );
     }
 
     private MetadataBackedSignatureValidator getMetadataBackedSignatureValidator(MetadataResolver metadataResolver) throws ComponentInitializationException {
+        ExplicitKeySignatureTrustEngine explicitKeySignatureTrustEngine = getExplicitKeySignatureTrustEngine(metadataResolver);
+        return MetadataBackedSignatureValidator.withoutCertificateChainValidation(explicitKeySignatureTrustEngine);
+    }
+
+    private ExplicitKeySignatureTrustEngine getExplicitKeySignatureTrustEngine(MetadataResolver metadataResolver) throws ComponentInitializationException {
+        MetadataCredentialResolver metadataCredentialResolver = getMetadataCredentialResolver(metadataResolver);
+        return new ExplicitKeySignatureTrustEngine(
+            metadataCredentialResolver, DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver()
+        );
+    }
+
+    private MetadataCredentialResolver getMetadataCredentialResolver(MetadataResolver metadataResolver) throws ComponentInitializationException {
         PredicateRoleDescriptorResolver predicateRoleDescriptorResolver = new PredicateRoleDescriptorResolver(metadataResolver);
         predicateRoleDescriptorResolver.initialize();
         MetadataCredentialResolver metadataCredentialResolver = new MetadataCredentialResolver();
         metadataCredentialResolver.setRoleDescriptorResolver(predicateRoleDescriptorResolver);
         metadataCredentialResolver.setKeyInfoCredentialResolver(DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver());
         metadataCredentialResolver.initialize();
-        ExplicitKeySignatureTrustEngine explicitKeySignatureTrustEngine = new ExplicitKeySignatureTrustEngine(
-            metadataCredentialResolver, DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver()
-        );
-        return MetadataBackedSignatureValidator.withoutCertificateChainValidation(explicitKeySignatureTrustEngine);
+        return metadataCredentialResolver;
     }
 
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getEidasNodeEntityId(), getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
+        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getDestinationNodeEntityId(), getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
     }
 
     private SingleSignOnServiceLocator getEidasSingleSignOnServiceLocator() {
-        return new SingleSignOnServiceLocator(getEidasMetadataResolver());
+        return new SingleSignOnServiceLocator(getCountryMetadataResolverRepository());
     }
 
     private SigningHelper getEidasSigningHelper() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
@@ -293,4 +317,22 @@ public class VerifyEidasBridgeFactory {
         BasicX509Credential x509SigningCredential = new BasicX509Credential((X509Certificate) certificate);
         return new SigningHelper(credential, x509SigningCredential, keyInfoGenerator);
     }
+
+    private MetadataBackedCountrySignatureValidator getEidasSignatureValidator() {
+        return new MetadataBackedCountrySignatureValidator(getCountrySignatureTrustEngines());
+    }
+
+    private Map<String, ExplicitKeySignatureTrustEngine> getCountrySignatureTrustEngines() {
+        return getCountryMetadataResolverRepository().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                entry -> {
+                    try {
+                        return getExplicitKeySignatureTrustEngine(entry.getValue());
+                    } catch (ComponentInitializationException e1) {
+                        throw Throwables.propagate(e1);
+                    }
+                }
+        ));
+    }
+
 }

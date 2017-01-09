@@ -24,7 +24,7 @@ dependencies {
             "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "io.dropwizard:dropwizard-assets:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-25",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-29",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
             "uk.gov.verify:saml-utils:$openSamlVersion-18",
             "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.0",

@@ -16,11 +16,11 @@ public class BridgeConfiguration extends Configuration {
 
     @JsonProperty
     @Valid
-    private MetadataConfiguration eidasMetadata;
+    private EidasMetadataConfiguration eidasMetadata;
 
     @JsonProperty
     @NotNull
-    private String eidasNodeEntityId;
+    private String destinationNodeEntityId;
 
     @JsonProperty
     @NotNull
@@ -54,7 +54,7 @@ public class BridgeConfiguration extends Configuration {
         return verifyMetadata;
     }
 
-    public MetadataConfiguration getEidasMetadataConfiguration() {
+    public EidasMetadataConfiguration getEidasMetadataConfiguration() {
         return eidasMetadata;
     }
 
@@ -74,8 +74,8 @@ public class BridgeConfiguration extends Configuration {
         return hostname;
     }
 
-    public String getEidasNodeEntityId() {
-        return eidasNodeEntityId;
+    public String getDestinationNodeEntityId() {
+        return destinationNodeEntityId;
     }
 
     public JwtCookieAuthConfiguration getSessionCookie() {

@@ -10,6 +10,7 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 
 import java.util.List;
 
@@ -20,13 +21,14 @@ public class SingleSignOnServiceLocator {
 
     private static final Logger LOG = LoggerFactory.getLogger(SingleSignOnServiceLocator.class);
 
-    private final MetadataResolver metadataResolver;
+    private final MetadataResolverRepository metadataResolvers;
 
-    public SingleSignOnServiceLocator(MetadataResolver metadataResolver) {
-        this.metadataResolver = metadataResolver;
+    public SingleSignOnServiceLocator(MetadataResolverRepository metadataResolvers) {
+        this.metadataResolvers = metadataResolvers;
     }
 
-    public String getSignOnUrl(String entityId) {
+    public String getSignOnUrl(String entityId) throws CountryNotDefinedException {
+        MetadataResolver metadataResolver = metadataResolvers.fetch(entityId);
         EntityDescriptor idpEntityDescriptor;
         try {
             CriteriaSet criteria = new CriteriaSet(new EntityIdCriterion(entityId));

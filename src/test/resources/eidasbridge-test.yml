@@ -6,7 +6,6 @@ server:
     - type: http
       port: 0
 
-bridgeEntityId: http://bridge.entity.id
 
 logging:
   level: INFO
@@ -20,7 +19,7 @@ sessionCookie:
 
 hostname: OVERRIDE_ME
 bridgeEntityId: OVERRIDE_ME
-eidasNodeEntityId: OVERRIDE_ME
+destinationNodeEntityId: OVERRIDE_ME
 
 encryptingKeyStore:
   base64Value: OVERRIDE_ME
@@ -60,23 +59,14 @@ verifyMetadata:
       trustSelfSignedCertificates: true
 
 eidasMetadata:
-  uri: http://localhost:9000/ServiceMetadata
-  trustStorePath: eidas_truststore.ts
-  trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
-  expectedEntityId: https://signin.service.gov.uk
-  jerseyClientName: EidasMetadataClient
   client:
     timeout: 2s
     timeToLive: 10m
     cookiesEnabled: false
     connectionTimeout: 1s
     retries: 3
-    keepAlive: 60s
-    chunkedEncodingEnabled: false
-    validateAfterInactivityPeriod: 5s
-    tls:
-      protocol: TLSv1.2
-      verifyHostname: false
-      trustSelfSignedCertificates: true
+  countries:
+  - entityID: http://localhost:9000/ServiceMetadata
+

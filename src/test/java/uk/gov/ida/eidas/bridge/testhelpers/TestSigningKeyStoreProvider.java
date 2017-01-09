@@ -22,6 +22,7 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 public class TestSigningKeyStoreProvider {
@@ -77,6 +78,20 @@ public class TestSigningKeyStoreProvider {
     public static String getBase64EncodedKeyStore(String alias, String password)
     {
         return toBase64String(getKeyStore(alias, password), password);
+    }
+
+    public static String getBase64EncodedTrustStore(String cert, String password)
+    {
+
+        try {
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            X509Certificate certificate = new X509CertificateFactory().createCertificate(cert);
+            keyStore.setCertificateEntry("cert", certificate);
+            return toBase64String(keyStore, password);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private static String toBase64String(KeyStore keyStore, String password) {

@@ -5,6 +5,7 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
 import java.util.function.Supplier;
 
@@ -18,6 +19,7 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
 
     private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String metadataTrustStore = TestSigningKeyStoreProvider.getBase64EncodedTrustStore(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, KEYSTORE_PASSWORD) ;
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
     private static final String SECRET_SEED = "SECRET_SEED";
@@ -35,9 +37,10 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
                 "eidasbridge-test.yml",
                 ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
                 ConfigOverride.config("verifyMetadata.uri", verifyMetadataUri),
-                ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-                ConfigOverride.config("eidasMetadata.uri", eidasMetadataUri),
-                ConfigOverride.config("eidasNodeEntityId", eidasMetadataUri),
+                ConfigOverride.config("eidasMetadata.countries[0].base64Value", metadataTrustStore),
+                ConfigOverride.config("eidasMetadata.countries[0].password", KEYSTORE_PASSWORD),
+                ConfigOverride.config("eidasMetadata.countries[0].entityID", eidasMetadataUri),
+                ConfigOverride.config("destinationNodeEntityId", eidasMetadataUri),
                 ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
                 ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
                 ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),

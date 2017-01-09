@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
+import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 
 import static org.junit.Assert.assertEquals;
@@ -21,6 +22,9 @@ public class SingleSignOnServiceLocatorTest {
     @Mock
     private MetadataResolver metadataResolver;
 
+    @Mock
+    private MetadataResolverRepository metadataResolverRepository;
+
     @Before
     public void before() {
         try {
@@ -31,7 +35,8 @@ public class SingleSignOnServiceLocatorTest {
     }
     @Test
     public void shouldFetchSingleSignOnServiceLocationFromMetadata() {
-        SingleSignOnServiceLocator singleSignOnServiceLocator = new SingleSignOnServiceLocator(metadataResolver);
+        SingleSignOnServiceLocator singleSignOnServiceLocator = new SingleSignOnServiceLocator(metadataResolverRepository);
+        when(metadataResolverRepository.fetch("myEntityId")).thenReturn(metadataResolver);
         String ssoLocation = singleSignOnServiceLocator.getSignOnUrl("myEntityId");
         assertEquals("http://foo.com/bar", ssoLocation);
     }

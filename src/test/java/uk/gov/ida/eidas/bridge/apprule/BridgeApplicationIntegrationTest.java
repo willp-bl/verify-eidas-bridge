@@ -9,6 +9,7 @@ import org.junit.Test;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
 import java.util.function.Supplier;
@@ -25,16 +26,20 @@ public class BridgeApplicationIntegrationTest {
     private static final String ALIAS = "key-alias";
     private static final String eidasEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
     private static final String verifyEncodedSigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
+    private static final String metadataTrustStore = TestSigningKeyStoreProvider.getBase64EncodedTrustStore(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, KEYSTORE_PASSWORD) ;
     private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ALIAS, KEYSTORE_PASSWORD);
 
     private static final String KEYSTORE_TYPE = "PKCS12";
+
+
     private static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         "eidasbridge-test.yml",
         ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
         ConfigOverride.config("verifyMetadata.uri", () -> "http://localhost:" + wireMock.port() + "/SAML2/metadata/federation"),
-        ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-        ConfigOverride.config("eidasMetadata.uri", nodeMetadataUri()),
-        ConfigOverride.config("eidasNodeEntityId", nodeMetadataUri()),
+        ConfigOverride.config("eidasMetadata.countries[0].base64Value", metadataTrustStore),
+        ConfigOverride.config("eidasMetadata.countries[0].password", KEYSTORE_PASSWORD),
+        ConfigOverride.config("eidasMetadata.countries[0].entityID", nodeMetadataUri()),
+        ConfigOverride.config("destinationNodeEntityId", nodeMetadataUri()),
         ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasEncodedSigningKeyStore),
         ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
