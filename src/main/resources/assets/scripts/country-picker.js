@@ -1,22 +1,28 @@
 (function($){
   function handleSelection() {
-      event.preventDefault()
-      country = document.getElementById("country-selector").value;
-      console.log(country)
+    event.preventDefault()
 
-      //List of countries with eIDAs
-      eidasCountries = ["NL", "ES"]
+    var $countryOption = $('#country-selector')
+    var country = $countryOption.val()
+    var countryName = $('option[value="' + country + '"]').text()
 
-      if(eidasCountries.indexOf(country)  > -1 ) {
-          document.forms[0].submit()
-      } else {
-          document.getElementById('display-noEidas').innerHTML = country
-          document.getElementById('noEidas').style.display = "block"
-          document.getElementById('hasEidas').style.display = "none"
+    //List of countries with eIDAs
+    eidasCountries = ["NL", "ES"]
+
+    if(eidasCountries.indexOf(country)  > -1 ) {
+      document.forms[0].submit()
+    } else if (countryName) {
+      document.getElementById('display-noEidas').innerHTML = countryName
+      document.getElementById('noEidas').style.display = "block"
+      document.getElementById('noCountry').style.display = "none"
+    }
+    else {
+      document.getElementById('noEidas').style.display = "none"
+      document.getElementById('noCountry').style.display = "block"
     }
   }
   $('#user_input').click(handleSelection)
-  $(function(){
-    $('select').selectToAutocomplete();
-  });
-})(jQuery);
+  $(function(){ $('select').selectToAutocomplete() })
+})(jQuery)
+
+

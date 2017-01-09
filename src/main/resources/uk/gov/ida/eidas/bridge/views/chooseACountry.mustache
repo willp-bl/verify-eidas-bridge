@@ -46,8 +46,8 @@
                 <li class="translation">
                     <span>English</span>
                 </li>
-                <li class="translation last">
-                    <a lang="cy" hreflang="cy" href="/dechrau">Cymraeg</a>
+                <li class="translation last" title="Support for Welsh to be implemented">
+                    <a lang="cy" hreflang="cy" href="/dechrau" class="disabled">Cymraeg</a>
                 </li>
             </ul>
         </div>
@@ -63,6 +63,32 @@
                         <option value=""></option>
                         <option value="NL" data-alternative-spellings="Netherlands  Kingdom of the Netherlands NL Nederland">Netherlands</option>
                         <option value="ES" data-alternative-spellings="Spain Kingdom of Spain ES E España Espana">Spain</option>
+
+                        <option value="AT" data-alternative-spellings="Austria Republic of Austria AT  A Österreich  Osterreich">Austria</option>
+                        <option value="BE" data-alternative-spellings="Belgium Kingdom of Belgium  BE  B Belgique België Belgie  ">Belgium</option>
+                        <option value="BG" data-alternative-spellings="Bulgaria Republic of Bulgaria  BG      ">Bulgaria</option>
+                        <option value="HR" data-alternative-spellings="Croatia Republic of Croatia HR    Hrvatska  ">Croatia</option>
+                        <option value="CY" data-alternative-spellings="Cyprus Republic of Cyprus  CY      ">Republic of Cyprus</option>
+                        <option value="CZ" data-alternative-spellings="Czech Republic Czech Republic  CZ    Česká republika Ceska republika">Czech Republic</option>
+                        <option value="DK" data-alternative-spellings="Denmark Kingdom of Denmark  DK  DK  Danmark ">Denmark</option>
+                        <option value="EE" data-alternative-spellings="Estonia Republic of Estonia EE    Eesti ">Estonia</option>
+                        <option value="FI" data-alternative-spellings="Finland Republic of Finland FI  FIN Suomi Finland ">Finland</option>
+                        <option value="FR" data-alternative-spellings="France French Republic FR  F France  ">France</option>
+                        <option value="DE" data-alternative-spellings="Germany Federal Republic of Germany DE  D Deutschland ">Germany</option>
+                        <option value="EL" data-alternative-spellings="Greece Hellenic Republic EL  EL    ">Greece</option>
+                        <option value="HU" data-alternative-spellings="Hungary Hungary HU    Magyarország  Magyarorszag">Hungary</option>
+                        <option value="IE" data-alternative-spellings="Ireland Ireland IE  IRL Éire Eire Ireland ">Ireland</option>
+                        <option value="IT" data-alternative-spellings="Italy Italian Republic  IT  I Italia  ">Italy</option>
+                        <option value="LV" data-alternative-spellings="Latvia Republic of Latvia  LV    Latvija ">Latvia</option>
+                        <option value="LT" data-alternative-spellings="Lithuania Republic of Lithuania LT    Lietuva ">Lithuania</option>
+                        <option value="LU" data-alternative-spellings="Luxembourg Grand Duchy of Luxembourg LU  L Luxembourg  ">Luxembourg</option>
+                        <option value="MT" data-alternative-spellings="Malta Republic of Malta MT    Malta ">Malta</option>
+                        <option value="PL" data-alternative-spellings="Poland Republic of Poland  PL    Polska  ">Poland</option>
+                        <option value="PT" data-alternative-spellings="Portugal Portuguese Republic PT  P Portugal  ">Portugal</option>
+                        <option value="RO" data-alternative-spellings="Romania Romania RO    România Romania">Romania</option>
+                        <option value="SK" data-alternative-spellings="Slovakia Slovak Republic SK    Slovensko ">Slovakia</option>
+                        <option value="SI" data-alternative-spellings="Slovenia Republic of Slovenia  SI    Slovenija ">Slovenia</option>
+                        <option value="SE" data-alternative-spellings="Sweden Kingdom of Sweden SE  S Sverige ">Sweden</option>
                     </select>
                     <input id="user_input" type="submit" value="Select" class="button"/>
                 </form>
@@ -70,11 +96,15 @@
                     <div id='noEidas'>
                         <h2 class="heading-medium"><span id="display-noEidas"></span> don't have an eID you can use with this service</h2>
                         <p>Your country doesn't yet have an eID that you can use to sign in.</p>
-                        <p><a href="/select-signin?requestId=view-share-driving-licence">Try another way to sign in.</a>
+                        <p><a href="javascript:history.back()">Try another way to sign in.</a>
+                        </p>
+                    </div>
+                    <div id='noCountry'>
+                        <h2 class="heading-medium">Please select a country from the list</h2>
+                        <p><a href="javascript:history.back()">Try another way to sign in.</a>
                         </p>
                     </div>
                 </div>
-                <p>Or <a href="/select-signin?requestId=view-share-driving-licence">Try another way to sign in</a>.</p>
             </div>
         </article>
     </div>

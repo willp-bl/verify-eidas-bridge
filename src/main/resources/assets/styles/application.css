@@ -1,3 +1,14 @@
+/* disable links - from https://css-tricks.com/pointer-events-current-nav/ */
+
+a.disabled {
+     pointer-events: none;
+     cursor: default;
+     text-decoration: none;
+     color: gray;
+}
+
+/* disable links */
+
 .grid-row:after, #content:after, .notice:after, .panel:after, fieldset:after, .form-section:after, .form-group:after, .form-block:after, .breadcrumbs ol:after, .page-navigation:after, .available-languages ul:after, .idp-choice:after, .verify-heading:after {
   content: "";
   display: block;
@@ -2296,7 +2307,7 @@ legend {
   color: #fff;
 }
 
-#hasEidas, #noEidas {
+#hasEidas, #noEidas, #noCountry {
   display: none;
 }
 
