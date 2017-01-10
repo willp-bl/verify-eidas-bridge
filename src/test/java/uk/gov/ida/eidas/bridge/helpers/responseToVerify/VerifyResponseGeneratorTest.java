@@ -28,6 +28,7 @@ import uk.gov.ida.saml.security.EncrypterFactory;
 import uk.gov.ida.saml.security.EncryptionCredentialFactory;
 
 import java.security.PublicKey;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,7 +50,7 @@ public class VerifyResponseGeneratorTest {
     @Before
     public void before() {
         EidasSamlBootstrap.bootstrap();
-        eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", "holborn", Gender.FEMALE, new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
+        eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", Optional.of("holborn"), Optional.of(Gender.FEMALE), new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
         OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory);
         AttributeFactory_1_1 attributeFactory = new AttributeFactory_1_1(openSamlXmlObjectFactory);

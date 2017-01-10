@@ -36,8 +36,8 @@ public class EidasIdentityAssertionUnmarshallerTest {
         EidasIdentityAssertion result = eidasIdentityAssertionUnmarshaller.unmarshallAssertion(validatedAssertions);
 
         assertEquals("javier", result.getFirstName());
-        assertEquals("Current Address", result.getCurrentAddress());
-        assertEquals(Gender.MALE, result.getGender());
+        assertEquals("Current Address", result.getCurrentAddress().get());
+        assertEquals(Gender.MALE, result.getGender().get());
         assertEquals(new DateTime(1965, 1, 1, 0, 0), result.getDateOfBirth());
         assertEquals("CA/UK/12345", result.getPersonIdentifier());
     }

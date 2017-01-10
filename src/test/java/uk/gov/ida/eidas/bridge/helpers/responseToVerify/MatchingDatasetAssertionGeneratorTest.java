@@ -19,6 +19,7 @@ import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
 import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,8 +33,8 @@ public class MatchingDatasetAssertionGeneratorTest {
 
     private static final String FAMILY_NAME = "familyName";
     private static final String FIRST_NAME = "aFirstName";
-    private static final String CURRENT_ADDRESS = "holborn";
-    private static final Gender GENDER = Gender.MALE;
+    private static final Optional<String> CURRENT_ADDRESS = Optional.of("holborn");
+    private static final Optional<Gender> GENDER = Optional.of(Gender.MALE);
     private static final String DATE_OF_BIRTH = "1965-01-01";
     private static final String PERSON_IDENTIFIER = "anId";
 
@@ -77,8 +78,26 @@ public class MatchingDatasetAssertionGeneratorTest {
 
         assertEquals(FIRST_NAME, getAttributeValueString(attributes, "MDS_firstname"));
         assertEquals(FAMILY_NAME, getAttributeValueString(attributes, "MDS_surname"));
-        assertEquals(GENDER.getValue(), getAttributeValueString(attributes, "MDS_gender"));
-        assertEquals(CURRENT_ADDRESS, ((Address)getAttributeValue(attributes, "MDS_currentaddress")).getLines().get(0).getValue());
+        assertEquals(GENDER.get().getValue(), getAttributeValueString(attributes, "MDS_gender"));
+        assertEquals(CURRENT_ADDRESS.get(), ((Address)getAttributeValue(attributes, "MDS_currentaddress")).getLines().get(0).getValue());
+        assertEquals(DATE_OF_BIRTH, getAttributeValueString(attributes, "MDS_dateofbirth"));
+    }
+
+    @Test
+    public void generateAttributeStatementWithoutOptionalFields() throws Exception {
+        DateTime dateOfBirth = new DateTime(1965, 1, 1, 0, 0);
+        EidasIdentityAssertion eidasIdentityAssertion = new EidasIdentityAssertion(FIRST_NAME, FAMILY_NAME, Optional.empty(), Optional.empty(), dateOfBirth, PERSON_IDENTIFIER);
+
+        Assertion assertion = assertionGenerator.generate(IN_RESPONSE_TO, eidasIdentityAssertion);
+
+        List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
+        AttributeStatement attributeStatement = attributeStatements.get(0);
+        List<Attribute> attributes = attributeStatement.getAttributes();
+
+        assertEquals(FIRST_NAME, getAttributeValueString(attributes, "MDS_firstname"));
+        assertEquals(FAMILY_NAME, getAttributeValueString(attributes, "MDS_surname"));
+        assertEquals(null, getAttributeValue(attributes, "MDS_gender"));
+        assertEquals(null, getAttributeValue(attributes, "MDS_currentaddress"));
         assertEquals(DATE_OF_BIRTH, getAttributeValueString(attributes, "MDS_dateofbirth"));
     }
 

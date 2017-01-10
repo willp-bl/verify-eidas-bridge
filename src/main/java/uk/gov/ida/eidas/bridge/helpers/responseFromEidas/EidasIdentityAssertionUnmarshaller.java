@@ -29,6 +29,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class EidasIdentityAssertionUnmarshaller {
@@ -59,13 +60,16 @@ public class EidasIdentityAssertionUnmarshaller {
             .stream()
             .collect(Collectors.toMap(Attribute::getName, this::getAttributeValueString));
 
+        Optional<String> address = getOptional(attributesByName, CURRENT_ADDRESS_URI).map(this::extractAddressFromBase64EncodedXml);
+        Optional<Gender> gender = getOptional(attributesByName, GENDER_URI).map(Gender::fromString);
+
         return new EidasIdentityAssertion(
-            getOrThrow(attributesByName, FIRST_NAME_URI),
-            getOrThrow(attributesByName, FAMILY_NAME_URI),
-            extractAddressFromBase64EncodedXml(getOrThrow(attributesByName, CURRENT_ADDRESS_URI)),
-            Gender.fromString(getOrThrow(attributesByName, GENDER_URI)),
-            parseDate(getOrThrow(attributesByName, DATE_OF_BIRTH_URI)),
-            getOrThrow(attributesByName, PERSON_IDENTIFIER_URI)
+            getMandatory(attributesByName, FIRST_NAME_URI),
+            getMandatory(attributesByName, FAMILY_NAME_URI),
+            address,
+            gender,
+            parseDate(getMandatory(attributesByName, DATE_OF_BIRTH_URI)),
+            getMandatory(attributesByName, PERSON_IDENTIFIER_URI)
         );
     }
 
@@ -134,12 +138,16 @@ public class EidasIdentityAssertionUnmarshaller {
         }
     }
 
-    private String getOrThrow(Map<String, String> map, String key) {
+    private String getMandatory(Map<String, String> map, String key) {
         String result = map.get(key);
         if (result == null) {
             throw new IllegalArgumentException("Could not find a value for key '" + key + "'");
         }
         return result;
+    }
+
+    private Optional<String> getOptional(Map<String, String> map, String key) {
+        return Optional.ofNullable(map.get(key));
     }
 
 }

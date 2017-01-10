@@ -14,10 +14,12 @@ import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.Address;
+import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.domain.SimpleMdsValue;
 import uk.gov.ida.saml.hub.factories.AttributeFactory;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Optional.absent;
 import static java.util.Collections.singletonList;
@@ -65,25 +67,31 @@ public class MatchingDatasetAssertionGenerator {
         Attribute surnameAttribute = attributeFactory.createSurnameAttribute(buildMdsValueList(eidasIdentityAssertion.getFamilyName()));
         attributeStatement.getAttributes().add(surnameAttribute);
 
-        Attribute genderAttribute = attributeFactory.createGenderAttribute(buildMdsValue(eidasIdentityAssertion.getGender()));
-        attributeStatement.getAttributes().add(genderAttribute);
+        Optional<Gender> gender = eidasIdentityAssertion.getGender();
+        if (gender.isPresent()) {
+            Attribute genderAttribute = attributeFactory.createGenderAttribute(buildMdsValue(gender.get()));
+            attributeStatement.getAttributes().add(genderAttribute);
+        }
 
         Attribute dateOfBirthAttribute = attributeFactory.createDateOfBirthAttribute(buildMdsValueList(new LocalDate(eidasIdentityAssertion.getDateOfBirth())));
         attributeStatement.getAttributes().add(dateOfBirthAttribute);
 
-        // TODO - the eIDAS stub IdP doesn't provide addresses in a structured form (although the eIDAS spec indicates that it should).
-        // As a workaround we're putting the entire, unstructured address that it sends us in the first line of the address and leaving the rest blank.
-        Address address = new Address(
-            singletonList(eidasIdentityAssertion.getCurrentAddress()),
-            absent(),
-            absent(),
-            absent(),
-            null,
-            absent(),
-            false
-        );
-        Attribute currentAddressesAttribute = attributeFactory.createCurrentAddressesAttribute(singletonList(address));
-        attributeStatement.getAttributes().add(currentAddressesAttribute);
+        Optional<String> currentAddress = eidasIdentityAssertion.getCurrentAddress();
+        if (currentAddress.isPresent()) {
+            // TODO - the eIDAS stub IdP doesn't provide addresses in a structured form (although the eIDAS spec indicates that it should).
+            // As a workaround we're putting the entire, unstructured address that it sends us in the first line of the address and leaving the rest blank.
+            Address address = new Address(
+                singletonList(currentAddress.get()),
+                absent(),
+                absent(),
+                absent(),
+                null,
+                absent(),
+                false
+            );
+            Attribute currentAddressesAttribute = attributeFactory.createCurrentAddressesAttribute(singletonList(address));
+            attributeStatement.getAttributes().add(currentAddressesAttribute);
+        }
 
         return attributeStatement;
     }

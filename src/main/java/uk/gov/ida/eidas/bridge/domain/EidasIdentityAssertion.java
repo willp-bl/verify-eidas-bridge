@@ -3,15 +3,17 @@ package uk.gov.ida.eidas.bridge.domain;
 import org.joda.time.DateTime;
 import uk.gov.ida.saml.core.domain.Gender;
 
+import java.util.Optional;
+
 public class EidasIdentityAssertion {
     private final String firstName;
     private final String familyName;
-    private final String currentAddress;
-    private final Gender gender;
+    private final Optional<String> currentAddress;
+    private final Optional<Gender> gender;
     private final DateTime dateOfBirth;
     private final String personIdentifier;
 
-    public EidasIdentityAssertion(String firstName, String familyName, String currentAddress, Gender gender, DateTime dateOfBirth, String personIdentifier) {
+    public EidasIdentityAssertion(String firstName, String familyName, Optional<String> currentAddress, Optional<Gender> gender, DateTime dateOfBirth, String personIdentifier) {
         this.firstName = firstName;
         this.familyName = familyName;
         this.currentAddress = currentAddress;
@@ -28,11 +30,11 @@ public class EidasIdentityAssertion {
         return familyName;
     }
 
-    public String getCurrentAddress() {
+    public Optional<String> getCurrentAddress() {
         return currentAddress;
     }
 
-    public Gender getGender() {
+    public Optional<Gender> getGender() {
         return gender;
     }
 
