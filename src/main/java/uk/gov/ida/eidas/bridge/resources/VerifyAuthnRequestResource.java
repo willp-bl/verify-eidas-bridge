@@ -86,6 +86,6 @@ public class VerifyAuthnRequestResource {
         String destinationEntityId = countryRepository.fetchEntityId(country);
         principal.getClaims().put("country",  destinationEntityId);
         SamlRequest samlRequest = eidasAuthnRequestFormGenerator.generateAuthnRequestForm(outboundID, destinationEntityId);
-        return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation(), country);
+        return new AuthnRequestFormView(samlRequest.getAuthnRequest(), samlRequest.getSingleSignOnLocation());
     }
 }

@@ -271,19 +271,6 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertNotNull(doc.getElementsByAttributeValue("type", "submit").first());
     }
 
-    @Test
-    public void testRendersCountryInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest(COUNTRY_CODE);
-        String responseString = result.readEntity(String.class);
-
-        Document doc = Jsoup.parseBodyFragment(responseString);
-
-        Element countryInput = doc.getElementsByAttributeValue("name", "country").first();
-        assertNotNull(countryInput);
-        assertEquals(COUNTRY_CODE, countryInput.val());
-
-    }
-
     private Response makeRequestForAuthnRequest(String countryCode) {
         return client
             .target(String.format("http://localhost:%d/redirect-to-eidas/%s", RULE.getLocalPort(), countryCode))
