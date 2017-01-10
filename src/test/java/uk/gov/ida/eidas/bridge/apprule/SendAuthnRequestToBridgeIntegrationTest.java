@@ -191,6 +191,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         Response response = client
             .target(String.format("http://localhost:%d/choose-a-country", RULE.getLocalPort()))
             .request()
+            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS))).compact())
             .get();
         String responseString = response.readEntity(String.class);
 
@@ -215,6 +216,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
             .target(String.format("http://localhost:%d/choose-a-country", RULE.getLocalPort()))
             .request()
+            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS))).compact())
             .buildPost(Entity.form(form))
             .invoke();
 
@@ -222,6 +224,21 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         String[] pathComponents = result.getLocation().getPath().split("/");
         assertEquals("redirect-to-eidas", pathComponents[1]);
         assertEquals("FR", pathComponents[2]);
+    }
+
+    @Test
+    public void testNeedsCookieToSubmitCountryPicker() throws Exception {
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("country", singletonList("FR"));
+
+        Response result = client
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d/choose-a-country", RULE.getLocalPort()))
+            .request()
+            .buildPost(Entity.form(form))
+            .invoke();
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatus());
     }
 
     @Test

@@ -62,7 +62,7 @@ public class VerifyAuthnRequestResource {
     @GET
     @Path("/choose-a-country")
     @Produces(MediaType.TEXT_HTML)
-    public View getCountryPicker() {
+    public View getCountryPicker(@Auth DefaultJwtCookiePrincipal principal) {
         return new ChooseACountryView();
     }
 
@@ -70,6 +70,7 @@ public class VerifyAuthnRequestResource {
     @Path("/choose-a-country")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response postCountryPicker(
+        @Auth DefaultJwtCookiePrincipal principal,
         @NotBlank @FormParam("country") String country) {
         return Response.seeOther(UriBuilder.fromUri("/redirect-to-eidas/" + country).build()).build();
     }
