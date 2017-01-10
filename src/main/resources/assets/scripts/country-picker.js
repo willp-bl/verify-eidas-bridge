@@ -7,7 +7,7 @@
     var countryName = $('option[value="' + country + '"]').text()
 
     //List of countries with eIDAs
-    eidasCountries = ["NL", "ES"]
+    eidasCountries = ["NL", "ES", "SE"]
 
     if(eidasCountries.indexOf(country)  > -1 ) {
       document.forms[0].submit()
