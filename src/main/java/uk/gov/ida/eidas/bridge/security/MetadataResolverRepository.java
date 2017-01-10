@@ -1,7 +1,7 @@
 package uk.gov.ida.eidas.bridge.security;
 
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.CountryNotDefinedException;
+import uk.gov.ida.eidas.bridge.exceptions.CountryNotDefinedException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +15,7 @@ public class MetadataResolverRepository {
     }
 
     public MetadataResolver fetch(String entityId) throws CountryNotDefinedException {
-        return Optional.ofNullable(metadataResolverMap.get(entityId)).orElseThrow(CountryNotDefinedException::new);
+        return Optional.ofNullable(metadataResolverMap.get(entityId)).orElseThrow(() -> new CountryNotDefinedException(entityId));
     }
 
     public Stream<Map.Entry<String, MetadataResolver>> stream() {

@@ -31,7 +31,6 @@ public class BridgeApplicationIntegrationTest {
 
     private static final String KEYSTORE_TYPE = "PKCS12";
 
-
     private static final DropwizardTestSupport<BridgeConfiguration> dropwizardTestSupport = new DropwizardTestSupport<>(BridgeApplication.class,
         "eidasbridge-test.yml",
         ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
@@ -39,7 +38,6 @@ public class BridgeApplicationIntegrationTest {
         ConfigOverride.config("eidasMetadata.countries[0].base64Value", metadataTrustStore),
         ConfigOverride.config("eidasMetadata.countries[0].password", KEYSTORE_PASSWORD),
         ConfigOverride.config("eidasMetadata.countries[0].entityID", nodeMetadataUri()),
-        ConfigOverride.config("destinationNodeEntityId", nodeMetadataUri()),
         ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasEncodedSigningKeyStore),
         ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
         ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),

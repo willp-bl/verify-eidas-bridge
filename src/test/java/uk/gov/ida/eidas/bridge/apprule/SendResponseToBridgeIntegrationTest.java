@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.jsonwebtoken.JwtBuilder;
@@ -66,12 +67,11 @@ public class SendResponseToBridgeIntegrationTest {
     @ClassRule
     public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(uri -> new MetadataFactory().defaultMetadata());
 
-
     @ClassRule
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
     @ClassRule
-    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url);
+    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, ImmutableMap.of("FR", eidasMetadata::url));
 
     @BeforeClass
     public static void before() {
@@ -87,6 +87,7 @@ public class SendResponseToBridgeIntegrationTest {
 
         JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
         jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadata.url());
 
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
@@ -111,6 +112,7 @@ public class SendResponseToBridgeIntegrationTest {
 
         JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
         jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadata.url());
 
         Response result = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)
@@ -124,12 +126,59 @@ public class SendResponseToBridgeIntegrationTest {
     }
 
     @Test
+    public void shouldRejectsResponseWhenCountryInCookieIsNotDefined() throws Exception {
+        ResponseBuilder responseBuilder = getResponseBuilder();
+        String responseString = buildString(responseBuilder);
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
+        jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", "OTHER_COUNTRY");
+
+        Response result = client
+                .property(ClientProperties.FOLLOW_REDIRECTS, false)
+                .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
+                .request()
+                .cookie("sessionToken", jwtBuilder.compact())
+                .buildPost(Entity.form(form))
+                .invoke();
+
+        assertEquals(400, result.getStatus());
+    }
+
+    @Test
+    public void shouldRejectsResponseWhenIssuerDoesntMatchCountryClaim() throws Exception {
+        ResponseBuilder responseBuilder = getResponseBuilder();
+        String responseString = buildString(responseBuilder.withIssuer(IssuerBuilder.anIssuer().withIssuerId("fooBar").build()));
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
+        jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadata.url());
+
+        Response result = client
+                .property(ClientProperties.FOLLOW_REDIRECTS, false)
+                .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
+                .request()
+                .cookie("sessionToken", jwtBuilder.compact())
+                .buildPost(Entity.form(form))
+                .invoke();
+
+        assertEquals(400, result.getStatus());
+    }
+
+    @Test
     public void testRendersResponseInForm() throws Exception {
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLResponse", singletonList(buildString(getResponseBuilder())));
 
         JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
         jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadata.url());
 
         Response response = client
             .property(ClientProperties.FOLLOW_REDIRECTS, false)

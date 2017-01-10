@@ -16,4 +16,13 @@ public class CountryConfiguration extends TrustStoreConfiguration {
     @NotNull
     @JsonProperty
     public String entityID;
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    public String countryCode;
 }

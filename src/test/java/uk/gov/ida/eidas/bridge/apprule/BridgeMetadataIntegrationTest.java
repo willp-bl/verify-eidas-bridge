@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
+import com.google.common.collect.ImmutableMap;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.junit.Assert;
@@ -18,6 +19,8 @@ import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,8 +33,10 @@ public class BridgeMetadataIntegrationTest {
     @ClassRule
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
+    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of("FR", eidasMetadata::url);
+
     @ClassRule
-    public static final DropwizardAppRule<BridgeConfiguration> RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url);
+    public static final DropwizardAppRule<BridgeConfiguration> RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, countryConfig);
 
     @BeforeClass
     public static void before() {

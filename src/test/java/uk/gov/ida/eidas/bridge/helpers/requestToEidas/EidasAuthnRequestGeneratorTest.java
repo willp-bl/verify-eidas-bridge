@@ -67,7 +67,7 @@ public class EidasAuthnRequestGeneratorTest {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
 
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
         Assert.assertNotNull(authnRequest);
         Assert.assertNotNull(authnRequest.getIssueInstant());
         Assert.assertEquals(EIDAS_SSO_LOCATION, authnRequest.getDestination());
@@ -84,7 +84,7 @@ public class EidasAuthnRequestGeneratorTest {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
 
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
         Issuer issuer = authnRequest.getIssuer();
         Assert.assertEquals(entityId, issuer.getValue());
     }
@@ -94,7 +94,7 @@ public class EidasAuthnRequestGeneratorTest {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
 
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
         NameIDPolicy nameIDPolicy = authnRequest.getNameIDPolicy();
         Assert.assertEquals(true, nameIDPolicy.getAllowCreate());
         Assert.assertEquals(NameIDType.UNSPECIFIED, nameIDPolicy.getFormat());
@@ -105,7 +105,7 @@ public class EidasAuthnRequestGeneratorTest {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
 
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
         RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
         Assert.assertEquals(AuthnContextComparisonTypeEnumeration.MINIMUM, requestedAuthnContext.getComparison());
         AuthnContextClassRef authnContextClassRef = requestedAuthnContext.getAuthnContextClassRefs().get(0);
@@ -117,7 +117,7 @@ public class EidasAuthnRequestGeneratorTest {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
 
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
         Extensions extensions = authnRequest.getExtensions();
         Assert.assertNotNull(extensions);
         Optional<XMLObject> spType = extensions
@@ -159,7 +159,7 @@ public class EidasAuthnRequestGeneratorTest {
     public void shouldSignTheEidasAuthnRequest() throws MarshallingException, SignatureException, SecurityException {
         String entityId = "http://i.am.the.bridge.com";
         EidasAuthnRequestGenerator authnRequestGenerator = createEidasAuthnRequestGenerator(entityId);
-        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID);
+        AuthnRequest authnRequest = authnRequestGenerator.generateAuthnRequest(AUTHN_REQEUST_ID, EIDAS_ENTITY_ID);
 
         Signature signature = authnRequest.getSignature();
         Assert.assertNotNull(signature);
@@ -175,7 +175,7 @@ public class EidasAuthnRequestGeneratorTest {
     }
 
     private EidasAuthnRequestGenerator createEidasAuthnRequestGenerator(String entityId) {
-        return new EidasAuthnRequestGenerator(entityId, EIDAS_ENTITY_ID, aSigningHelper().build(), singleSignOnServiceLocator);
+        return new EidasAuthnRequestGenerator(entityId, aSigningHelper().build(), singleSignOnServiceLocator);
     }
 
 }

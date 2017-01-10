@@ -69,4 +69,5 @@ eidasMetadata:
     retries: 3
   countries:
   - entityID: http://localhost:9000/ServiceMetadata
+    countryCode: NL
 

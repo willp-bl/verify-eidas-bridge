@@ -10,6 +10,7 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.eidas.bridge.exceptions.CountryNotDefinedException;
 import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 
 import java.util.List;

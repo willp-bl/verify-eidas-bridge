@@ -6,7 +6,7 @@ import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.criterion.EntityRoleCriterion;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.CountryNotDefinedException;
+import uk.gov.ida.eidas.bridge.exceptions.CountryNotDefinedException;
 import uk.gov.ida.saml.security.SignatureValidator;
 
 import javax.xml.namespace.QName;
@@ -26,7 +26,7 @@ public class MetadataBackedCountrySignatureValidator extends SignatureValidator 
         criteriaSet.add(new EntityIdCriterion(entityId));
         criteriaSet.add(new EntityRoleCriterion(role));
 
-        ExplicitKeySignatureTrustEngine explicitKeySignatureTrustEngine = Optional.ofNullable(countryTrustEngines.get(entityId)).orElseThrow(CountryNotDefinedException::new);
+        ExplicitKeySignatureTrustEngine explicitKeySignatureTrustEngine = Optional.ofNullable(countryTrustEngines.get(entityId)).orElseThrow(() -> new CountryNotDefinedException(entityId));
 
         return explicitKeySignatureTrustEngine.validate(signableSAMLObject.getSignature(), criteriaSet);
     }

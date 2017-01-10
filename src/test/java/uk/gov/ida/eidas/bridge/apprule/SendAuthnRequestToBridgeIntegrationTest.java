@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.jsonwebtoken.Claims;
@@ -48,8 +49,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static io.jsonwebtoken.SignatureAlgorithm.HS256;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -70,15 +73,17 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     private static EntityDescriptor eidasEntityDescriptor;
 
     @ClassRule
-    public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(
+    public static final MetadataRule nlMetadata = MetadataRule.eidasMetadata(
             uri -> {
                 eidasEntityDescriptor = NodeMetadataFactory.createIdpEntityDescriptor(uri);
                 return NodeMetadataFactory.createMetadata(eidasEntityDescriptor);
             });
 
+    private static final String COUNTRY_CODE = "NL";
+    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of(COUNTRY_CODE, nlMetadata::url);
 
     @ClassRule
-    public static final BridgeAppRule RULE = new BridgeAppRule(verifyMetadata::url, eidasMetadata::url);
+    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, countryConfig);
 
 
     @BeforeClass
@@ -169,8 +174,23 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     }
 
     @Test
-    public void testRendersAuthnRequestInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
+    public void testErrorsWhenCountryIsUnknown() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
         Response response = makeRequestForAuthnRequest("FR");
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+        String responseString = response.readEntity(String.class);
+        assertThat(responseString).isEqualTo("Country configuration is not defined");
+    }
+
+    @Test
+    public void testSetsEntityIntoCountryClaim() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
+        Response response = makeRequestForAuthnRequest("NL");
+        Claims sessionTokenClaims = getSessionTokenClaims(response);
+        assertThat(sessionTokenClaims.get("country")).isEqualTo(nlMetadata.url());
+    }
+
+    @Test
+    public void testRendersAuthnRequestInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
+        Response response = makeRequestForAuthnRequest(COUNTRY_CODE);
         String responseString = response.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -200,7 +220,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         Document doc = Jsoup.parseBodyFragment(responseString);
         Elements countryInputs = doc.getElementsByTag("option");
         Element spainOption = countryInputs.stream().filter(x -> x.val().equals("ES")).findAny().get();
-        Element netherlandsOption = countryInputs.stream().filter(x -> x.val().equals("NL")).findAny().get();
+        Element netherlandsOption = countryInputs.stream().filter(x -> x.val().equals(COUNTRY_CODE)).findAny().get();
         assertNotNull(spainOption);
         assertNotNull(netherlandsOption);
 
@@ -229,7 +249,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void testRendersSingleSignOnLocationAsFormAction() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest("FR");
+        Response result = makeRequestForAuthnRequest(COUNTRY_CODE);
         String responseString = result.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -243,7 +263,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void testRendersButtonInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest("FR");
+        Response result = makeRequestForAuthnRequest(COUNTRY_CODE);
         String responseString = result.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
@@ -253,14 +273,14 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void testRendersCountryInForm() throws MarshallingException, SignatureException, Base64DecodingException, ParserConfigurationException, UnmarshallingException, SAXException, IOException, SecurityException {
-        Response result = makeRequestForAuthnRequest("NL");
+        Response result = makeRequestForAuthnRequest(COUNTRY_CODE);
         String responseString = result.readEntity(String.class);
 
         Document doc = Jsoup.parseBodyFragment(responseString);
 
         Element countryInput = doc.getElementsByAttributeValue("name", "country").first();
         assertNotNull(countryInput);
-        assertEquals("NL", countryInput.val());
+        assertEquals(COUNTRY_CODE, countryInput.val());
 
     }
 

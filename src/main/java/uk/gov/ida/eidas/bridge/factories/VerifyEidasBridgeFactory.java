@@ -17,6 +17,8 @@ import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
+import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
+import uk.gov.ida.eidas.bridge.domain.CountryRepository;
 import uk.gov.ida.eidas.bridge.security.MetadataBackedCountrySignatureValidator;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
@@ -107,7 +109,7 @@ public class VerifyEidasBridgeFactory {
     public VerifyAuthnRequestResource getVerifyAuthnRequestResource() throws ComponentInitializationException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         AuthnRequestHandler authnRequestHandler = this.getAuthnRequestHandler();
         AuthnRequestFormGenerator authnRequestFormGenerator = this.getAuthnRequestFormGenerator();
-        return new VerifyAuthnRequestResource(authnRequestHandler, authnRequestFormGenerator);
+        return new VerifyAuthnRequestResource(authnRequestHandler, authnRequestFormGenerator, getCountryRepository());
     }
 
     public BridgeMetadataResource getBridgeMetadataResource() throws UnrecoverableKeyException, CertificateEncodingException, NoSuchAlgorithmException, KeyStoreException {
@@ -190,9 +192,7 @@ public class VerifyEidasBridgeFactory {
     private AuthnRequestFormGenerator getAuthnRequestFormGenerator() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
         return new AuthnRequestFormGenerator(
             getEidasAuthnRequestGenerator(),
-            getEidasSingleSignOnServiceLocator(),
-            new XmlObjectToBase64EncodedStringTransformer(),
-            configuration.getDestinationNodeEntityId());
+                new XmlObjectToBase64EncodedStringTransformer());
     }
 
     private VerifyResponseGenerator getVerifyResponseGenerator(String bridgeEntityId, String verifyEntityId) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
@@ -225,8 +225,7 @@ public class VerifyEidasBridgeFactory {
         );
         return new ResponseHandler(
             stringToResponse,
-            configuration.getDestinationNodeEntityId(),
-            new SamlResponseSignatureValidator(samlMessageSignatureValidator),
+                new SamlResponseSignatureValidator(samlMessageSignatureValidator),
             new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(encryptionAlgorithmWhitelist), new DecrypterFactory()),
             new SamlAssertionsSignatureValidator(samlMessageSignatureValidator),
             new EidasIdentityAssertionUnmarshaller());
@@ -288,7 +287,7 @@ public class VerifyEidasBridgeFactory {
 
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", configuration.getDestinationNodeEntityId(), getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
+        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
     }
 
     private SingleSignOnServiceLocator getEidasSingleSignOnServiceLocator() {
@@ -335,4 +334,11 @@ public class VerifyEidasBridgeFactory {
         ));
     }
 
+    public CountryRepository getCountryRepository() {
+        Map<String, String> countryCodeEntityIdMap = configuration.getEidasMetadataConfiguration().getCountries().stream().collect(Collectors.toMap(
+                CountryConfiguration::getCountryCode,
+                CountryConfiguration::getEntityID
+        ));
+        return new CountryRepository(countryCodeEntityIdMap);
+    }
 }

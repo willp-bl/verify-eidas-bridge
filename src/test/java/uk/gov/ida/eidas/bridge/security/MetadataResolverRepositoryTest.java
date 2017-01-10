@@ -1,11 +1,9 @@
 package uk.gov.ida.eidas.bridge.security;
 
 import com.google.common.collect.ImmutableMap;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.CountryNotDefinedException;
+import uk.gov.ida.eidas.bridge.exceptions.CountryNotDefinedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
