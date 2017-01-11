@@ -21,7 +21,6 @@ import uk.gov.ida.shared.utils.xml.XmlUtils;
 public class NodeMetadataFactory {
 
     private static XmlObjectToElementTransformer<EntityDescriptor> entityDescriptorXmlObjectToElementTransformer = new XmlObjectToElementTransformer<>();
-    ;
 
     public static String createNodeIdpMetadata(String entityID) {
         return createMetadata(createIdpEntityDescriptor(entityID));

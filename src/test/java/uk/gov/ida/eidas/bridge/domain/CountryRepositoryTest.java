@@ -20,9 +20,9 @@ public class CountryRepositoryTest {
     }
 
     @Test
-    public void shouldErrorIfTheCountryIsntThere() throws Exception {
+    public void shouldErrorIfTheCountryIsNotThere() throws Exception {
         ImmutableMap<String, String> metadataResolverMap = ImmutableMap.of("countryA", expected);
         CountryRepository metadataResolverRepository = new CountryRepository(metadataResolverMap);
-        assertThatThrownBy(() -> {metadataResolverRepository.fetchEntityId("countryB");}).isInstanceOf(CountryNotDefinedException.class);
+        assertThatThrownBy(() -> metadataResolverRepository.fetchEntityId("countryB")).isInstanceOf(CountryNotDefinedException.class);
     }
 }

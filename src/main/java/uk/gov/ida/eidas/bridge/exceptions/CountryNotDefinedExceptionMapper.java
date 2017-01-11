@@ -13,7 +13,7 @@ public class CountryNotDefinedExceptionMapper implements ExceptionMapper<Country
 
     @Override
     public Response toResponse(CountryNotDefinedException exception) {
-        LOG.error("Country %s is not defined", exception.getCountry());
+        LOG.error(String.format("Country %s is not defined", exception.getCountry()), exception);
         return OutboundJaxrsResponse.status(HttpStatus.SC_BAD_REQUEST).entity("Country configuration is not defined").build();
     }
 }

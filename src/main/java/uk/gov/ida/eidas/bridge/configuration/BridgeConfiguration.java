@@ -20,10 +20,6 @@ public class BridgeConfiguration extends Configuration {
 
     @JsonProperty
     @NotNull
-    private String destinationNodeEntityId;
-
-    @JsonProperty
-    @NotNull
     private String bridgeEntityId;
 
     @JsonProperty
@@ -72,10 +68,6 @@ public class BridgeConfiguration extends Configuration {
 
     public String getHostname() {
         return hostname;
-    }
-
-    public String getDestinationNodeEntityId() {
-        return destinationNodeEntityId;
     }
 
     public JwtCookieAuthConfiguration getSessionCookie() {

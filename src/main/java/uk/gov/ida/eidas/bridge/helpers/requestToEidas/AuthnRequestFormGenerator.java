@@ -22,7 +22,7 @@ public class AuthnRequestFormGenerator {
         AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId, destinationEntityId);
         return new SamlRequest(
             xmlObjectToBase64EncodedStringTransformer.apply(eidasAuthnRequest),
-                eidasAuthnRequest.getDestination()
+            eidasAuthnRequest.getDestination()
         );
     }
 }

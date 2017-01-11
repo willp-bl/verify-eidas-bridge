@@ -15,7 +15,6 @@ sessionCookie:
 
 hostname: ${HOST}
 bridgeEntityId: ${ENTITY_ID}
-destinationNodeEntityId: ${DESTINATION_NODE_ENTITY_ID}
 
 encryptingKeyStore:
   base64Value: ${ENCRYPTING_KEY_STORE_VALUE}

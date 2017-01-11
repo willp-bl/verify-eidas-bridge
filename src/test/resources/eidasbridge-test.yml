@@ -19,7 +19,6 @@ sessionCookie:
 
 hostname: OVERRIDE_ME
 bridgeEntityId: OVERRIDE_ME
-destinationNodeEntityId: OVERRIDE_ME
 
 encryptingKeyStore:
   base64Value: OVERRIDE_ME

@@ -40,13 +40,11 @@ public class EidasMetadataConfiguration {
     @JsonProperty
     private Integer maxRefreshDelay;
 
-    /* Used to set {@link org.opensaml.saml2.metadata.provider.AbstractReloadingMetadataProvider#maxRefreshDelay} */
     @Valid
     @NotNull
     @JsonProperty
     private JerseyClientConfiguration client;
 
-    /* Used to set {@link org.opensaml.saml2.metadata.provider.AbstractReloadingMetadataProvider#maxRefreshDelay} */
     @Valid
     @NotNull
     @NotEmpty
