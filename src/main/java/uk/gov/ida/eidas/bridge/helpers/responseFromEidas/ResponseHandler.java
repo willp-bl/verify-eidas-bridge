@@ -17,7 +17,6 @@ import java.util.List;
 
 public class ResponseHandler {
     private final StringToOpenSamlObjectTransformer<Response> stringToResponse;
-    private final String eidasEntityId;
     private final SamlResponseSignatureValidator samlResponseSignatureValidator;
     private final AssertionDecrypter assertionDecrypter;
     private final SamlAssertionsSignatureValidator samlAssertionsSignatureValidator;
@@ -25,20 +24,18 @@ public class ResponseHandler {
 
 
     public ResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse,
-                           String eidasEntityId,
                            SamlResponseSignatureValidator samlResponseSignatureValidator,
                            AssertionDecrypter assertionDecrypter,
                            SamlAssertionsSignatureValidator samlAssertionsSignatureValidator,
                            EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller) {
         this.stringToResponse = stringToResponse;
-        this.eidasEntityId = eidasEntityId;
         this.samlResponseSignatureValidator = samlResponseSignatureValidator;
         this.assertionDecrypter = assertionDecrypter;
         this.samlAssertionsSignatureValidator = samlAssertionsSignatureValidator;
         this.eidasIdentityAssertionUnmarshaller = eidasIdentityAssertionUnmarshaller;
     }
 
-    public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId) throws SecurityException {
+    public EidasSamlResponse handleResponse(String base64EncodedResponse, String expectedId, String eidasEntityId) throws SecurityException {
         Response response = this.stringToResponse.apply(base64EncodedResponse);
 
         if(!response.getInResponseTo().equals(expectedId)) {
@@ -46,8 +43,8 @@ public class ResponseHandler {
         }
 
         String actualIssuer = response.getIssuer().getValue();
-        if(!this.eidasEntityId.equals(actualIssuer)) {
-            throw new SecurityException("Response issuer (" + actualIssuer + ") didn't match expected issuer (" + this.eidasEntityId + ")");
+        if(!eidasEntityId.equals(actualIssuer)) {
+            throw new SecurityException("Response issuer (" + actualIssuer + ") didn't match expected issuer (" + eidasEntityId + ")");
         }
 
         ValidatedResponse validatedResponse = samlResponseSignatureValidator.validate(response, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);

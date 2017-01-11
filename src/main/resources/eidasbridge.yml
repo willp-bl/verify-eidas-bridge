@@ -15,7 +15,6 @@ sessionCookie:
 
 hostname: ${HOST}
 bridgeEntityId: ${ENTITY_ID}
-eidasNodeEntityId: ${CONNECTOR_NODE_ENTITY_ID}
 
 encryptingKeyStore:
   base64Value: ${ENCRYPTING_KEY_STORE_VALUE}
@@ -58,23 +57,15 @@ verifyMetadata:
       trustSelfSignedCertificates: true
 
 eidasMetadata:
-  uri: ${CONNECTOR_NODE_METADATA_URL}
-  trustStorePath: eidas_metadata_truststore.ts
-  trustStorePassword: Password
   minRefreshDelay: 60000
   maxRefreshDelay: 600000
-  expectedEntityId: ${CONNECTOR_NODE_ENTITY_ID}
-  jerseyClientName: EidasMetadataClient
   client:
     timeout: 2s
     timeToLive: 10m
     cookiesEnabled: false
     connectionTimeout: 1s
     retries: 3
-    keepAlive: 60s
-    chunkedEncodingEnabled: false
-    validateAfterInactivityPeriod: 5s
     tls:
       protocol: TLSv1.2
-      verifyHostname: false
-      trustSelfSignedCertificates: true
+  countries: ${COUNTRIES:-[]}
+

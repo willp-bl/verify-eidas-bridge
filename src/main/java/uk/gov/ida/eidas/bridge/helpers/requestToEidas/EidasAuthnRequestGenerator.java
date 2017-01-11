@@ -35,19 +35,18 @@ public class EidasAuthnRequestGenerator {
     public static final String NATURAL_PERSON_NAME_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
-    private final String bridgeEntityId, eidasEntityId;
+    private final String bridgeEntityId;
     private final SigningHelper signingHelper;
     private final SingleSignOnServiceLocator signOnServiceLocator;
 
 
-    public EidasAuthnRequestGenerator(String bridgeEntityId, String eidasEntityId, SigningHelper signingHelper, SingleSignOnServiceLocator signOnServiceLocator) {
+    public EidasAuthnRequestGenerator(String bridgeEntityId, SigningHelper signingHelper, SingleSignOnServiceLocator signOnServiceLocator) {
         this.bridgeEntityId = bridgeEntityId;
-        this.eidasEntityId = eidasEntityId;
         this.signingHelper = signingHelper;
         this.signOnServiceLocator = signOnServiceLocator;
     }
 
-    public AuthnRequest generateAuthnRequest(String authnReqeustId) throws MarshallingException, SignatureException, SecurityException {
+    public AuthnRequest generateAuthnRequest(String authnReqeustId, String destinationEntityId) throws MarshallingException, SignatureException, SecurityException {
         AuthnRequest eidasAuthnRequest = openSamlXmlObjectFactory.createAuthnRequest();
         Namespace eidasSamlExtensionsNamespace = new Namespace(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
         eidasAuthnRequest.getNamespaceManager().registerNamespaceDeclaration(eidasSamlExtensionsNamespace);
@@ -55,7 +54,7 @@ public class EidasAuthnRequestGenerator {
         eidasAuthnRequest.setID(authnReqeustId);
         eidasAuthnRequest.setIssueInstant(new DateTime());
         eidasAuthnRequest.setConsent(StatusResponseType.UNSPECIFIED_CONSENT);
-        eidasAuthnRequest.setDestination(signOnServiceLocator.getSignOnUrl(eidasEntityId));
+        eidasAuthnRequest.setDestination(signOnServiceLocator.getSignOnUrl(destinationEntityId));
         eidasAuthnRequest.setForceAuthn(true);
         eidasAuthnRequest.setProviderName(PROVIDER_NAME);
         eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(bridgeEntityId));

@@ -9,26 +9,20 @@ import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 public class AuthnRequestFormGenerator {
     private final EidasAuthnRequestGenerator eidasAuthnRequestGenerator;
-    private final SingleSignOnServiceLocator signOnServiceLocator;
     private final XmlObjectToBase64EncodedStringTransformer xmlObjectToBase64EncodedStringTransformer;
-    private final String eidasConnectorNodeEntityId;
 
     public AuthnRequestFormGenerator(
-        EidasAuthnRequestGenerator eidasAuthnRequestGenerator,
-        SingleSignOnServiceLocator signOnServiceLocator,
-        XmlObjectToBase64EncodedStringTransformer xmlObjectToBase64EncodedStringTransformer,
-        String eidasConnectorNodeEntityId) {
+            EidasAuthnRequestGenerator eidasAuthnRequestGenerator,
+            XmlObjectToBase64EncodedStringTransformer xmlObjectToBase64EncodedStringTransformer) {
         this.eidasAuthnRequestGenerator = eidasAuthnRequestGenerator;
-        this.signOnServiceLocator = signOnServiceLocator;
         this.xmlObjectToBase64EncodedStringTransformer = xmlObjectToBase64EncodedStringTransformer;
-        this.eidasConnectorNodeEntityId = eidasConnectorNodeEntityId;
     }
 
-    public SamlRequest generateAuthnRequestForm(String authnRequestId) throws MarshallingException, SignatureException, SecurityException {
-        AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId);
+    public SamlRequest generateAuthnRequestForm(String authnRequestId, String destinationEntityId) throws MarshallingException, SignatureException, SecurityException {
+        AuthnRequest eidasAuthnRequest = eidasAuthnRequestGenerator.generateAuthnRequest(authnRequestId, destinationEntityId);
         return new SamlRequest(
             xmlObjectToBase64EncodedStringTransformer.apply(eidasAuthnRequest),
-            signOnServiceLocator.getSignOnUrl(eidasConnectorNodeEntityId)
+            eidasAuthnRequest.getDestination()
         );
     }
 }

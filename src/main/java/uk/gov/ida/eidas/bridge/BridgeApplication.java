@@ -1,6 +1,5 @@
 package uk.gov.ida.eidas.bridge;
 
-import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -12,6 +11,7 @@ import io.dropwizard.views.ViewBundle;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.dhatim.dropwizard.jwt.cookie.authentication.JwtCookieAuthBundle;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.exceptions.CountryNotDefinedExceptionMapper;
 import uk.gov.ida.eidas.bridge.exceptions.MarshallingExceptionMapper;
 import uk.gov.ida.eidas.bridge.exceptions.SamlTransformationErrorMapper;
 import uk.gov.ida.eidas.bridge.exceptions.SecurityExceptionMapper;
@@ -23,9 +23,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
-import java.util.Map;
-
-import static com.google.common.collect.ImmutableMap.of;
 
 
 public class BridgeApplication extends Application<BridgeConfiguration> {
@@ -60,16 +57,15 @@ public class BridgeApplication extends Application<BridgeConfiguration> {
         environment.jersey().register(verifyEidasBridgeFactory.getBridgeMetadataResource());
         environment.jersey().register(verifyEidasBridgeFactory.getEidasResponseResource());
 
+        environment.jersey().register(new CountryNotDefinedExceptionMapper());
         environment.jersey().register(new SamlTransformationErrorMapper());
         environment.jersey().register(new SecurityExceptionMapper());
         environment.jersey().register(new SignatureExceptionMapper());
         environment.jersey().register(new MarshallingExceptionMapper());
 
-        Map<String, HealthCheck> healthChecks = of(
-            "verify-metadata", verifyEidasBridgeFactory.getVerifyMetadataHealthcheck(),
-            "eidas-metadata", verifyEidasBridgeFactory.getEidasMetadataHealthcheck()
-        );
-        healthChecks.entrySet().forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
+        verifyEidasBridgeFactory.getMetadataHealthchecks()
+                .entrySet()
+                .forEach(x -> environment.healthChecks().register(x.getKey(), x.getValue()));
     }
 
 }

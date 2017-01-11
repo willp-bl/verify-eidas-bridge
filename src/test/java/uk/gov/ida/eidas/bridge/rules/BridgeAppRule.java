@@ -5,8 +5,17 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.asList;
 
 public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
 
@@ -18,26 +27,24 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
 
     private static final String verifySigningKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(VERIFY_SIGNING_KEY_ALIAS, KEYSTORE_PASSWORD);
     private static final String encodedEncryptingKeyStore = TestSigningKeyStoreProvider.getBase64EncodedKeyStore(ENCRYPTING_KEY_ALIAS, KEYSTORE_PASSWORD);
+    private static final String metadataTrustStore = TestSigningKeyStoreProvider.getBase64EncodedTrustStore(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, KEYSTORE_PASSWORD) ;
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String HOSTNAME = "hostname";
     private static final String SECRET_SEED = "SECRET_SEED";
 
-    public String getHostname() {
-        return HOSTNAME;
-    }
+    public static BridgeAppRule createBridgeAppRule(Supplier<String> verifyMetadataUri, Map<String, Supplier<String>> countryConfig) {
+        List<Map.Entry<String, Supplier<String>>> entries = countryConfig.entrySet().stream().collect(Collectors.toList());
+        ConfigOverride.config("eidasMetadata.countries", "[{},{}]");
+        Stream<ConfigOverride> countryConfigOverrides = IntStream.range(0, entries.size()).mapToObj(idx -> asList(
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].base64Value", idx), metadataTrustStore),
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].password", idx), KEYSTORE_PASSWORD),
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].entityID", idx), entries.get(idx).getValue()),
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].countryCode", idx), entries.get(idx).getKey())
+        )).flatMap(Collection::stream);
 
-    public String getSecretSeed() {
-        return SECRET_SEED;
-    }
-
-    public BridgeAppRule(Supplier<String> verifyMetadataUri, Supplier<String> eidasMetadataUri, String eidasEntityId) {
-        super(BridgeApplication.class,
-                "eidasbridge-test.yml",
+        List<ConfigOverride> configOverrides = asList(
                 ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
                 ConfigOverride.config("verifyMetadata.uri", verifyMetadataUri),
-                ConfigOverride.config("eidasMetadata.trustStorePath", "test_metadata_truststore.ts"),
-                ConfigOverride.config("eidasMetadata.uri", eidasMetadataUri),
-                ConfigOverride.config("eidasNodeEntityId", eidasEntityId),
                 ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
                 ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
                 ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
@@ -51,6 +58,20 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
                 ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
                 ConfigOverride.config("encryptingKeyStore.alias", ENCRYPTING_KEY_ALIAS),
                 ConfigOverride.config("hostname", HOSTNAME),
-                ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED));
+                ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
+        );
+        return new BridgeAppRule(Stream.concat(configOverrides.stream(), countryConfigOverrides).toArray(ConfigOverride[]::new));
+    }
+
+    public String getHostname() {
+        return HOSTNAME;
+    }
+
+    public String getSecretSeed() {
+        return SECRET_SEED;
+    }
+
+    private BridgeAppRule(ConfigOverride... configOverrides) {
+        super(BridgeApplication.class, "eidasbridge-test.yml", configOverrides);
     }
 }

@@ -15,20 +15,20 @@ public class MetadataRule extends WireMockRule {
     private static final String verifyMetadataPath = "/SAML2/metadata/federation";
     private static final String eidasMetadataPath = "/ServiceMetadata";
 
-    private final String metadata;
     private final String path;
+    private final MetadataSupplier metadataSupplier;
 
-    private MetadataRule(String path, String metadata, WireMockConfiguration wireMockConfiguration) {
+    private MetadataRule(String path, MetadataSupplier metadataSupplier, WireMockConfiguration wireMockConfiguration) {
         super(wireMockConfiguration);
         this.path = path;
-        this.metadata = metadata;
+        this.metadataSupplier = metadataSupplier;
     }
 
-    public static MetadataRule eidasMetadata(String metadata) {
-        return new MetadataRule(eidasMetadataPath, metadata, wireMockConfig().dynamicPort());
+    public static MetadataRule eidasMetadata(MetadataSupplier metadataSupplier) {
+        return new MetadataRule(eidasMetadataPath, metadataSupplier, wireMockConfig().dynamicPort());
     }
 
-    public static MetadataRule verifyMetadata(String metadata) {
+    public static MetadataRule verifyMetadata(MetadataSupplier metadata) {
         return new MetadataRule(verifyMetadataPath, metadata, wireMockConfig().dynamicPort());
     }
 
@@ -40,7 +40,7 @@ public class MetadataRule extends WireMockRule {
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", MediaType.APPLICATION_XML)
-                    .withBody(metadata)
+                    .withBody(metadataSupplier.get(url()))
                 )
         );
     }

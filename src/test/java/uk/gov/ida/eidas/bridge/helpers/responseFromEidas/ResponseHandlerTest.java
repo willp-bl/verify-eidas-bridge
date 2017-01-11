@@ -18,8 +18,6 @@ import uk.gov.ida.common.shared.security.PublicKeyFactory;
 import uk.gov.ida.common.shared.security.X509CertificateFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
-import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
-import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
@@ -74,7 +72,7 @@ public class ResponseHandlerTest {
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         String responseString = buildString(responseBuilder);
-        assertNotNull(responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID));
+        assertNotNull(responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID));
     }
 
     @Test(expected = SamlTransformationErrorException.class)
@@ -86,7 +84,7 @@ public class ResponseHandlerTest {
         Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
         responseBuilder.withSigningCredential(signingCredential);
         String responseString = buildString(responseBuilder);
-        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID);
+        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID);
     }
 
     @Test
@@ -96,7 +94,7 @@ public class ResponseHandlerTest {
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         String responseString = buildString(responseBuilder);
-        EidasSamlResponse response = responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID);
+        EidasSamlResponse response = responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID);
         assertNotNull(response);
 
         assertNotNull("Should have an identity assertion", response.getIdentityAssertion());
@@ -111,7 +109,7 @@ public class ResponseHandlerTest {
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         responseBuilder.addEncryptedAssertion(anAssertion().buildWithEncrypterCredential(testCredentialFactory.getEncryptingCredential()));
         String responseString = buildString(responseBuilder);
-        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID);
+        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID);
     }
 
     @Test(expected = SamlTransformationErrorException.class)
@@ -124,7 +122,7 @@ public class ResponseHandlerTest {
 
         responseBuilder.addEncryptedAssertion(anAssertion().buildWithEncrypterCredential(testCredentialFactory2.getEncryptingCredential()));
         String responseString = buildString(responseBuilder);
-        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID);
+        responseHandler.handleResponse(responseString, IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID);
     }
 
     @Test(expected = SecurityException.class)
@@ -132,7 +130,7 @@ public class ResponseHandlerTest {
         ResponseHandler responseHandler = aResponseHandler().build();
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId("not-the-" + EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
-        responseHandler.handleResponse(buildString(responseBuilder), IN_RESPONSE_TO_ID);
+        responseHandler.handleResponse(buildString(responseBuilder), IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID);
     }
 
     @Test(expected = SecurityException.class)
@@ -142,7 +140,7 @@ public class ResponseHandlerTest {
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(EIDAS_ENTITY_ID).build();
         ResponseBuilder responseBuilder = getResponseBuilder(issuer);
         String responseString = buildString(responseBuilder);
-        assertNotNull(responseHandler.handleResponse(responseString, "NOT-" + IN_RESPONSE_TO_ID));
+        assertNotNull(responseHandler.handleResponse(responseString, "NOT-" + IN_RESPONSE_TO_ID, EIDAS_ENTITY_ID));
     }
 
     private SignatureValidator signatureValidator(final boolean validationShouldSucceed) {
@@ -208,7 +206,7 @@ public class ResponseHandlerTest {
 
             SamlAssertionsSignatureValidator samlAssertionsSignatureValidator = new SamlAssertionsSignatureValidator(new SamlMessageSignatureValidator(signatureValidator(this.shouldPassAssertionSignatureValidation)));
             EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller = new EidasIdentityAssertionUnmarshaller();
-            return new ResponseHandler(stringToResponse, EIDAS_ENTITY_ID, samlResponseSignatureValidator, assertionDecrypter, samlAssertionsSignatureValidator, eidasIdentityAssertionUnmarshaller);
+            return new ResponseHandler(stringToResponse, samlResponseSignatureValidator, assertionDecrypter, samlAssertionsSignatureValidator, eidasIdentityAssertionUnmarshaller);
         }
     }
 }

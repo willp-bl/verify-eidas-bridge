@@ -52,8 +52,9 @@ public class EidasResponseResource {
         @FormParam("SAMLResponse") @NotNull String responseStr,
         @Auth DefaultJwtCookiePrincipal principal) throws MarshallingException, SecurityException, SignatureException {
         String outboundID = principal.getClaims().get("outboundID", String.class);
+        String entityId = principal.getClaims().get("country", String.class);
 
-        EidasSamlResponse eidasSamlResponse = responseHandler.handleResponse(responseStr, outboundID);
+        EidasSamlResponse eidasSamlResponse = responseHandler.handleResponse(responseStr, outboundID, entityId);
         String inboundID = principal.getClaims().get("inboundID", String.class);
         String assertionConsumerServiceLocation = assertionConsumerServiceLocator.getAssertionConsumerServiceLocation(verifyEntityId);
         org.opensaml.saml.saml2.core.Response response = responseGenerator.generateResponse(assertionConsumerServiceLocation, inboundID, req.getRemoteAddr(), eidasSamlResponse.getIdentityAssertion());
