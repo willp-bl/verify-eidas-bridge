@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
+import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 import uk.gov.ida.saml.metadata.test.factories.metadata.EntityDescriptorFactory;
 
@@ -27,14 +28,16 @@ public class SingleSignOnServiceLocatorTest {
 
     @Before
     public void before() {
+        EidasSamlBootstrap.bootstrap();
+    }
+
+    @Test
+    public void shouldFetchSingleSignOnServiceLocationFromMetadata() {
         try {
             when(metadataResolver.resolveSingle(any(CriteriaSet.class))).thenReturn(new EntityDescriptorFactory().idpEntityDescriptor("myEntityId"));
         } catch (ResolverException e) {
             throw Throwables.propagate(e);
         }
-    }
-    @Test
-    public void shouldFetchSingleSignOnServiceLocationFromMetadata() {
         SingleSignOnServiceLocator singleSignOnServiceLocator = new SingleSignOnServiceLocator(metadataResolverRepository);
         when(metadataResolverRepository.fetch("myEntityId")).thenReturn(metadataResolver);
         String ssoLocation = singleSignOnServiceLocator.getSignOnUrl("myEntityId");
