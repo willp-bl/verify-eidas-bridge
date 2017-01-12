@@ -23,6 +23,7 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.metadata.criteria.entity.impl.EntityDescriptorCriterionPredicateRegistry;
+import org.opensaml.saml.metadata.resolver.filter.impl.SignatureValidationFilter;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestUnmarshaller;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
@@ -41,7 +42,10 @@ import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.metadata.EntitiesDescriptorNameCriterion;
 import uk.gov.ida.saml.metadata.EntitiesDescriptorNamePredicate;
+import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
 import uk.gov.ida.saml.metadata.JerseyClientMetadataResolver;
+import uk.gov.ida.saml.metadata.KeyStoreLoader;
+import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -56,6 +60,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URI;
 import java.security.Key;
+import java.security.KeyStore;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -337,31 +342,8 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void shouldFetchSSOLocationFromSwedishMetadata() throws Exception {
-        JerseyClientMetadataResolver metadataResolver = new JerseyClientMetadataResolver(
-            new Timer(),
-            client,
-            URI.create("https://eunode.eidastest.se/EidasNode/ServiceMetadata"));
-        BasicParserPool parserPool = new BasicParserPool();
-        parserPool.initialize();
-        metadataResolver.setParserPool(parserPool);
-        metadataResolver.setId("MetadataModule.MetadataResolver");
 
-        metadataResolver.setRequireValidMetadata(true);
-        metadataResolver.setFailFastInitialization(false);
-        metadataResolver.setMaxRefreshDelay(1000);
-        metadataResolver.setMinRefreshDelay(1000);
-        metadataResolver.setResolveViaPredicatesOnly(true);
 
-        EntityDescriptorCriterionPredicateRegistry registry = new EntityDescriptorCriterionPredicateRegistry();
-        registry.register(EntitiesDescriptorNameCriterion.class, EntitiesDescriptorNamePredicate.class);
-        metadataResolver.setCriterionPredicateRegistry(registry);
-
-        metadataResolver.initialize();
-
-        SingleSignOnServiceLocator singleSignOnServiceLocator = new SingleSignOnServiceLocator(metadataResolverRepository);
-        when(metadataResolverRepository.fetch("https://eunode.eidastest.se/EidasNode/ServiceMetadata")).thenReturn(metadataResolver);
-        String ssoLocation = singleSignOnServiceLocator.getSignOnUrl("https://eunode.eidastest.se/EidasNode/ServiceMetadata");
-        assertEquals("https://eunode.eidastest.se/EidasNode/ColleagueRequest", ssoLocation);
     }
 
     private String getExpectedSingleSignOnLocation() {
