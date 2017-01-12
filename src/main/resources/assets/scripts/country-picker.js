@@ -1,17 +1,15 @@
 (function($){
-  function handleSelection() {
+  function handleSelection(event) {
     event.preventDefault()
 
-    var $countryOption = $('#country-selector')
-    var country = $countryOption.val()
-    var countryName = $('option[value="' + country + '"]').text()
+    var $countrySelect = $('#country-selector')
+    var $countryOption = $countrySelect.find('option[value="' + $countrySelect.val() + '"]')
+    var countryName = $countryOption.text()
 
-    //List of countries with eIDAs
-    eidasCountries = ["NL", "ES", "SE"]
-
-    if(eidasCountries.indexOf(country)  > -1 ) {
+    if($countryOption.data('enabled')) {
       document.forms[0].submit()
-    } else if (countryName) {
+    }
+    else if (countryName) {
       document.getElementById('display-noEidas').innerHTML = countryName
       document.getElementById('noEidas').style.display = "block"
       document.getElementById('noCountry').style.display = "none"
@@ -22,7 +20,5 @@
     }
   }
   $('#user_input').click(handleSelection)
-  $(function(){ $('select').selectToAutocomplete() })
+  $('select').selectToAutocomplete()
 })(jQuery)
-
-

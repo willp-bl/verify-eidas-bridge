@@ -66,7 +66,7 @@ public class VerifyAuthnRequestResource {
     @Path("/choose-a-country")
     @Produces(MediaType.TEXT_HTML)
     public View getCountryPicker(@Auth DefaultJwtCookiePrincipal principal) {
-        return new ChooseACountryView();
+        return new ChooseACountryView(countryRepository.getEnabledCountries());
     }
 
     @POST

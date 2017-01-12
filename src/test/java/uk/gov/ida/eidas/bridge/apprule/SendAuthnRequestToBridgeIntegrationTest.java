@@ -225,6 +225,9 @@ public class SendAuthnRequestToBridgeIntegrationTest {
         assertNotNull(spainOption);
         assertNotNull(netherlandsOption);
 
+        assertEquals("Netherlands should be enabled (see eidasbridge-test.yml)", "true", netherlandsOption.attr("data-enabled"));
+        assertEquals("Spain should not be enabled (see eidasbridge-test.yml)", "false", spainOption.attr("data-enabled"));
+
         for (Element inputForm: doc.getElementsByTag("form")) {
             assertEquals("/choose-a-country", inputForm.attr("action"));
         }
