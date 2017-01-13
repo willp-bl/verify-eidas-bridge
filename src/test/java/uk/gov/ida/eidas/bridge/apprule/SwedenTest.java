@@ -1,16 +1,11 @@
 package uk.gov.ida.eidas.bridge.apprule;
 
 import com.google.common.io.Resources;
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.Test;
-import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.metadata.criteria.entity.impl.EntityDescriptorCriterionPredicateRegistry;
 import org.opensaml.saml.metadata.resolver.filter.impl.SignatureValidationFilter;
-import org.opensaml.saml.saml2.metadata.EntityDescriptor;
-import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
-import org.w3c.dom.Element;
 import uk.gov.ida.eidas.bridge.hacks.RoleDescriptorSkippingSignatureValidationFilter;
 import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
@@ -19,7 +14,6 @@ import uk.gov.ida.saml.metadata.EntitiesDescriptorNameCriterion;
 import uk.gov.ida.saml.metadata.EntitiesDescriptorNamePredicate;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
 import uk.gov.ida.saml.metadata.JerseyClientMetadataResolver;
-import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 
 import java.net.URI;
 import java.security.KeyStore;
