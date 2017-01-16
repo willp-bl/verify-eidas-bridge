@@ -5,7 +5,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.xml.BasicParserPool;
+import org.opensaml.saml.metadata.criteria.entity.impl.EntityDescriptorCriterionPredicateRegistry;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
+import org.opensaml.saml.metadata.resolver.filter.impl.SignatureValidationFilter;
 import org.opensaml.saml.metadata.resolver.impl.PredicateRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Response;
@@ -17,16 +20,15 @@ import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.support.impl.ExplicitKeySignatureTrustEngine;
-import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
-import uk.gov.ida.eidas.bridge.domain.CountryRepository;
-import uk.gov.ida.eidas.bridge.security.MetadataBackedCountrySignatureValidator;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.KeyStoreConfiguration;
+import uk.gov.ida.eidas.bridge.domain.CountryRepository;
+import uk.gov.ida.eidas.bridge.hacks.RoleDescriptorSkippingSignatureValidationFilter;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.helpers.requestFromVerify.AuthnRequestHandler;
 import uk.gov.ida.eidas.bridge.helpers.requestToEidas.AuthnRequestFormGenerator;
 import uk.gov.ida.eidas.bridge.helpers.requestToEidas.EidasAuthnRequestGenerator;
-import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.EidasIdentityAssertionUnmarshaller;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
@@ -40,6 +42,9 @@ import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
+import uk.gov.ida.eidas.bridge.security.MetadataBackedCountrySignatureValidator;
+import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
+import uk.gov.ida.saml.core.IdaSamlBootstrap;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
@@ -48,7 +53,10 @@ import uk.gov.ida.saml.dropwizard.metadata.MetadataHealthCheck;
 import uk.gov.ida.saml.hub.factories.AttributeFactory_1_1;
 import uk.gov.ida.saml.hub.transformers.inbound.decorators.AuthnRequestSizeValidator;
 import uk.gov.ida.saml.hub.validators.StringSizeValidator;
+import uk.gov.ida.saml.metadata.EntitiesDescriptorNameCriterion;
+import uk.gov.ida.saml.metadata.EntitiesDescriptorNamePredicate;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
+import uk.gov.ida.saml.metadata.JerseyClientMetadataResolver;
 import uk.gov.ida.saml.metadata.KeyStoreLoader;
 import uk.gov.ida.saml.metadata.MetadataConfiguration;
 import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
@@ -67,7 +75,9 @@ import uk.gov.ida.saml.security.validators.signature.SamlResponseSignatureValida
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.client.Client;
 import java.io.InputStream;
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -80,6 +90,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
@@ -253,14 +264,54 @@ public class VerifyEidasBridgeFactory {
             keyStoreResource,
             metadataConfiguration.getTrustStorePassword()
         );
-        return  metadataModule.metadataResolver(
+        return getRoleDescriptorSkippingMetadataResolver(keyStore,
             metadataConfiguration.getUri(),
             metadataConfiguration.getMaxRefreshDelay(),
             metadataConfiguration.getMinRefreshDelay(),
             metadataModule.getClient(environment, metadataConfiguration),
-            new ExpiredCertificateMetadataFilter(),
-            new PKIXSignatureValidationFilterProvider(keyStore)
-        );
+            new ExpiredCertificateMetadataFilter());
+    }
+
+    /**
+     * Duplicate of {@link MetadataModule#metadataResolver}, except the resolver is built with a
+     * a {@link RoleDescriptorSkippingSignatureValidationFilter} instead of a {@link SignatureValidationFilter}
+     */
+    private MetadataResolver getRoleDescriptorSkippingMetadataResolver(
+        KeyStore keystore,
+        URI metadataUri,
+        int maxRefreshDelay,
+        int minRefreshDelay,
+        Client client,
+        ExpiredCertificateMetadataFilter expiredCertificateMetadataFilter) {
+        try {
+            IdaSamlBootstrap.bootstrap();
+            JerseyClientMetadataResolver metadataResolver = new JerseyClientMetadataResolver(
+                new Timer(),
+                client,
+                metadataUri);
+            BasicParserPool parserPool = new BasicParserPool();
+            parserPool.initialize();
+            metadataResolver.setParserPool(parserPool);
+            metadataResolver.setId("MetadataModule.MetadataResolver");
+
+            SignatureValidationFilter signatureValidationFilter = RoleDescriptorSkippingSignatureValidationFilter.fromKeystore(keystore);
+            metadataResolver.setMetadataFilter(metadata -> signatureValidationFilter.filter(expiredCertificateMetadataFilter.filter(metadata)));
+
+            metadataResolver.setRequireValidMetadata(true);
+            metadataResolver.setFailFastInitialization(false);
+            metadataResolver.setMaxRefreshDelay(maxRefreshDelay);
+            metadataResolver.setMinRefreshDelay(minRefreshDelay);
+            metadataResolver.setResolveViaPredicatesOnly(true);
+
+            EntityDescriptorCriterionPredicateRegistry registry = new EntityDescriptorCriterionPredicateRegistry();
+            registry.register(EntitiesDescriptorNameCriterion.class, EntitiesDescriptorNamePredicate.class);
+            metadataResolver.setCriterionPredicateRegistry(registry);
+
+            metadataResolver.initialize();
+            return metadataResolver;
+        } catch (ComponentInitializationException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private MetadataBackedSignatureValidator getMetadataBackedSignatureValidator(MetadataResolver metadataResolver) throws ComponentInitializationException {

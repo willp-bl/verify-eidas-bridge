@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import uk.gov.ida.saml.metadata.NamelessPKIXValidationInformationResolver;
+import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
@@ -49,6 +50,10 @@ import static java.util.Collections.singletonList;
 public class RoleDescriptorSkippingSignatureValidationFilter extends SignatureValidationFilter {
     private static final Logger log = LoggerFactory.getLogger(RoleDescriptorSkippingSignatureValidationFilter.class);
 
+    /**
+     * Duplicate of {@link PKIXSignatureValidationFilterProvider#get()}, except it returns
+     * a {@link RoleDescriptorSkippingSignatureValidationFilter} instead of a {@link SignatureValidationFilter}
+     */
     public static RoleDescriptorSkippingSignatureValidationFilter fromKeystore(KeyStore metadataTrustStore) {
         ArrayList<String> aliases;
         BasicPKIXValidationInformation basicPKIXValidationInformation = null;
