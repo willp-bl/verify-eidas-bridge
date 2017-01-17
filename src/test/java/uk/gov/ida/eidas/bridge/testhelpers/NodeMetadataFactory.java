@@ -26,6 +26,30 @@ public class NodeMetadataFactory {
         return createMetadata(createIdpEntityDescriptor(entityID));
     }
 
+    public static String createNodeIdpMetadataWithoutSignedIDPSSODescriptor(String entityID) {
+        return createMetadata(createIdpEntityDescriptorWithoutIDPSSODescriptor(entityID));
+    }
+
+    public static EntityDescriptor createIdpEntityDescriptorWithoutIDPSSODescriptor(String entityID) {
+        Signature signature = createSignature(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, TestCertificateStrings.METADATA_SIGNING_A_PRIVATE_KEY);
+        KeyDescriptor keyDescriptor = KeyDescriptorBuilder.aKeyDescriptor().withX509ForSigning(TestCertificateStrings.TEST_PUBLIC_CERT).build();
+        try {
+            IDPSSODescriptor idpssoDescriptor = IdpSSODescriptorBuilderSkippingSignature
+                .anIdpSsoDescriptor()
+                .addKeyDescriptor(keyDescriptor)
+                .withoutSigning()
+                .build();
+            return EntityDescriptorBuilder
+                .anEntityDescriptor()
+                .withEntityId(entityID)
+                .withIdpSsoDescriptor(idpssoDescriptor)
+                .withSignature(signature)
+                .build();
+        } catch (MarshallingException | SignatureException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     public static EntityDescriptor createIdpEntityDescriptor(String entityID) {
         Signature signature = createSignature(TestCertificateStrings.METADATA_SIGNING_A_PUBLIC_CERT, TestCertificateStrings.METADATA_SIGNING_A_PRIVATE_KEY);
         KeyDescriptor keyDescriptor = KeyDescriptorBuilder.aKeyDescriptor().withX509ForSigning(TestCertificateStrings.TEST_PUBLIC_CERT).build();

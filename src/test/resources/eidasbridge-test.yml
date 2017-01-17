@@ -69,4 +69,5 @@ eidasMetadata:
   countries:
   - entityID: http://localhost:9000/ServiceMetadata
     countryCode: NL
-
+  - entityID: http://localhost:9000/ServiceMetadata
+    countryCode: ES

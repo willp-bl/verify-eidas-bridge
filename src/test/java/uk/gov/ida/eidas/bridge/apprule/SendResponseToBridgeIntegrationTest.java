@@ -71,7 +71,10 @@ public class SendResponseToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
     @ClassRule
-    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, ImmutableMap.of("FR", eidasMetadata::url));
+    public static final MetadataRule eidasMetadataWithoutSignedSSODescriptor = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadataWithoutSignedIDPSSODescriptor);
+
+    @ClassRule
+    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, ImmutableMap.of("FR", eidasMetadata::url, "SE", eidasMetadataWithoutSignedSSODescriptor::url));
 
     @BeforeClass
     public static void before() {
@@ -80,7 +83,7 @@ public class SendResponseToBridgeIntegrationTest {
 
     @Test
     public void shouldAcceptsResponseWithValidSignature() throws Exception {
-        String responseString = buildString(getResponseBuilder());
+        String responseString = buildString(getResponseBuilder(eidasMetadata.url()));
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
         form.put("SAMLResponse", singletonList(responseString));
@@ -100,9 +103,32 @@ public class SendResponseToBridgeIntegrationTest {
         assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
     }
 
+    //this is reproducing the bug on CEF JIRA  : eId-108
+    @Test
+    public void shouldAcceptResponseWithUnexpectedlySignedSSODescriptor() throws Exception {
+        String responseString = buildString(getResponseBuilder(eidasMetadataWithoutSignedSSODescriptor.url()));
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
+        jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadataWithoutSignedSSODescriptor.url());
+
+        Response result = client
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
+            .request()
+            .cookie("sessionToken", jwtBuilder.compact())
+            .buildPost(Entity.form(form))
+            .invoke();
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
+    }
+
     @Test
     public void shouldRejectsResponseWithInvalidSignature() throws Exception {
-        ResponseBuilder responseBuilder = getResponseBuilder();
+        ResponseBuilder responseBuilder = getResponseBuilder(eidasMetadata.url());
         Credential signingCredential = new TestCredentialFactory(TestCertificateStrings.UNCHAINED_PUBLIC_CERT, TestCertificateStrings.UNCHAINED_PRIVATE_KEY).getSigningCredential();
         responseBuilder.withSigningCredential(signingCredential);
         String responseString = buildString(responseBuilder);
@@ -127,7 +153,7 @@ public class SendResponseToBridgeIntegrationTest {
 
     @Test
     public void shouldRejectsResponseWhenCountryInCookieIsNotDefined() throws Exception {
-        ResponseBuilder responseBuilder = getResponseBuilder();
+        ResponseBuilder responseBuilder = getResponseBuilder(eidasMetadata.url());
         String responseString = buildString(responseBuilder);
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
@@ -150,7 +176,7 @@ public class SendResponseToBridgeIntegrationTest {
 
     @Test
     public void shouldRejectsResponseWhenIssuerDoesntMatchCountryClaim() throws Exception {
-        ResponseBuilder responseBuilder = getResponseBuilder();
+        ResponseBuilder responseBuilder = getResponseBuilder(eidasMetadata.url());
         String responseString = buildString(responseBuilder.withIssuer(IssuerBuilder.anIssuer().withIssuerId("fooBar").build()));
 
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
@@ -174,7 +200,7 @@ public class SendResponseToBridgeIntegrationTest {
     @Test
     public void testRendersResponseInForm() throws Exception {
         MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
-        form.put("SAMLResponse", singletonList(buildString(getResponseBuilder())));
+        form.put("SAMLResponse", singletonList(buildString(getResponseBuilder(eidasMetadata.url()))));
 
         JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
         jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
@@ -202,7 +228,7 @@ public class SendResponseToBridgeIntegrationTest {
         assertNotNull(samlResponseSaml);
     }
 
-    private ResponseBuilder getResponseBuilder() {
+    private ResponseBuilder getResponseBuilder(String url) {
         AttributeStatementBuilder attributeStatementBuilder = anAttributeStatement();
 
         String eidasAddress = new String(encodeBase64("<some-xml>This is my address</some-xml>".getBytes()));
@@ -214,8 +240,8 @@ public class SendResponseToBridgeIntegrationTest {
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.PERSON_IDENTIFIER_URI, "personNumber1337"));
 
         AssertionBuilder assertionBuilder = anAssertion().addAttributeStatement(attributeStatementBuilder.build());
-        Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
-        Issuer issuerAssertion = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
+        Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(url).build();
+        Issuer issuerAssertion = IssuerBuilder.anIssuer().withIssuerId(url).build();
         return aResponse().withInResponseTo(SOME_RESPONSE_ID)
                 .withIssuer(issuer)
                 .addEncryptedAssertion(assertionBuilder.withIssuer(issuerAssertion).buildWithEncrypterCredential(createEncrypter()));
