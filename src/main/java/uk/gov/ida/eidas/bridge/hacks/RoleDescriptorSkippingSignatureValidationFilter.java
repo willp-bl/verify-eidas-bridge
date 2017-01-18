@@ -94,52 +94,52 @@ public class RoleDescriptorSkippingSignatureValidationFilter extends SignatureVa
             verifySignature(entityDescriptor, entityID, false);
         }
 
-        final Iterator<RoleDescriptor> roleIter = entityDescriptor.getRoleDescriptors().iterator();
-        while (roleIter.hasNext()) {
-           final RoleDescriptor roleChild = roleIter.next();
-            if (!roleChild.isSigned()) {
-                log.trace("RoleDescriptor member '{}' was not signed, skipping signature processing...",
-                        roleChild.getElementQName());
-                continue;
-            }
-            // <hack> Skip role descriptors with broken signatures due to eIDAS bug EID-108.
-            else if (hasBrokenSignatureValue(roleChild)) { continue; }
-            // </hack>
-            else {
-                log.trace("Processing signed RoleDescriptor member: {}", roleChild.getElementQName());
-            }
-
-            try {
-                final String roleID = getRoleIDToken(entityID, roleChild);
-                verifySignature(roleChild, roleID, false);
-            } catch (final FilterException e) {
-                log.error("RoleDescriptor '{}' subordinate to entity '{}' failed signature verification, "
-                       + "removing from metadata provider",
-                       roleChild.getElementQName(), entityID);
-                // Note that this is ok since we're iterating over an IndexedXMLObjectChildrenList directly,
-                // rather than a sublist like in processEntityGroup, and iterator remove() is supported there.
-                roleIter.remove();
-            }
-        }
-
-        if (entityDescriptor.getAffiliationDescriptor() != null) {
-            final AffiliationDescriptor affiliationDescriptor = entityDescriptor.getAffiliationDescriptor();
-            if (!affiliationDescriptor.isSigned()) {
-                log.trace("AffiliationDescriptor member was not signed, skipping signature processing...");
-            } else {
-                log.trace("Processing signed AffiliationDescriptor member with owner ID: {}",
-                        affiliationDescriptor.getOwnerID());
-
-                try {
-                    verifySignature(affiliationDescriptor, affiliationDescriptor.getOwnerID(), false);
-                } catch (final FilterException e) {
-                    log.error("AffiliationDescriptor with owner ID '{}' subordinate to entity '{}' " +
-                            "failed signature verification, removing from metadata provider",
-                            affiliationDescriptor.getOwnerID(), entityID);
-                    entityDescriptor.setAffiliationDescriptor(null);
-                }
-            }
-        }
+//        final Iterator<RoleDescriptor> roleIter = entityDescriptor.getRoleDescriptors().iterator();
+//        while (roleIter.hasNext()) {
+//           final RoleDescriptor roleChild = roleIter.next();
+//            if (!roleChild.isSigned()) {
+//                log.trace("RoleDescriptor member '{}' was not signed, skipping signature processing...",
+//                        roleChild.getElementQName());
+//                continue;
+//            }
+//            // <hack> Skip role descriptors with broken signatures due to eIDAS bug EID-108.
+//            else if (hasBrokenSignatureValue(roleChild)) { continue; }
+//            // </hack>
+//            else {
+//                log.trace("Processing signed RoleDescriptor member: {}", roleChild.getElementQName());
+//            }
+//
+//            try {
+//                final String roleID = getRoleIDToken(entityID, roleChild);
+//                verifySignature(roleChild, roleID, false);
+//            } catch (final FilterException e) {
+//                log.error("RoleDescriptor '{}' subordinate to entity '{}' failed signature verification, "
+//                       + "removing from metadata provider",
+//                       roleChild.getElementQName(), entityID);
+//                // Note that this is ok since we're iterating over an IndexedXMLObjectChildrenList directly,
+//                // rather than a sublist like in processEntityGroup, and iterator remove() is supported there.
+//                roleIter.remove();
+//            }
+//        }
+//
+//        if (entityDescriptor.getAffiliationDescriptor() != null) {
+//            final AffiliationDescriptor affiliationDescriptor = entityDescriptor.getAffiliationDescriptor();
+//            if (!affiliationDescriptor.isSigned()) {
+//                log.trace("AffiliationDescriptor member was not signed, skipping signature processing...");
+//            } else {
+//                log.trace("Processing signed AffiliationDescriptor member with owner ID: {}",
+//                        affiliationDescriptor.getOwnerID());
+//
+//                try {
+//                    verifySignature(affiliationDescriptor, affiliationDescriptor.getOwnerID(), false);
+//                } catch (final FilterException e) {
+//                    log.error("AffiliationDescriptor with owner ID '{}' subordinate to entity '{}' " +
+//                            "failed signature verification, removing from metadata provider",
+//                            affiliationDescriptor.getOwnerID(), entityID);
+//                    entityDescriptor.setAffiliationDescriptor(null);
+//                }
+//            }
+//        }
     }
 
     /**
