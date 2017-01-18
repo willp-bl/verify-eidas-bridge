@@ -5,7 +5,6 @@ import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import org.apache.http.HttpStatus;
 import org.apache.xml.security.exceptions.Base64DecodingException;
 import org.glassfish.jersey.client.ClientProperties;
@@ -22,8 +21,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.metadata.criteria.entity.impl.EntityDescriptorCriterionPredicateRegistry;
-import org.opensaml.saml.metadata.resolver.filter.impl.SignatureValidationFilter;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestUnmarshaller;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
@@ -33,19 +30,12 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
-import uk.gov.ida.saml.metadata.EntitiesDescriptorNameCriterion;
-import uk.gov.ida.saml.metadata.EntitiesDescriptorNamePredicate;
-import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
-import uk.gov.ida.saml.metadata.JerseyClientMetadataResolver;
-import uk.gov.ida.saml.metadata.KeyStoreLoader;
-import uk.gov.ida.saml.metadata.PKIXSignatureValidationFilterProvider;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -58,16 +48,13 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.net.URI;
 import java.security.Key;
-import java.security.KeyStore;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Timer;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -77,7 +64,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
 import static uk.gov.ida.eidas.bridge.testhelpers.AuthnRequestBuilder.anAuthnRequest;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -101,7 +87,11 @@ public class SendAuthnRequestToBridgeIntegrationTest {
             });
 
     private static final String COUNTRY_CODE = "NL";
-    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of(COUNTRY_CODE, nlMetadata::url);
+
+    @ClassRule
+    public static final MetadataRule eidasMetadataWithoutSignedSSODescriptor = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadataWithoutSignedIDPSSODescriptor);
+
+    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of(COUNTRY_CODE, nlMetadata::url, "SE", eidasMetadataWithoutSignedSSODescriptor::url);
 
     @ClassRule
     public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, countryConfig);
@@ -342,8 +332,23 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     @Test
     public void shouldFetchSSOLocationFromSwedishMetadata() throws Exception {
+        Response response = makeRequestForAuthnRequest("SE");
+        String responseString = response.readEntity(String.class);
 
+        Document doc = Jsoup.parseBodyFragment(responseString);
+        Element samlRequest = doc.getElementsByAttributeValue("name", "SAMLRequest").first();
+        assertNotNull(samlRequest);
+        String samlRequestValue = samlRequest.val();
+        assertNotNull(samlRequestValue);
 
+        AuthnRequest authnRequest = (AuthnRequest) new AuthnRequestUnmarshaller().unmarshall(XmlUtils.convertToElement(StringEncoding.fromBase64Encoded(samlRequestValue)));
+
+        //ID is recorded in sessionToken
+        assertThat(authnRequest.getID()).isEqualTo(getSessionTokenClaims(response).get("outboundID", String.class));
+
+        assertThat(TestSignatureValidator.getSignatureValidator().validate(authnRequest, null, SPSSODescriptor.DEFAULT_ELEMENT_NAME)).isTrue();
+        String entityId = authnRequest.getIssuer().getValue();
+        assertEquals(RULE.getHostname() + "/metadata", entityId);
     }
 
     private String getExpectedSingleSignOnLocation() {

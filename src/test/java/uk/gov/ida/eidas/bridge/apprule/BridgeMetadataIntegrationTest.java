@@ -33,7 +33,7 @@ public class BridgeMetadataIntegrationTest {
     @ClassRule
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
-    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of("FR", eidasMetadata::url);
+    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of("FR", eidasMetadata::url, "ES", () -> "http://banana.rama.com");
 
     @ClassRule
     public static final DropwizardAppRule<BridgeConfiguration> RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, countryConfig);

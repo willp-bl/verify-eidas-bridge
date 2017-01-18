@@ -37,7 +37,6 @@ public class NodeMetadataFactory {
             IDPSSODescriptor idpssoDescriptor = IdpSSODescriptorBuilderSkippingSignature
                 .anIdpSsoDescriptor()
                 .addKeyDescriptor(keyDescriptor)
-                .withoutSigning()
                 .build();
             return EntityDescriptorBuilder
                 .anEntityDescriptor()
