@@ -71,7 +71,7 @@ public class SendResponseToBridgeIntegrationTest {
     public static final MetadataRule eidasMetadata = MetadataRule.eidasMetadata(NodeMetadataFactory::createNodeIdpMetadata);
 
     @ClassRule
-    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, ImmutableMap.of("FR", eidasMetadata::url));
+    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, ImmutableMap.of("FR", eidasMetadata::url, "ES", () -> "http://some-metadata.com"));
 
     @BeforeClass
     public static void before() {

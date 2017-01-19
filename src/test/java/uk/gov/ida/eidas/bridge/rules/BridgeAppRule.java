@@ -4,6 +4,7 @@ import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
@@ -32,35 +33,52 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
     private static final String HOSTNAME = "hostname";
     private static final String SECRET_SEED = "SECRET_SEED";
 
-    public static BridgeAppRule createBridgeAppRule(Supplier<String> verifyMetadataUri, Map<String, Supplier<String>> countryConfig) {
-        List<Map.Entry<String, Supplier<String>>> entries = countryConfig.entrySet().stream().collect(Collectors.toList());
+    // Need a supplier that will return a string url - we need wiremock to initialise before we try and read the url
+    public static BridgeAppRule createBridgeAppRuleFromConfig(Supplier<String> verifyMetadataUri, Map<String, Supplier<CountryConfiguration>> countryConfig) {
+        List<Map.Entry<String, Supplier<CountryConfiguration>>> entries = countryConfig.entrySet().stream().collect(Collectors.toList());
         ConfigOverride.config("eidasMetadata.countries", "[{},{}]");
-        Stream<ConfigOverride> countryConfigOverrides = IntStream.range(0, entries.size()).mapToObj(idx -> asList(
+        Stream<ConfigOverride> countryConfigOverrides = IntStream.range(0, entries.size()).mapToObj(idx -> {
+            String key = entries.get(idx).getKey();
+            Supplier<CountryConfiguration> value = entries.get(idx).getValue();
+            return asList(
                 ConfigOverride.config(String.format("eidasMetadata.countries[%s].base64Value", idx), metadataTrustStore),
                 ConfigOverride.config(String.format("eidasMetadata.countries[%s].password", idx), KEYSTORE_PASSWORD),
-                ConfigOverride.config(String.format("eidasMetadata.countries[%s].entityID", idx), entries.get(idx).getValue()),
-                ConfigOverride.config(String.format("eidasMetadata.countries[%s].countryCode", idx), entries.get(idx).getKey())
-        )).flatMap(Collection::stream);
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].entityID", idx), () -> value.get().getEntityID()),
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].workaroundBrokenRoleDescriptorSignatures", idx), () -> Boolean.toString(value.get().workaroundBrokenRoleDescriptorSignatures())),
+                ConfigOverride.config(String.format("eidasMetadata.countries[%s].countryCode", idx), key)
+            );
+        }).flatMap(Collection::stream);
 
         List<ConfigOverride> configOverrides = asList(
-                ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
-                ConfigOverride.config("verifyMetadata.uri", verifyMetadataUri),
-                ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
-                ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
-                ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
-                ConfigOverride.config("eidasSigningKeyStore.alias", EIDAS_SIGNING_KEY_ALIAS),
-                ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
-                ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
-                ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
-                ConfigOverride.config("verifySigningKeyStore.alias", VERIFY_SIGNING_KEY_ALIAS),
-                ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
-                ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
-                ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
-                ConfigOverride.config("encryptingKeyStore.alias", ENCRYPTING_KEY_ALIAS),
-                ConfigOverride.config("hostname", HOSTNAME),
-                ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
+            ConfigOverride.config("verifyMetadata.trustStorePath", "test_metadata_truststore.ts"),
+            ConfigOverride.config("verifyMetadata.uri", verifyMetadataUri),
+            ConfigOverride.config("eidasSigningKeyStore.base64Value", eidasSigningKeyStore),
+            ConfigOverride.config("eidasSigningKeyStore.password", KEYSTORE_PASSWORD),
+            ConfigOverride.config("eidasSigningKeyStore.type", KEYSTORE_TYPE),
+            ConfigOverride.config("eidasSigningKeyStore.alias", EIDAS_SIGNING_KEY_ALIAS),
+            ConfigOverride.config("verifySigningKeyStore.base64Value", verifySigningKeyStore),
+            ConfigOverride.config("verifySigningKeyStore.password", KEYSTORE_PASSWORD),
+            ConfigOverride.config("verifySigningKeyStore.type", KEYSTORE_TYPE),
+            ConfigOverride.config("verifySigningKeyStore.alias", VERIFY_SIGNING_KEY_ALIAS),
+            ConfigOverride.config("encryptingKeyStore.base64Value", encodedEncryptingKeyStore),
+            ConfigOverride.config("encryptingKeyStore.password", KEYSTORE_PASSWORD),
+            ConfigOverride.config("encryptingKeyStore.type", KEYSTORE_TYPE),
+            ConfigOverride.config("encryptingKeyStore.alias", ENCRYPTING_KEY_ALIAS),
+            ConfigOverride.config("hostname", HOSTNAME),
+            ConfigOverride.config("sessionCookie.secretSeed", SECRET_SEED)
         );
         return new BridgeAppRule(Stream.concat(configOverrides.stream(), countryConfigOverrides).toArray(ConfigOverride[]::new));
+    }
+
+    public static BridgeAppRule createBridgeAppRule(Supplier<String> verifyMetadataUri, Map<String, Supplier<String>> countryConfig) {
+        Map<String, Supplier<CountryConfiguration>> configMap = countryConfig.entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> () -> new CountryConfiguration(entry.getValue().get(), entry.getKey(), false)
+                )
+        );
+        return createBridgeAppRuleFromConfig(verifyMetadataUri, configMap);
     }
 
     public String getHostname() {

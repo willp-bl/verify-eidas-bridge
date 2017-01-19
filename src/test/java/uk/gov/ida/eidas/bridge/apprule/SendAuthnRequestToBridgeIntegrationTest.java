@@ -27,6 +27,7 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
+import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
@@ -70,6 +71,7 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     @ClassRule
     public static final MetadataRule verifyMetadata = MetadataRule.verifyMetadata(uri-> new MetadataFactory().defaultMetadata());
 
+    // TODO: this is set as a side effect of a lambda. Gross. Gross.
     private static EntityDescriptor eidasEntityDescriptor;
 
     @ClassRule
@@ -79,11 +81,21 @@ public class SendAuthnRequestToBridgeIntegrationTest {
                 return NodeMetadataFactory.createMetadata(eidasEntityDescriptor);
             });
 
+    @ClassRule
+    public static final MetadataRule eidasMetadataWithoutSignedSSODescriptor = MetadataRule.eidasMetadata(uri -> {
+            EntityDescriptor entityDescriptorWithBrokenRoleDescriptorSignatures = NodeMetadataFactory.createEntityDescriptorWithBrokenRoleDescriptorSignature(uri);
+            return NodeMetadataFactory.createMetadata(entityDescriptorWithBrokenRoleDescriptorSignatures);
+        }
+    );
+
     private static final String COUNTRY_CODE = "NL";
-    private static Map<String, Supplier<String>> countryConfig = ImmutableMap.of(COUNTRY_CODE, nlMetadata::url);
+    private static Map<String, Supplier<CountryConfiguration>> countryConfig = ImmutableMap.of(
+        COUNTRY_CODE, () -> new CountryConfiguration(nlMetadata.url(), COUNTRY_CODE, false),
+        "SE", () -> new CountryConfiguration(eidasMetadataWithoutSignedSSODescriptor.url(), "SE", /* workaroundBrokenRoleDescriptorSignatures = */ true)
+    );
 
     @ClassRule
-    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRule(verifyMetadata::url, countryConfig);
+    public static final BridgeAppRule RULE = BridgeAppRule.createBridgeAppRuleFromConfig(verifyMetadata::url, countryConfig);
 
 
     @BeforeClass
@@ -316,6 +328,27 @@ public class SendAuthnRequestToBridgeIntegrationTest {
             .invoke();
 
         assertEquals(400, result.getStatus());
+    }
+
+    @Test
+    public void shouldFetchSSOLocationFromSwedishMetadata() throws Exception {
+        Response response = makeRequestForAuthnRequest("SE");
+        String responseString = response.readEntity(String.class);
+
+        Document doc = Jsoup.parseBodyFragment(responseString);
+        Element samlRequest = doc.getElementsByAttributeValue("name", "SAMLRequest").first();
+        assertNotNull(samlRequest);
+        String samlRequestValue = samlRequest.val();
+        assertNotNull(samlRequestValue);
+
+        AuthnRequest authnRequest = (AuthnRequest) new AuthnRequestUnmarshaller().unmarshall(XmlUtils.convertToElement(StringEncoding.fromBase64Encoded(samlRequestValue)));
+
+        //ID is recorded in sessionToken
+        assertThat(authnRequest.getID()).isEqualTo(getSessionTokenClaims(response).get("outboundID", String.class));
+
+        assertThat(TestSignatureValidator.getSignatureValidator().validate(authnRequest, null, SPSSODescriptor.DEFAULT_ELEMENT_NAME)).isTrue();
+        String entityId = authnRequest.getIssuer().getValue();
+        assertEquals(RULE.getHostname() + "/metadata", entityId);
     }
 
     private String getExpectedSingleSignOnLocation() {
