@@ -67,6 +67,8 @@ eidasMetadata:
     connectionTimeout: 1s
     retries: 3
   countries:
-  - entityID: http://localhost:9000/ServiceMetadata
-    countryCode: NL
+  - entityID: http://override.me
+    countryCode: CA
+  - entityID: http://overrride.me/as/well
+    countryCode: CB
 

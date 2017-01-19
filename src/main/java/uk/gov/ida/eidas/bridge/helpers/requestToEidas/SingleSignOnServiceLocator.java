@@ -42,14 +42,18 @@ public class SingleSignOnServiceLocator {
 
         if (idpEntityDescriptor != null) {
             final IDPSSODescriptor idpssoDescriptor = idpEntityDescriptor.getIDPSSODescriptor(SAMLConstants.SAML20P_NS);
-            final List<SingleSignOnService> singleSignOnServices = idpssoDescriptor.getSingleSignOnServices();
-            if (singleSignOnServices.size() == 0) {
-                LOG.error("No singleSignOnServices present for IDP entityId: {}", entityId);
+            if (idpssoDescriptor == null) {
+                LOG.error("No IDPSSODescriptors found on EntityDescriptor. Perhaps their signatures were not valid?");
             } else {
-                if (singleSignOnServices.size() > 1) {
-                    LOG.warn("More than one singleSignOnService present: {} for {}", singleSignOnServices.size(), entityId);
+                final List<SingleSignOnService> singleSignOnServices = idpssoDescriptor.getSingleSignOnServices();
+                if (singleSignOnServices.size() == 0) {
+                    LOG.error("No singleSignOnServices present for IDP entityId: {}", entityId);
+                } else {
+                    if (singleSignOnServices.size() > 1) {
+                        LOG.warn("More than one singleSignOnService present: {} for {}", singleSignOnServices.size(), entityId);
+                    }
+                    return singleSignOnServices.get(0).getLocation();
                 }
-                return singleSignOnServices.get(0).getLocation();
             }
         }
         throw new RuntimeException(format("no entity descriptor for IDP: {0}", entityId));
