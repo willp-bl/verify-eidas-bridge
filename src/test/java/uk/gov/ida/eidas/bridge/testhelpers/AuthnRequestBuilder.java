@@ -15,6 +15,7 @@ import uk.gov.ida.saml.hub.domain.IdaAuthnRequestFromHub;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.common.base.Optional.absent;
@@ -69,7 +70,7 @@ public class AuthnRequestBuilder {
             DateTime.now(),
             AuthnContext.LEVEL_1,
             AuthnContext.LEVEL_1,
-            absent(),
+            Optional.empty(),
             DateTime.now().plusHours(20),
             URI.create("/location"));
     }

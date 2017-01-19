@@ -24,18 +24,18 @@ dependencies {
             "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "io.dropwizard:dropwizard-assets:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-29",
-            "uk.gov.ida:dropwizard-saml:$openSamlVersion-352",
-            "uk.gov.verify:saml-utils:$openSamlVersion-18",
-            "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.0",
-            "uk.gov.ida:saml-security:$openSamlVersion-23",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-33",
+            "uk.gov.ida:dropwizard-saml:$openSamlVersion-354",
+            "uk.gov.verify:saml-utils:$openSamlVersion-20",
+            "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.2",
+            "uk.gov.ida:saml-security:$openSamlVersion-26",
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
-            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-25",
-            "org.jsoup:jsoup:1.10.1",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-33",
+            "org.jsoup:jsoup:1.10.2",
     )
-    testCompile("com.github.tomakehurst:wiremock:2.2.2") { transitive = false }
+    testCompile("com.github.tomakehurst:wiremock:2.5.0") { transitive = false }
 }
 
 mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
@@ -43,4 +43,3 @@ mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
 task wrapper(type: Wrapper) {
     gradleVersion = '3.1'
 }
-

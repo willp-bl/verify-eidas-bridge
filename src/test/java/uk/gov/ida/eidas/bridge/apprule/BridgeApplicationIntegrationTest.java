@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
+import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
@@ -62,6 +63,7 @@ public class BridgeApplicationIntegrationTest {
 
     @Before
     public void before() {
+        EidasSamlBootstrap.bootstrap();
         wireMock.start();
     }
 

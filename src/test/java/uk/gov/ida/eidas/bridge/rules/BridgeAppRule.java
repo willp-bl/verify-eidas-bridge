@@ -5,6 +5,7 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import uk.gov.ida.eidas.bridge.BridgeApplication;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
+import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSigningKeyStoreProvider;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
@@ -35,6 +36,7 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
 
     // Need a supplier that will return a string url - we need wiremock to initialise before we try and read the url
     public static BridgeAppRule createBridgeAppRuleFromConfig(Supplier<String> verifyMetadataUri, Map<String, Supplier<CountryConfiguration>> countryConfig) {
+        EidasSamlBootstrap.bootstrap();
         List<Map.Entry<String, Supplier<CountryConfiguration>>> entries = countryConfig.entrySet().stream().collect(Collectors.toList());
         ConfigOverride.config("eidasMetadata.countries", "[{},{}]");
         Stream<ConfigOverride> countryConfigOverrides = IntStream.range(0, entries.size()).mapToObj(idx -> {

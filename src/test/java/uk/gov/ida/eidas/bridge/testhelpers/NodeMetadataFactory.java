@@ -13,10 +13,10 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.w3c.dom.Element;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
+import uk.gov.ida.saml.core.test.builders.SignatureBuilder;
 import uk.gov.ida.saml.core.test.builders.metadata.EntityDescriptorBuilder;
 import uk.gov.ida.saml.core.test.builders.metadata.IdpSsoDescriptorBuilder;
 import uk.gov.ida.saml.core.test.builders.metadata.KeyDescriptorBuilder;
-import uk.gov.ida.saml.core.test.builders.metadata.SignatureBuilder;
 import uk.gov.ida.saml.serializers.XmlObjectToElementTransformer;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
 
