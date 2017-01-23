@@ -195,14 +195,14 @@ public class VerifyEidasBridgeFactory {
                 new XmlObjectToBase64EncodedStringTransformer());
     }
 
-    private VerifyResponseGenerator getVerifyResponseGenerator(String bridgeEntityId, String verifyEntityId) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+    private VerifyResponseGenerator getVerifyResponseGenerator(String bridgeEntityId, String verifyEntityId) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, ComponentInitializationException {
         OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
 
         AttributeFactory_1_1 attributeFactory_1_1 = new AttributeFactory_1_1(openSamlXmlObjectFactory);
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId, openSamlXmlObjectFactory);
         SigningHelper verifySigningHelper = getVerifySigningHelper();
 
-        MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(getVerifyMetadataResolver());
+        MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(getMetadataCredentialResolver(getVerifyMetadataResolver()));
         EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(metadataBackedEncryptionPublicKeyRetriever::retrieveKey);
 
         return new VerifyResponseGenerator(
@@ -284,7 +284,6 @@ public class VerifyEidasBridgeFactory {
         metadataCredentialResolver.initialize();
         return metadataCredentialResolver;
     }
-
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
         return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());

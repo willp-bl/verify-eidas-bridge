@@ -4,41 +4,34 @@ import com.google.common.base.Throwables;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
 import org.opensaml.core.criterion.EntityIdCriterion;
-import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.metadata.resolver.MetadataResolver;
-import org.opensaml.saml.saml2.metadata.EntityDescriptor;
-import org.opensaml.saml.saml2.metadata.KeyDescriptor;
+import org.opensaml.saml.criterion.EntityRoleCriterion;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.saml.security.impl.MetadataCredentialResolver;
+import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
-import org.opensaml.xmlsec.signature.X509Certificate;
-import uk.gov.ida.common.shared.security.X509CertificateFactory;
+import org.opensaml.security.criteria.UsageCriterion;
 
 import java.security.PublicKey;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class MetadataBackedEncryptionPublicKeyRetriever {
-    private final MetadataResolver metadataResolver;
+    private final MetadataCredentialResolver metadataCredentialResolver;
 
-    public MetadataBackedEncryptionPublicKeyRetriever(MetadataResolver metadataResolver) {
-        this.metadataResolver = metadataResolver;
+    public MetadataBackedEncryptionPublicKeyRetriever(MetadataCredentialResolver metadataCredentialResolver) {
+        this.metadataCredentialResolver = metadataCredentialResolver;
     }
 
     public PublicKey retrieveKey(String entityId) {
-        CriteriaSet criteria = new CriteriaSet(new EntityIdCriterion(entityId));
-        EntityDescriptor entityDescriptor;
         try {
-            entityDescriptor = metadataResolver.resolveSingle(criteria);
+            CriteriaSet criteriaSet = new CriteriaSet();
+            criteriaSet.add(new EntityIdCriterion(entityId));
+            criteriaSet.add(new EntityRoleCriterion(SPSSODescriptor.DEFAULT_ELEMENT_NAME));
+            criteriaSet.add(new UsageCriterion(UsageType.ENCRYPTION));
+            Credential credential = Optional.ofNullable(metadataCredentialResolver.resolveSingle(criteriaSet)).orElseThrow(() -> new NoSuchElementException("No encryption key found for entityId " + entityId));
+            return credential.getPublicKey();
         } catch (ResolverException e) {
             throw Throwables.propagate(e);
         }
-        SPSSODescriptor spssoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
-        KeyDescriptor keyDescriptor = spssoDescriptor.getKeyDescriptors()
-            .stream()
-            .filter(x -> x.getUse() == UsageType.ENCRYPTION)
-            .findFirst()
-            .orElseThrow(() -> new NoSuchElementException("No encryption key found for entityId " + entityId));
-        X509Certificate x509Certificate = keyDescriptor.getKeyInfo().getX509Datas().get(0).getX509Certificates().get(0);
-        java.security.cert.X509Certificate certificate = new X509CertificateFactory().createCertificate(x509Certificate.getValue());
-        return certificate.getPublicKey();
     }
 }
