@@ -38,8 +38,10 @@ dependencies {
     testCompile("com.github.tomakehurst:wiremock:2.5.0") { transitive = false }
 }
 
-mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
-
 task wrapper(type: Wrapper) {
     gradleVersion = '3.1'
 }
+
+apply from: 'env.gradle'
+
+mainClassName = 'uk.gov.ida.eidas.bridge.BridgeApplication'
