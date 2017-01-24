@@ -9,9 +9,8 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.impl.FilesystemMetadataResolver;
-import org.opensaml.saml.metadata.resolver.impl.PredicateRoleDescriptorResolver;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
-import org.opensaml.xmlsec.config.DefaultSecurityConfigurationBootstrap;
+import uk.gov.ida.eidas.saml.factories.MetadataCredentialResolverFactory;
 
 import java.io.File;
 import java.security.PublicKey;
@@ -20,6 +19,8 @@ import static com.google.common.base.Throwables.propagate;
 import static org.junit.Assert.assertTrue;
 
 public class MetadataBackedEncryptionPublicKeyRetrieverTest {
+
+    private final MetadataCredentialResolverFactory metadataCredentialResolverFactory = new MetadataCredentialResolverFactory();
 
     @Test
     public void shouldRetrieveKey() throws Exception {
@@ -47,12 +48,6 @@ public class MetadataBackedEncryptionPublicKeyRetrieverTest {
     }
 
     private MetadataCredentialResolver getMetadataCredentialResolver(MetadataResolver metadataResolver) throws ComponentInitializationException {
-        PredicateRoleDescriptorResolver predicateRoleDescriptorResolver = new PredicateRoleDescriptorResolver(metadataResolver);
-        predicateRoleDescriptorResolver.initialize();
-        MetadataCredentialResolver metadataCredentialResolver = new MetadataCredentialResolver();
-        metadataCredentialResolver.setRoleDescriptorResolver(predicateRoleDescriptorResolver);
-        metadataCredentialResolver.setKeyInfoCredentialResolver(DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver());
-        metadataCredentialResolver.initialize();
-        return metadataCredentialResolver;
+        return metadataCredentialResolverFactory.getMetadataCredentialResolver(metadataResolver);
     }
 }

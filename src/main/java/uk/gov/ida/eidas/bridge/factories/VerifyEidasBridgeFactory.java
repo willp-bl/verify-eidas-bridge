@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableSet;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
-import org.opensaml.saml.metadata.resolver.impl.PredicateRoleDescriptorResolver;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.security.impl.MetadataCredentialResolver;
@@ -40,6 +39,7 @@ import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.resources.BridgeMetadataResource;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.resources.VerifyAuthnRequestResource;
+import uk.gov.ida.eidas.saml.factories.MetadataCredentialResolverFactory;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.api.CoreTransformersFactory;
 import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
@@ -97,6 +97,7 @@ public class VerifyEidasBridgeFactory {
 
     @Nullable
     private MetadataResolverRepository metadataResolverRepository;
+    private MetadataCredentialResolverFactory metadataCredentialResolverFactory = new MetadataCredentialResolverFactory();
 
     public VerifyEidasBridgeFactory(
         Environment environment,
@@ -202,7 +203,7 @@ public class VerifyEidasBridgeFactory {
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(verifyEntityId, openSamlXmlObjectFactory);
         SigningHelper verifySigningHelper = getVerifySigningHelper();
 
-        MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(getMetadataCredentialResolver(getVerifyMetadataResolver()));
+        MetadataBackedEncryptionPublicKeyRetriever metadataBackedEncryptionPublicKeyRetriever = new MetadataBackedEncryptionPublicKeyRetriever(metadataCredentialResolverFactory.getMetadataCredentialResolver(getVerifyMetadataResolver()));
         EncryptionCredentialFactory encryptionCredentialFactory = new EncryptionCredentialFactory(metadataBackedEncryptionPublicKeyRetriever::retrieveKey);
 
         return new VerifyResponseGenerator(
@@ -269,20 +270,10 @@ public class VerifyEidasBridgeFactory {
     }
 
     private ExplicitKeySignatureTrustEngine getExplicitKeySignatureTrustEngine(MetadataResolver metadataResolver) throws ComponentInitializationException {
-        MetadataCredentialResolver metadataCredentialResolver = getMetadataCredentialResolver(metadataResolver);
+        MetadataCredentialResolver metadataCredentialResolver = metadataCredentialResolverFactory.getMetadataCredentialResolver(metadataResolver);
         return new ExplicitKeySignatureTrustEngine(
             metadataCredentialResolver, DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver()
         );
-    }
-
-    private MetadataCredentialResolver getMetadataCredentialResolver(MetadataResolver metadataResolver) throws ComponentInitializationException {
-        PredicateRoleDescriptorResolver predicateRoleDescriptorResolver = new PredicateRoleDescriptorResolver(metadataResolver);
-        predicateRoleDescriptorResolver.initialize();
-        MetadataCredentialResolver metadataCredentialResolver = new MetadataCredentialResolver();
-        metadataCredentialResolver.setRoleDescriptorResolver(predicateRoleDescriptorResolver);
-        metadataCredentialResolver.setKeyInfoCredentialResolver(DefaultSecurityConfigurationBootstrap.buildBasicInlineKeyInfoCredentialResolver());
-        metadataCredentialResolver.initialize();
-        return metadataCredentialResolver;
     }
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
