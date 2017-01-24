@@ -6,9 +6,11 @@ import org.dhatim.dropwizard.jwt.cookie.authentication.DefaultJwtCookiePrincipal
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.responseFromEidas.ResponseHandler;
+import uk.gov.ida.eidas.bridge.helpers.responseToVerify.AssertionConsumerServiceLocator;
 import uk.gov.ida.eidas.bridge.helpers.responseToVerify.VerifyResponseGenerator;
 import uk.gov.ida.eidas.bridge.views.ResponseFormView;
 import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
@@ -24,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/")
 public class EidasResponseResource {
+    private static final Logger LOG = LoggerFactory.getLogger(EidasResponseResource.class);
+
     public final static String ASSERTION_CONSUMER_PATH = "/SAML2/SSO/Response/POST";
 
     private final String verifyEntityId;
@@ -57,7 +61,7 @@ public class EidasResponseResource {
         EidasSamlResponse eidasSamlResponse = responseHandler.handleResponse(responseStr, outboundID, entityId);
         String inboundID = principal.getClaims().get("inboundID", String.class);
         String assertionConsumerServiceLocation = assertionConsumerServiceLocator.getAssertionConsumerServiceLocation(verifyEntityId);
-        org.opensaml.saml.saml2.core.Response response = responseGenerator.generateResponse(assertionConsumerServiceLocation, inboundID, req.getRemoteAddr(), eidasSamlResponse.getIdentityAssertion());
+        org.opensaml.saml.saml2.core.Response response = responseGenerator.generateResponse(assertionConsumerServiceLocation, inboundID, req.getRemoteAddr(), eidasSamlResponse);
 
         return new ResponseFormView(xmlObjectToBase64EncodedStringTransformer.apply(response), assertionConsumerServiceLocation, principal.getClaims().get("inboundRelayState", String.class));
     }

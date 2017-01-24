@@ -14,8 +14,12 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.Status;
+import org.opensaml.saml.saml2.core.StatusCode;
+import org.opensaml.saml.saml2.core.StatusMessage;
 import org.opensaml.saml.saml2.core.impl.AttributeBuilder;
 import org.opensaml.saml.saml2.core.impl.ResponseUnmarshaller;
+import org.opensaml.saml.saml2.core.impl.StatusMessageBuilder;
 import org.opensaml.saml.saml2.encryption.Encrypter;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
@@ -34,6 +38,8 @@ import uk.gov.ida.saml.core.test.builders.AssertionBuilder;
 import uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder;
 import uk.gov.ida.saml.core.test.builders.IssuerBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
+import uk.gov.ida.saml.core.test.builders.StatusBuilder;
+import uk.gov.ida.saml.core.test.builders.StatusCodeBuilder;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -98,6 +104,51 @@ public class SendResponseToBridgeIntegrationTest {
             .invoke();
 
         assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
+    }
+
+    @Test
+    public void shouldAcceptsResponseWithAuthenticationFailure() throws Exception {
+        StatusCode statusCode = StatusCodeBuilder
+            .aStatusCode()
+            .withValue(StatusCode.AUTHN_FAILED)
+            .build();
+
+        StatusCode statusCodeResponder = StatusCodeBuilder
+            .aStatusCode()
+            .withValue(StatusCode.RESPONDER)
+            .build();
+        statusCodeResponder.setStatusCode(statusCode);
+        StatusMessage statusMessage = new StatusMessageBuilder().buildObject();
+        statusMessage.setMessage("authenticationFailed");
+
+        Status status = StatusBuilder.aStatus()
+            .withStatusCode(statusCodeResponder)
+            .withMessage(statusMessage)
+            .build();
+
+        String responseString = buildString(aResponse()
+            .withStatus(status)
+            .withInResponseTo(SOME_RESPONSE_ID)
+            .withIssuer(IssuerBuilder.anIssuer()
+                .withIssuerId(eidasMetadata.url()).build())
+            .withNoDefaultAssertion());
+
+        MultivaluedHashMap<String, String> form = new MultivaluedHashMap<>();
+        form.put("SAMLResponse", singletonList(responseString));
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
+        jwtBuilder.claim("outboundID", SOME_RESPONSE_ID);
+        jwtBuilder.claim("country", eidasMetadata.url());
+
+        Response result = client
+            .property(ClientProperties.FOLLOW_REDIRECTS, false)
+            .target(String.format("http://localhost:%d%s", RULE.getLocalPort(), EidasResponseResource.ASSERTION_CONSUMER_PATH))
+            .request()
+            .cookie("sessionToken", jwtBuilder.compact())
+            .buildPost(Entity.form(form))
+            .invoke();
+
+        assertEquals(200, result.getStatus());
     }
 
     @Test

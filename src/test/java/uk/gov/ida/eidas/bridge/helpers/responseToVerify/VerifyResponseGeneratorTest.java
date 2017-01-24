@@ -15,6 +15,7 @@ import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
@@ -46,11 +47,13 @@ public class VerifyResponseGeneratorTest {
     private final String assertionConsumerServiceLocation = "http://some-destination";
     private EidasIdentityAssertion eidasIdentityAssertion;
     private VerifyResponseGenerator verifyResponseGenerator;
+    private EidasSamlResponse eidasSamlResponse;
 
     @Before
     public void before() {
         EidasSamlBootstrap.bootstrap();
         eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", Optional.of("holborn"), Optional.of(Gender.FEMALE), new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
+        eidasSamlResponse = new EidasSamlResponse(eidasIdentityAssertion);
         OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory);
         AttributeFactory_1_1 attributeFactory = new AttributeFactory_1_1(openSamlXmlObjectFactory);
@@ -66,7 +69,8 @@ public class VerifyResponseGeneratorTest {
 
     @Test
     public void shouldGenerateAResponse() throws MarshallingException, SecurityException, SignatureException {
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasIdentityAssertion);
+
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasSamlResponse);
         assertNotNull(response);
 
         assertEquals(assertionConsumerServiceLocation, response.getDestination());
@@ -77,7 +81,7 @@ public class VerifyResponseGeneratorTest {
 
     @Test
     public void shouldGenerateAResponseWithIssue() throws MarshallingException, SecurityException, SignatureException {
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasIdentityAssertion);
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasSamlResponse);
         assertNotNull(response);
 
         Issuer issuer = response.getIssuer();
@@ -88,7 +92,7 @@ public class VerifyResponseGeneratorTest {
 
     @Test
     public void shouldGenerateAResponseWithStatus() throws MarshallingException, SecurityException, SignatureException {
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasIdentityAssertion);
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasSamlResponse);
         assertNotNull(response);
 
         Status status = response.getStatus();
@@ -100,7 +104,7 @@ public class VerifyResponseGeneratorTest {
 
     @Test
     public void shouldGenerateAResponseWithEncryptedAssertions() throws MarshallingException, SecurityException, SignatureException {
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasIdentityAssertion);
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasSamlResponse);
         assertNotNull(response);
 
         assertTrue("There should be two assertions (Matching Dataset and AuthnStatement)", response.getEncryptedAssertions().size() == 2);
@@ -108,7 +112,7 @@ public class VerifyResponseGeneratorTest {
 
     @Test
     public void shouldSignTheResponse() throws MarshallingException, SecurityException, SignatureException {
-        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasIdentityAssertion);
+        Response response = verifyResponseGenerator.generateResponse(assertionConsumerServiceLocation, IN_RESPONSE_TO, IP_ADDRESS, eidasSamlResponse);
         assertNotNull(response);
 
         Signature signature = response.getSignature();
