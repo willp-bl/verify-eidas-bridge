@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import org.apache.http.HttpStatus;
 import org.apache.xml.security.exceptions.Base64DecodingException;
+import org.dhatim.dropwizard.jwt.cookie.authentication.DefaultJwtCookiePrincipal;
 import org.glassfish.jersey.client.ClientProperties;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,7 +34,10 @@ import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
+import uk.gov.ida.saml.core.domain.AuthnContext;
+import uk.gov.ida.saml.core.extensions.IdaAuthnContext;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
+import uk.gov.ida.saml.core.transformers.AuthnContextFactory;
 import uk.gov.ida.saml.metadata.test.factories.metadata.MetadataFactory;
 import uk.gov.ida.shared.utils.string.StringEncoding;
 import uk.gov.ida.shared.utils.xml.XmlUtils;
@@ -304,10 +309,16 @@ public class SendAuthnRequestToBridgeIntegrationTest {
     }
 
     private Response makeRequestForAuthnRequest(String countryCode) {
+        AuthnContextFactory authnContextFactory = new AuthnContextFactory();
+        AuthnContext authnContext = authnContextFactory.authnContextForLevelOfAssurance(IdaAuthnContext.LEVEL_2_AUTHN_CTX);
+
+        JwtBuilder jwtBuilder = Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)));
+        jwtBuilder.claim("lowestLOA", authnContext);
+
         return client
             .target(String.format("http://localhost:%d/redirect-to-eidas/%s", RULE.getLocalPort(), countryCode))
             .request()
-            .cookie("sessionToken", Jwts.builder().signWith(HS256, getSecretSessionKey()).setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS))).compact())
+            .cookie("sessionToken", jwtBuilder.compact())
             .get();
     }
 

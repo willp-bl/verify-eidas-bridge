@@ -18,7 +18,6 @@ import uk.gov.ida.saml.security.validators.signature.SamlResponseSignatureValida
 import java.util.List;
 
 public class ResponseHandler {
-    public static final String RESPONSE_STATUS_CODE_INDICATES_AUTHENTICATION_FAILURE = "Response status code indicates authentication failure";
     public static final String RESPONSE_INRESPONSETO_FAILURE_MESSAGE_START = "Response InResponseTo";
     public static final String RESPONSE_ISSUER_FAILURE_MESSAGE_START = "Response issuer";
 

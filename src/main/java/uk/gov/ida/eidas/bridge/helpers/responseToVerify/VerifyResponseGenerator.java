@@ -49,7 +49,7 @@ public class VerifyResponseGenerator {
         response.setIssueInstant(new DateTime());
 
         setIssuer(response);
-        if(eidasSamlResponse.shouldBuildAssertion()) {
+        if(eidasSamlResponse.isSuccess()) {
             setStatus(response);
             setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion);
             samlResponseAssertionEncrypter.encryptAssertions(response);
