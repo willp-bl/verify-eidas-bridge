@@ -9,7 +9,8 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.impl.FilesystemMetadataResolver;
-import uk.gov.ida.eidas.bridge.helpers.responseToVerify.MetadataBackedEncryptionPublicKeyRetriever;
+import org.opensaml.saml.security.impl.MetadataCredentialResolver;
+import uk.gov.ida.eidas.saml.factories.MetadataCredentialResolverFactory;
 
 import java.io.File;
 import java.security.PublicKey;
@@ -19,10 +20,12 @@ import static org.junit.Assert.assertTrue;
 
 public class MetadataBackedEncryptionPublicKeyRetrieverTest {
 
+    private final MetadataCredentialResolverFactory metadataCredentialResolverFactory = new MetadataCredentialResolverFactory();
+
     @Test
     public void shouldRetrieveKey() throws Exception {
         MetadataResolver metadataResolver = initializeMetadata();
-        MetadataBackedEncryptionPublicKeyRetriever retriever = new MetadataBackedEncryptionPublicKeyRetriever(metadataResolver);
+        MetadataBackedEncryptionPublicKeyRetriever retriever = new MetadataBackedEncryptionPublicKeyRetriever(getMetadataCredentialResolver(metadataResolver));
         PublicKey key = retriever.retrieveKey("https://signin.service.gov.uk");
         assertTrue("Public key should be non-empty", key.getEncoded().length > 10);
     }
@@ -42,5 +45,9 @@ public class MetadataBackedEncryptionPublicKeyRetrieverTest {
         } catch (ResolverException | ComponentInitializationException | InitializationException e) {
             throw propagate(e);
         }
+    }
+
+    private MetadataCredentialResolver getMetadataCredentialResolver(MetadataResolver metadataResolver) throws ComponentInitializationException {
+        return metadataCredentialResolverFactory.getMetadataCredentialResolver(metadataResolver);
     }
 }
