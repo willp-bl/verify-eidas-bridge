@@ -9,11 +9,14 @@ import org.opensaml.core.xml.XMLObject;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
 import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
@@ -33,6 +36,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class EidasIdentityAssertionUnmarshaller {
+    private static final Logger LOG = LoggerFactory.getLogger(EidasIdentityAssertionUnmarshaller.class);
+
     private static final String NATURAL_PERSON_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-DD");
 
@@ -106,12 +111,22 @@ public class EidasIdentityAssertionUnmarshaller {
     }
 
     private String getAttributeValueString(Attribute attribute) {
-        XMLObject attributeValue = attribute.getAttributeValues().stream()
+        List<XMLObject> attributeValues = attribute.getAttributeValues();
+        Optional<XMLObject> attributeValue = attributeValues.stream()
             .filter(this::isLatinScript)
-            .findFirst()
-            .orElseThrow(() -> new SamlTransformationErrorException("Could not find a Latin value of " + attribute.getName(), Level.ERROR));
+            .findFirst();
 
-        String value = getAttributeValue(attributeValue).getValue();
+        if(!attributeValue.isPresent()) {
+            LOG.warn("Latin attribute value for {} expected but not received. Using non-Latin value instead", attribute.getName());
+            attributeValue = attributeValues.stream()
+                .findFirst();
+        }
+
+        if(!attributeValue.isPresent()) {
+            throw new SamlTransformationErrorException("Could not find a Latin or non-Latin value of " + attribute.getName(), Level.ERROR);
+        }
+
+        String value = getAttributeValue(attributeValue.get()).getValue();
         if (value == null) {
             throw new IllegalArgumentException("Attribute value had a null value");
         }
