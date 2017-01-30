@@ -91,12 +91,12 @@ public class EidasAuthnRequestGenerator {
         XMLObjectBuilder<?> requestedAttributesBuilder = xmlObjectBuilderFactory.getBuilder(RequestedAttributes.DEFAULT_ELEMENT_NAME);
         RequestedAttributesImpl requestedAttributesObject = (RequestedAttributesImpl) requestedAttributesBuilder.buildObject(RequestedAttributes.DEFAULT_ELEMENT_NAME);
         requestedAttributesObject.setRequestedAttributes(
-            getRequestedAttribute("FirstName", "CurrentGivenName"),
-            getRequestedAttribute("FamilyName", "CurrentFamilyName"),
-            getRequestedAttribute("DateOfBirth", "DateOfBirth"),
-            getRequestedAttribute("CurrentAddress", "CurrentAddress"),
-            getRequestedAttribute("PersonIdentifier", "PersonIdentifier"),
-            getRequestedAttribute("Gender", "Gender")
+            getRequestedAttribute("FirstName", "CurrentGivenName", true),
+            getRequestedAttribute("FamilyName", "CurrentFamilyName", true),
+            getRequestedAttribute("DateOfBirth", "DateOfBirth", true),
+            getRequestedAttribute("CurrentAddress", "CurrentAddress", false),
+            getRequestedAttribute("PersonIdentifier", "PersonIdentifier", true),
+            getRequestedAttribute("Gender", "Gender", false)
         );
         extensions.getUnknownXMLObjects().add(requestedAttributesObject);
 
@@ -106,13 +106,13 @@ public class EidasAuthnRequestGenerator {
     }
 
     @Nonnull
-    private RequestedAttributeImpl getRequestedAttribute(String friendlyName, String nameSuffix) {
+    private RequestedAttributeImpl getRequestedAttribute(String friendlyName, String nameSuffix, boolean required) {
         XMLObjectBuilder<?> requestedAttributeBuilder = xmlObjectBuilderFactory.getBuilder(RequestedAttribute.DEFAULT_ELEMENT_NAME);
         RequestedAttributeImpl requestedAttribute = (RequestedAttributeImpl) requestedAttributeBuilder.buildObject(RequestedAttribute.DEFAULT_ELEMENT_NAME);
         requestedAttribute.setName(NATURAL_PERSON_NAME_PREFIX + nameSuffix);
         requestedAttribute.setFriendlyName(friendlyName);
         requestedAttribute.setNameFormat(Attribute.URI_REFERENCE);
-        requestedAttribute.setIsRequired(true);
+        requestedAttribute.setIsRequired(required);
         return requestedAttribute;
     }
 
