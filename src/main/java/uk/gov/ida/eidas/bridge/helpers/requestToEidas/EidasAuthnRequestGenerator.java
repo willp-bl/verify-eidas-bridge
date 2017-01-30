@@ -27,12 +27,14 @@ import uk.gov.ida.eidas.saml.extensions.RequestedAttributesImpl;
 import uk.gov.ida.eidas.saml.extensions.SPType;
 import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
+import uk.gov.ida.saml.core.domain.AuthnContext;
 
 import javax.annotation.Nonnull;
 
 public class EidasAuthnRequestGenerator {
     public static final String PROVIDER_NAME = "PROVIDER_NAME";
     public static final String NATURAL_PERSON_NAME_PREFIX = "http://eidas.europa.eu/attributes/naturalperson/";
+    public static final AuthnContextComparisonTypeEnumeration MINIMUM_AUTHNCONTEXT = AuthnContextComparisonTypeEnumeration.MINIMUM;
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
     private final XMLObjectBuilderFactory xmlObjectBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
     private final String bridgeEntityId;
@@ -46,7 +48,7 @@ public class EidasAuthnRequestGenerator {
         this.signOnServiceLocator = signOnServiceLocator;
     }
 
-    public AuthnRequest generateAuthnRequest(String authnReqeustId, String destinationEntityId) throws MarshallingException, SignatureException, SecurityException {
+    public AuthnRequest generateAuthnRequest(String authnReqeustId, String destinationEntityId, AuthnContext lowestAuthnContext) throws MarshallingException, SignatureException, SecurityException {
         AuthnRequest eidasAuthnRequest = openSamlXmlObjectFactory.createAuthnRequest();
         Namespace eidasSamlExtensionsNamespace = new Namespace(NamespaceConstants.EIDAS_EXTENSIONS_NAMESPACE, NamespaceConstants.EIDAS_EXTENSIONS_LOCAL_NAME);
         eidasAuthnRequest.getNamespaceManager().registerNamespaceDeclaration(eidasSamlExtensionsNamespace);
@@ -64,8 +66,18 @@ public class EidasAuthnRequestGenerator {
         nameIdPolicy.setAllowCreate(true);
         eidasAuthnRequest.setNameIDPolicy(nameIdPolicy);
 
-        RequestedAuthnContext requestedAuthnContext = openSamlXmlObjectFactory.createRequestedAuthnContext(AuthnContextComparisonTypeEnumeration.MINIMUM);
-        requestedAuthnContext.getAuthnContextClassRefs().add(openSamlXmlObjectFactory.createAuthnContextClassReference(LevelOfAssurance.SUBSTANTIAL.toString()));
+        RequestedAuthnContext requestedAuthnContext = openSamlXmlObjectFactory.createRequestedAuthnContext(MINIMUM_AUTHNCONTEXT);
+        String levelOfAssuranceRequested;
+        switch (lowestAuthnContext) {
+            case LEVEL_1    :   levelOfAssuranceRequested = LevelOfAssurance.LOW.toString();            break;
+            case LEVEL_2    :   levelOfAssuranceRequested = LevelOfAssurance.SUBSTANTIAL.toString();    break;
+            case LEVEL_3    :   levelOfAssuranceRequested = LevelOfAssurance.HIGH.toString();           break;
+            case LEVEL_4    :
+            default         :
+                throw new SecurityException("Unknown level of assurance from requested AuthnContext : " + lowestAuthnContext);
+        }
+
+        requestedAuthnContext.getAuthnContextClassRefs().add(openSamlXmlObjectFactory.createAuthnContextClassReference(levelOfAssuranceRequested));
         eidasAuthnRequest.setRequestedAuthnContext(requestedAuthnContext);
 
         Extensions extensions = new ExtensionsBuilder().buildObject();

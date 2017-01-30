@@ -14,6 +14,7 @@ import org.opensaml.saml.saml2.core.impl.StatusCodeBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
+import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
@@ -39,7 +40,8 @@ public class VerifyResponseGenerator {
         this.signingHelper = signingHelper;
     }
 
-    public Response generateResponse(String assertionConsumerServiceLocation, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion) throws MarshallingException, SecurityException, SignatureException {
+    public Response generateResponse(String assertionConsumerServiceLocation, String inResponseTo, String ipAddress, EidasSamlResponse eidasSamlResponse) throws MarshallingException, SecurityException, SignatureException {
+        EidasIdentityAssertion eidasIdentityAssertion = eidasSamlResponse.getIdentityAssertion();
         Response response = new ResponseBuilder().buildObject();
         response.setDestination(assertionConsumerServiceLocation);
         response.setID(RandomIdGenerator.generateRandomId());
@@ -47,9 +49,23 @@ public class VerifyResponseGenerator {
         response.setIssueInstant(new DateTime());
 
         setIssuer(response);
-        setStatus(response);
-        setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion);
-        samlResponseAssertionEncrypter.encryptAssertions(response);
+        if(eidasSamlResponse.isSuccess()) {
+            setStatus(response);
+            setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion);
+            samlResponseAssertionEncrypter.encryptAssertions(response);
+        } else {
+            Status status = new StatusBuilder().buildObject();
+            StatusCode eidasStatusCode = eidasSamlResponse.getFailureStatus();
+
+            StatusCode statusCode = new StatusCodeBuilder().buildObject();
+            statusCode.setValue(eidasStatusCode.getValue());
+            StatusCode statusCodeResponder = new StatusCodeBuilder().buildObject();
+            statusCodeResponder.setValue(StatusCode.RESPONDER);
+            statusCodeResponder.setStatusCode(statusCode);
+
+            status.setStatusCode(statusCodeResponder);
+            response.setStatus(status);
+        }
 
         return signingHelper.sign(response);
     }
