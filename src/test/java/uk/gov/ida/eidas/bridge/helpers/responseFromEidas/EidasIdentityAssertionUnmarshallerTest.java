@@ -52,9 +52,23 @@ public class EidasIdentityAssertionUnmarshallerTest {
         assertEquals("Onases", result.getFamilyName());
     }
 
+    @Test
+    public void shouldntErrorWithoutLatinEquivalents() throws Exception {
+        Assertion samlObject = buildAssertionFromNonLatinFile();
+
+        ValidatedAssertions validatedAssertions = new ValidatedAssertions(singletonList(samlObject));
+        EidasIdentityAssertion result = eidasIdentityAssertionUnmarshaller.unmarshallAssertion(validatedAssertions);
+
+        assertEquals("Ωνάσης", result.getFamilyName());
+    }
+
     private Assertion buildAssertionFromFile() throws IOException, javax.xml.parsers.ParserConfigurationException, org.xml.sax.SAXException, org.opensaml.core.xml.io.UnmarshallingException {
         String xmlString = new String(Files.readAllBytes(Paths.get(ResourceHelpers.resourceFilePath("EIDASIdentityAssertion.xml"))));
         return (Assertion) new SamlObjectParser().getSamlObject(xmlString);
     }
 
+    private Assertion buildAssertionFromNonLatinFile() throws IOException, javax.xml.parsers.ParserConfigurationException, org.xml.sax.SAXException, org.opensaml.core.xml.io.UnmarshallingException {
+        String xmlString = new String(Files.readAllBytes(Paths.get(ResourceHelpers.resourceFilePath("EIDASIdentityAssertion-nonLatin.xml"))));
+        return (Assertion) new SamlObjectParser().getSamlObject(xmlString);
+    }
 }

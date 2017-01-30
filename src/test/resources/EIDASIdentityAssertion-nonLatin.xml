@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:eidas-legal="http://eidas.europa.eu/attributes/legalperson" xmlns:eidas-natural="http://eidas.europa.eu/attributes/naturalperson" xmlns:xs="http://www.w3.org/2001/XMLSchema" ID="_2X94bC2RbNT6rrGO_xoeUi.hhkaNPFzlu-jc8-hQT25fF7L2TNFX50NgeYAG__" IssueInstant="2016-12-05T11:07:49.460Z" Version="2.0">
+    <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">https://uk-connector-node-reference.cloudapps.digital/ConnectorResponderMetadata</saml2:Issuer>
+    <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"/>
+            <ds:Reference URI="#_2X94bC2RbNT6rrGO_xoeUi.hhkaNPFzlu-jc8-hQT25fF7L2TNFX50NgeYAG__">
+                <ds:Transforms>
+                    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+                    <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">
+                        <ec:InclusiveNamespaces xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="eidas-legal eidas-natural xs"/>
+                    </ds:Transform>
+                </ds:Transforms>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+                <ds:DigestValue>6Pcgq0HSHNa0YZefTmmDe3bIFn4=</ds:DigestValue>
+            </ds:Reference>
+        </ds:SignedInfo>
+        <ds:SignatureValue>HypeSULjwbHn+fBaewSycR8AtPWAv9j9Hhd65I7DWvtkOfMMSo4KdPiBNMVOztPO5PJT6dOhmibLBfzQqVrMj+tN92eFJWRW4WUxMLgs/Jh6J2tuJ4y0LAiC7QvlCKA19Ls/m0fyzdsOE+ar3sUGLOjzzUDDwmIZnby8H2rGd9UVojkpbDCpK7v/YDoUWtUgWyRkXTkVkm+G/GQR3wFmHbJEHQJdht15jpwMVeHvTtHB4GknZzj7xXsaC73fAEUlyNQot1I01Q0HA0z+NQgTPcJiX4RxqtdeCNJRmA0VvuhdssmduvXy7E2XJejPdhJuZMWkdqH8sChf0gIMi6szpW0pn/uhtiV0jCqgYErcPi0lvZieLDN+psDPeA0cw7XvR+FDz4IrEmzS5ukA7NvVPh/fHWP/cBZGM+iVhcz7iLcXAkw/V3BHrytn5CWLGEC5aNWQQ18Kqk4V4DYaJ2KdGy3UBhOfu15gcUwUq35uAbp2MV8qyy8JxR+kWqpUiY/3rN5TO9+68hIoPwm8WVKvBp+tvujXUM64r2pw3l0Tl4r3Sx385fNSk8SxjNksGzKLUO5m3eZVpkDrJVgV1OiZRCxVgbaNrxVhQW1wyGDkXr5XQOk39FYAoyYReEjzMXkdUZQpml//GvNYc4fnWACiyzmZsX/CgoBdDfpXoxPdnHg=</ds:SignatureValue>
+        <ds:KeyInfo>
+            <ds:X509Data>
+                <ds:X509Certificate>MIIGPDCCBCSgAwIBAgIUVlIN5Gp2y2rXucI43SU9iJBNqdgwDQYJKoZIhvcNAQENBQAwgaQxCzAJ
+                    BgNVBAYTAlVLMRcwFQYDVQQIEw5HcmVhdGVyIExvbmRvbjEPMA0GA1UEBxMGTG9uZG9uMRcwFQYD
+                    VQQKEw5DYWJpbmV0IE9mZmljZTEjMCEGA1UECxMaR292ZXJubWVudCBEaWdpdGFsIFNlcnZpY2Ux
+                    LTArBgNVBAMTJFRlc3QgQ29ubmVjdG9yIE1ldGFkYXRhIFNpZ25pbmcgKElDKTAeFw0xNjEwMjYx
+                    NDA1MDBaFw0xNzEwMjYxNDA1MDBaMIGoMQswCQYDVQQGEwJVSzEXMBUGA1UECBMOR3JlYXRlciBM
+                    b25kb24xDzANBgNVBAcTBkxvbmRvbjEXMBUGA1UEChMOQ2FiaW5ldCBPZmZpY2UxIzAhBgNVBAsT
+                    GkdvdmVybm1lbnQgRGlnaXRhbCBTZXJ2aWNlMTEwLwYDVQQDEyhUZXN0IENvbm5lY3RvciBNZXRh
+                    ZGF0YSBTaWduaW5nIDIwMTYxMDI2MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArIKS
+                    CYK6eUcsWxWBN3uj9+mEwV68llqg9ww8wgns4GhsHzNYN8KZek7asFhlzOSxyn/xI/KIWDYfjxOv
+                    SslXOm4jlLGPD5cwiIT7oFDMwCd1OaoNaL8BFUOuNa9/u7PL4vmtng9FWMzoxmbtt0ASMoqLUSaQ
+                    sGjHnNdflNlbfg3O948e414JmlehFbJhHLk6+PyD8UqwlK8O2sP4SvYQgcfczTC432IvviuNXWOp
+                    OACmPgdzstURotfcb/tHzSyCHRHmoX+Awc+l22FEsKyc7eykFeyG/mEwjhdXu5rPusb+N1+Jck16
+                    cdGbr60i/JBSgq39u2Hw1NPKg5RSzoCJMt3Ad2W+dLr7GNlFRNdqmlr91Nsxh8TTA35NO9sYTo5z
+                    V6ChWIyw27c/3NyWIYgibj0dg3mgA5l/DhFh7PC19Aa4JoYhvFVBh9izpANcOTea1w1mialClsPq
+                    A8tzViR63PAYARjpk48iI0QHpLTq+Ueam524y43dfHFzC/i3qodJ8WThvCZ+Cj8afsv6BROUCTFv
+                    2MftdKn2B2NenCS5s6VC5JP4bHJ1QO4b1xpQhBXOh7L/WcQywXXywGZdgoijAlaR/eX8iR7lgVph
+                    zPrpjxxKyPpXuJElaEGKAIP8I5ttRX5u6tKKSaU9PXqDTJ+5MSnBk+8gEYpPEubIykaV4cECAwEA
+                    AaNgMF4wDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFBpFpXuTNf9jjtCb
+                    YlFncj6M4n4YMB8GA1UdIwQYMBaAFKYWxPKn7FYFkS1YCnkagWsMP74YMA0GCSqGSIb3DQEBDQUA
+                    A4ICAQBQiPoTALNOmBl17uvM4u7VxsaebJq2Li8r1Lpn5KqLEpDvkV0sn0WboOStA6CLMF22mtyR
+                    kj9uFYZh9j4/Bz8Z5CUPgCvZ+uRC8eJNPjJbR1cegmF0dMYnSLo3NJdx//bqhVm0swBQoc7mZxeF
+                    lC4ubgyy/Yz24nVFs2eigyNTnBJlJ73owvnM51nMRSf+gQ19oImRO6ywsDXp3R0qpXfmChAfrhut
+                    tKFU5e49zaD4hONa1e9meIbp/3gdphOcb2A0ZJ01R4nSvey+lvBx6u+tjdbttm3ncTjuwba6gJXF
+                    KyYmocBOdCoGKu1yOGHRuf6OGDmSr5h1jK5VbZPysWja0g6o1NohZavyBWIR1+k20cgyCl+BeuzS
+                    hCexndvoovZEaL0syqUJYTCZ/F971rMGJY6Uf8RLZBn34eVLg0Ihf9lqgW+ErRx8p8hIvFaV4Flj
+                    u5vUDy3rLh2u2Ux5j0nzsVwIzUL6Y32fXE9zoI0jRQS6QFaMit0KXbn3fnj/i1Nmwo0zDEB16I0a
+                    T66F4+fijnxeRvC66hfLGtreBGAtoN6/heMxmhio5DrB7/QH3K8IUXgq4Uvo1ByQZVYxyZOXnL8c
+                    RCQNZpZRg6+Zjjcc0YFK78YxV612F0x+mk37+8x7GLkfphX9eGXM9yi1yUV4S2BA0ik3IxF+9AyC
+                    HrUHLQ==</ds:X509Certificate>
+            </ds:X509Data>
+        </ds:KeyInfo>
+    </ds:Signature>
+    <saml2:Subject>
+        <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified" NameQualifier="http://C-PEPS.gov.xx">CA/UK/125457487Company</saml2:NameID>
+        <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+            <saml2:SubjectConfirmationData Address="80.194.77.100" InResponseTo="_CS5EVOcsymuVm2h6nJ2-NIr0qwE1yCSaZlwJaENwaBeSu..3P9YOV3aDOalj4a" NotOnOrAfter="2016-12-05T11:12:49.458Z" Recipient="https://uk-stub-sp-reference.cloudapps.digital/ReturnPage"/>
+        </saml2:SubjectConfirmation>
+    </saml2:Subject>
+    <saml2:Conditions NotBefore="2016-12-05T11:07:49.460Z" NotOnOrAfter="2016-12-05T11:12:49.458Z">
+        <saml2:AudienceRestriction>
+            <saml2:Audience>https://uk-stub-sp-reference.cloudapps.digital/metadata</saml2:Audience>
+        </saml2:AudienceRestriction>
+        <saml2:OneTimeUse/>
+    </saml2:Conditions>
+    <saml2:AuthnStatement AuthnInstant="2016-12-05T11:07:49.461Z">
+        <saml2:SubjectLocality Address="80.194.77.100"/>
+        <saml2:AuthnContext>
+            <saml2:AuthnContextClassRef>http://eidas.europa.eu/LoA/low</saml2:AuthnContextClassRef>
+            <saml2:AuthnContextDecl/>
+        </saml2:AuthnContext>
+    </saml2:AuthnStatement>
+    <saml2:AttributeStatement>
+        <saml2:Attribute FriendlyName="D-2012-17-EUIdentifier" Name="http://eidas.europa.eu/attributes/legalperson/D-2012-17-EUIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-legal:D-2012-17-EUIdentifierType">Directive 2012/17/EU Identifier</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="CurrentAddress" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentAddress" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:CurrentAddressType">PGVpZGFzLW5hdHVyYWw6RnVsbEN2YWRkcmVzcz5DdXJyZW50IEFkZHJlc3M8L2VpZGFzLW5hdHVyYWw6RnVsbEN2YWRkcmVzcz4K</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="FamilyName" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" eidas-natural:LatinScript="false" xsi:type="eidas-natural:CurrentFamilyNameType">&#x3A9;&#x3BD;&#x3AC;&#x3C3;&#x3B7;&#x3C2;</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="FirstName" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:CurrentGivenNameType">javier</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="DateOfBirth" Name="http://eidas.europa.eu/attributes/naturalperson/DateOfBirth" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:DateOfBirthType">1965-01-01</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="Gender" Name="http://eidas.europa.eu/attributes/naturalperson/Gender" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:GenderType">Male</saml2:AttributeValue>
+        </saml2:Attribute>
+        <saml2:Attribute FriendlyName="PersonIdentifier" Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+            <saml2:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="eidas-natural:PersonIdentifierType">CA/UK/12345</saml2:AttributeValue>
+        </saml2:Attribute>
+    </saml2:AttributeStatement>
+</saml2:Assertion>
+
