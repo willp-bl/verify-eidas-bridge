@@ -2,6 +2,7 @@ package uk.gov.ida.eidas.bridge.resources;
 
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.w3c.dom.Document;
@@ -18,19 +19,19 @@ import java.util.function.Function;
 @Produces(MediaType.APPLICATION_XML)
 public class BridgeMetadataResource {
     private final BridgeMetadataGenerator bridgeMetadataGenerator;
-    private final Function<EntitiesDescriptor, Element> entitiesDescriptorElementTransformer;
+    private final Function<EntityDescriptor, Element> entityDescriptorElementTransformer;
 
     public BridgeMetadataResource(
         BridgeMetadataGenerator bridgeMetadataGenerator,
-        Function<EntitiesDescriptor, Element> entitiesDescriptorElementTransformer) {
+        Function<EntityDescriptor, Element> entityDescriptorElementTransformer) {
         this.bridgeMetadataGenerator = bridgeMetadataGenerator;
-        this.entitiesDescriptorElementTransformer = entitiesDescriptorElementTransformer;
+        this.entityDescriptorElementTransformer = entityDescriptorElementTransformer;
     }
 
     @GET
     @Path("/metadata")
     public Document getMetadata() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        return entitiesDescriptorElementTransformer.apply(entitiesDescriptor).getOwnerDocument();
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
+        return entityDescriptorElementTransformer.apply(entityDescriptor).getOwnerDocument();
     }
 }

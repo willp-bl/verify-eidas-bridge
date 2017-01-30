@@ -1,18 +1,14 @@
 package uk.gov.ida.eidas.bridge.helpers;
 
-import org.joda.time.DateTime;
-import org.joda.time.Hours;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.metadata.AssertionConsumerService;
-import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.RoleDescriptor;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.impl.AssertionConsumerServiceBuilder;
-import org.opensaml.saml.saml2.metadata.impl.EntitiesDescriptorBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.common.shared.security.Certificate;
@@ -24,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BridgeMetadataGenerator {
-
-
     private final String hostname;
     private final String entityId;
     private final KeyDescriptorsUnmarshaller keyDescriptorsUnmarshaller;
@@ -33,7 +27,6 @@ public class BridgeMetadataGenerator {
     private final Certificate encryptingCertificate;
     private final SigningHelper signingHelper;
     private final OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
-
 
     public BridgeMetadataGenerator(
         String hostname, String entityId,
@@ -49,20 +42,7 @@ public class BridgeMetadataGenerator {
         this.signingHelper = signingHelper;
     }
 
-    public EntitiesDescriptor generateMetadata() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = new EntitiesDescriptorBuilder().buildObject();
-        entitiesDescriptor.setID("entitiesDescriptor");
-        entitiesDescriptor.setValidUntil(new DateTime().plus(Hours.ONE));
-
-        final EntityDescriptor bridgeEntityDescriptor = createEntityDescriptor(entityId);
-
-        entitiesDescriptor.getEntityDescriptors().add(bridgeEntityDescriptor);
-        signingHelper.sign(entitiesDescriptor);
-
-        return entitiesDescriptor;
-    }
-
-    private EntityDescriptor createEntityDescriptor(String entityId) throws MarshallingException, SecurityException, SignatureException {
+    public EntityDescriptor createEntityDescriptor() throws MarshallingException, SecurityException, SignatureException {
         XMLObjectBuilderFactory openSamlBuilderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
         EntityDescriptor entityDescriptor = (EntityDescriptor) openSamlBuilderFactory.getBuilder(EntityDescriptor.TYPE_NAME).buildObject(EntityDescriptor.DEFAULT_ELEMENT_NAME, EntityDescriptor.TYPE_NAME);
         entityDescriptor.setEntityID(entityId);
