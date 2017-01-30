@@ -67,6 +67,7 @@ public class ChooseACountryView extends View {
             .add(new Country("LT", "Lithuania", "Lithuania Republic of Lithuania LT Lietuva", enabledCountries))
             .add(new Country("LU", "Luxembourg", "Luxembourg Grand Duchy of Luxembourg LU L Luxembourg", enabledCountries))
             .add(new Country("MT", "Malta", "Malta Republic of Malta MT Malta", enabledCountries))
+            .add(new Country("NO", "Norway", "Norway Kingdom of Norway NO Norge", enabledCountries))
             .add(new Country("PL", "Poland", "Poland Republic of Poland PL Polska", enabledCountries))
             .add(new Country("PT", "Portugal", "Portugal Portuguese Republic PT P Portugal", enabledCountries))
             .add(new Country("RO", "Romania", "Romania Romania RO România Romania", enabledCountries))
