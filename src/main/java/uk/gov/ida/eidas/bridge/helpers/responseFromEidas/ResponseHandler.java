@@ -59,7 +59,7 @@ public class ResponseHandler {
             StatusCode statusCodeResponder = status.getStatusCode();
             if(statusCodeResponder != null) {
                 StatusCode statusCode = statusCodeResponder.getStatusCode();
-                if(statusCode != null && statusCode.getValue().equals(StatusCode.AUTHN_FAILED)) {
+                if(statusCode != null && !statusCode.getValue().equals(StatusCode.SUCCESS)) {
                     return new EidasSamlResponse(statusCode);
                 }
             }
