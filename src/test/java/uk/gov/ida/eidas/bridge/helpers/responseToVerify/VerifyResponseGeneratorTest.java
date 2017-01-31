@@ -19,6 +19,7 @@ import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.bridge.testhelpers.TestSignatureValidator;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
@@ -53,7 +54,7 @@ public class VerifyResponseGeneratorTest {
     public void before() {
         EidasSamlBootstrap.bootstrap();
         eidasIdentityAssertion = new EidasIdentityAssertion("Ab", "ba", Optional.of("holborn"), Optional.of(Gender.FEMALE), new DateTime(1965, 1, 1, 0, 0), PERSON_IDENTIFIER);
-        eidasSamlResponse = new EidasSamlResponse(eidasIdentityAssertion);
+        eidasSamlResponse = new EidasSamlResponse(eidasIdentityAssertion, LevelOfAssurance.SUBSTANTIAL);
         OpenSamlXmlObjectFactory openSamlXmlObjectFactory = new OpenSamlXmlObjectFactory();
         AssertionSubjectGenerator assertionSubjectGenerator = new AssertionSubjectGenerator(VERIFY_ENTITY_ID, openSamlXmlObjectFactory);
         AttributeFactory_1_1 attributeFactory = new AttributeFactory_1_1(openSamlXmlObjectFactory);

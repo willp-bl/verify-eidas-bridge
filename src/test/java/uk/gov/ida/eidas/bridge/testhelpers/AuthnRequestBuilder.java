@@ -18,7 +18,6 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.google.common.base.Optional.absent;
 import static uk.gov.ida.saml.core.test.builders.SignatureBuilder.aSignature;
 
 public class AuthnRequestBuilder {

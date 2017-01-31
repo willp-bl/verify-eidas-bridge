@@ -17,16 +17,15 @@ import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.core.transformers.outbound.decorators.SamlResponseAssertionEncrypter;
 
 public class VerifyResponseGenerator {
-
     private final String bridgeEntityId;
     private final MatchingDatasetAssertionGenerator matchingDatasetAssertionGenerator;
     private final AuthnStatementAssertionGenerator authnStatementAssertionGenerator;
     private final SamlResponseAssertionEncrypter samlResponseAssertionEncrypter;
     private final SigningHelper signingHelper;
-
 
     public VerifyResponseGenerator(
         String bridgeEntityId,
@@ -51,7 +50,7 @@ public class VerifyResponseGenerator {
         setIssuer(response);
         if(eidasSamlResponse.isSuccess()) {
             setStatus(response);
-            setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion);
+            setAssertions(response, inResponseTo, ipAddress, eidasIdentityAssertion, eidasSamlResponse.getLevelOfAssurance());
             samlResponseAssertionEncrypter.encryptAssertions(response);
         } else {
             Status status = new StatusBuilder().buildObject();
@@ -85,8 +84,8 @@ public class VerifyResponseGenerator {
         response.setStatus(status);
     }
 
-    private void setAssertions(Response response, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion) throws MarshallingException, SecurityException, SignatureException {
+    private void setAssertions(Response response, String inResponseTo, String ipAddress, EidasIdentityAssertion eidasIdentityAssertion, LevelOfAssurance levelOfAssurance) throws MarshallingException, SecurityException, SignatureException {
         response.getAssertions().add(matchingDatasetAssertionGenerator.generate(inResponseTo, eidasIdentityAssertion));
-        response.getAssertions().add(authnStatementAssertionGenerator.generate(inResponseTo, ipAddress, eidasIdentityAssertion.getPersonIdentifier()));
+        response.getAssertions().add(authnStatementAssertionGenerator.generate(inResponseTo, ipAddress, eidasIdentityAssertion.getPersonIdentifier(), levelOfAssurance));
     }
 }
