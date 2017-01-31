@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.metadata.AssertionConsumerService;
-import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.KeyDescriptor;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
@@ -49,19 +48,14 @@ public class BridgeMetadataGeneratorTest {
 
     @Test
     public void shouldGenerateMetadataEntitiesDescriptor() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        assertEquals("Should have an entitiesDescriptor", "entitiesDescriptor", entitiesDescriptor.getID());
-        assertNotNull("Should have a ValidUntil attribute", entitiesDescriptor.getValidUntil());
-        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         assertNotNull("Should have bridge entity descriptor", entityDescriptor);
         assertEquals("Should have an entityDescriptor ID", "bridgeEntityDescriptor", entityDescriptor.getID());
     }
 
     @Test
     public void shouldGenerateMetadataSPSSODescriptor() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
-
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
         assertNotNull("Should have an SPSSODescriptor", spSsoDescriptor);
         List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
@@ -75,9 +69,7 @@ public class BridgeMetadataGeneratorTest {
 
     @Test
     public void shouldGenerateMetadataSigningKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
-
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
         List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
         KeyDescriptor keyDescriptor = keyDescriptors.get(0);
@@ -89,9 +81,7 @@ public class BridgeMetadataGeneratorTest {
 
     @Test
     public void shouldGenerateMetadataEncryptionKeyDescriptor() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
-
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         SPSSODescriptor spSsoDescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
         List<KeyDescriptor> keyDescriptors = spSsoDescriptor.getKeyDescriptors();
         KeyDescriptor keyDescriptor = keyDescriptors.get(1);
@@ -104,12 +94,7 @@ public class BridgeMetadataGeneratorTest {
 
     @Test
     public void shouldSignMetadata() throws SignatureException, MarshallingException, SecurityException {
-        EntitiesDescriptor entitiesDescriptor = bridgeMetadataGenerator.generateMetadata();
-        Signature entitiesDescriptorSignature = entitiesDescriptor.getSignature();
-        assertNotNull("Should have a signature", entitiesDescriptorSignature);
-        assertNotNull("Should have key info", entitiesDescriptorSignature.getKeyInfo());
-
-        EntityDescriptor entityDescriptor = entitiesDescriptor.getEntityDescriptors().get(0);
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         Signature entityDescriptorSignature = entityDescriptor.getSignature();
         assertNotNull("Should have a signature", entityDescriptorSignature);
         assertNotNull("Should have key info", entityDescriptorSignature.getKeyInfo());

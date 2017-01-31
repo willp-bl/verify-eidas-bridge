@@ -8,8 +8,8 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.opensaml.core.xml.io.UnmarshallingException;
-import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
-import org.opensaml.saml.saml2.metadata.impl.EntitiesDescriptorUnmarshaller;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import org.opensaml.saml.saml2.metadata.impl.EntityDescriptorUnmarshaller;
 import org.w3c.dom.Document;
 import uk.gov.ida.eidas.bridge.configuration.BridgeConfiguration;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
@@ -52,7 +52,7 @@ public class BridgeMetadataIntegrationTest {
 
         assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
 
-        EntitiesDescriptor entitiesDescriptor = (EntitiesDescriptor) new EntitiesDescriptorUnmarshaller().unmarshall(result.readEntity(Document.class).getDocumentElement());
-        Assert.assertNotNull("Should have an entitiesDescriptor", entitiesDescriptor);
+        EntityDescriptor entityDescriptor = (EntityDescriptor) new EntityDescriptorUnmarshaller().unmarshall(result.readEntity(Document.class).getDocumentElement());
+        Assert.assertNotNull("Should have an entityDescriptor", entityDescriptor);
     }
 }
