@@ -30,8 +30,8 @@ import uk.gov.ida.saml.deserializers.validators.SizeValidator;
 import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.DecrypterFactory;
 import uk.gov.ida.saml.security.EncrypterFactory;
-import uk.gov.ida.saml.security.KeyStore;
-import uk.gov.ida.saml.security.KeyStoreCredentialRetriever;
+import uk.gov.ida.saml.security.IdaKeyStore;
+import uk.gov.ida.saml.security.IdaKeyStoreCredentialRetriever;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
 import uk.gov.ida.saml.security.SamlMessageSignatureValidator;
 import uk.gov.ida.saml.security.SignatureValidator;
@@ -162,7 +162,7 @@ public class ResponseHandlerTest {
             .addEncryptedAssertion(encrypter.encrypt(buildAssertionFromFile()));
     }
 
-    private static KeyStore getKeyStore() throws Base64DecodingException {
+    private static IdaKeyStore getKeyStore() throws Base64DecodingException {
         List<KeyPair> encryptionKeyPairs = new ArrayList<>();
         PublicKeyFactory publicKeyFactory = new PublicKeyFactory(new X509CertificateFactory());
         PrivateKeyFactory privateKeyFactory = new PrivateKeyFactory();
@@ -173,7 +173,7 @@ public class ResponseHandlerTest {
         PrivateKey privateSigningKey = privateKeyFactory.createPrivateKey(Base64.decode(TestCertificateStrings.HUB_TEST_PRIVATE_SIGNING_KEY.getBytes()));
         KeyPair signingKeyPair = new KeyPair(publicSigningKey, privateSigningKey);
 
-        return new KeyStore(signingKeyPair, encryptionKeyPairs);
+        return new IdaKeyStore(signingKeyPair, encryptionKeyPairs);
     }
 
     private Assertion buildAssertionFromFile() throws IOException, javax.xml.parsers.ParserConfigurationException, org.xml.sax.SAXException, org.opensaml.core.xml.io.UnmarshallingException {
@@ -200,9 +200,9 @@ public class ResponseHandlerTest {
         public ResponseHandler build() throws Base64DecodingException {
             SignatureValidator signatureValidator = signatureValidator(this.shouldPassMessageSignatureValidation);
             SamlMessageSignatureValidator samlMessageSignatureValidator = new SamlMessageSignatureValidator(signatureValidator);
-            KeyStore samlSecurityKeyStore = getKeyStore();
+            IdaKeyStore samlSecurityKeyStore = getKeyStore();
             SamlResponseSignatureValidator samlResponseSignatureValidator = new SamlResponseSignatureValidator(samlMessageSignatureValidator);
-            AssertionDecrypter assertionDecrypter = new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(), new DecrypterFactory());
+            AssertionDecrypter assertionDecrypter = new AssertionDecrypter(new IdaKeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(), new DecrypterFactory());
 
             SamlAssertionsSignatureValidator samlAssertionsSignatureValidator = new SamlAssertionsSignatureValidator(new SamlMessageSignatureValidator(signatureValidator(this.shouldPassAssertionSignatureValidation)));
             EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller = new EidasIdentityAssertionUnmarshaller();

@@ -1,7 +1,6 @@
 package uk.gov.ida.eidas.bridge.resources;
 
 import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.saml.saml2.metadata.EntitiesDescriptor;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;

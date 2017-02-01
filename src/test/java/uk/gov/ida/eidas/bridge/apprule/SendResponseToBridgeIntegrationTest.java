@@ -13,6 +13,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Issuer;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
@@ -30,12 +31,14 @@ import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.eidas.bridge.rules.BridgeAppRule;
 import uk.gov.ida.eidas.bridge.rules.MetadataRule;
 import uk.gov.ida.eidas.bridge.testhelpers.NodeMetadataFactory;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
 import uk.gov.ida.saml.core.extensions.impl.StringBasedMdsAttributeValueBuilder;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
 import uk.gov.ida.saml.core.test.builders.AssertionBuilder;
 import uk.gov.ida.saml.core.test.builders.AttributeStatementBuilder;
+import uk.gov.ida.saml.core.test.builders.AuthnStatementBuilder;
 import uk.gov.ida.saml.core.test.builders.IssuerBuilder;
 import uk.gov.ida.saml.core.test.builders.ResponseBuilder;
 import uk.gov.ida.saml.core.test.builders.StatusBuilder;
@@ -264,7 +267,13 @@ public class SendResponseToBridgeIntegrationTest {
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.DATE_OF_BIRTH_URI, "1960-01-01"));
         attributeStatementBuilder.addAttribute(createAttribute(EidasIdentityAssertionUnmarshaller.PERSON_IDENTIFIER_URI, "personNumber1337"));
 
-        AssertionBuilder assertionBuilder = anAssertion().addAttributeStatement(attributeStatementBuilder.build());
+        AuthnStatementBuilder authnStatementBuilder = AuthnStatementBuilder.anAuthnStatement();
+        AuthnStatement authnStatement = authnStatementBuilder.build();
+        authnStatement.getAuthnContext().getAuthnContextClassRef().setAuthnContextClassRef(LevelOfAssurance.SUBSTANTIAL.toString());
+
+        AssertionBuilder assertionBuilder = anAssertion()
+            .addAttributeStatement(attributeStatementBuilder.build())
+            .addAuthnStatement(authnStatement);
         Issuer issuer = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
         Issuer issuerAssertion = IssuerBuilder.anIssuer().withIssuerId(eidasMetadata.url()).build();
         return aResponse().withInResponseTo(SOME_RESPONSE_ID)

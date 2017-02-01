@@ -57,7 +57,7 @@ import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.DecrypterFactory;
 import uk.gov.ida.saml.security.EncrypterFactory;
 import uk.gov.ida.saml.security.EncryptionCredentialFactory;
-import uk.gov.ida.saml.security.KeyStoreCredentialRetriever;
+import uk.gov.ida.saml.security.IdaKeyStoreCredentialRetriever;
 import uk.gov.ida.saml.security.MetadataBackedSignatureValidator;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
 import uk.gov.ida.saml.security.SamlMessageSignatureValidator;
@@ -215,7 +215,7 @@ public class VerifyEidasBridgeFactory {
     }
 
     private ResponseHandler getResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse, SignatureValidator signatureValidator, KeyStoreConfiguration keyStoreConfiguration) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        uk.gov.ida.saml.security.KeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.KeyStore(
+        uk.gov.ida.saml.security.IdaKeyStore samlSecurityKeyStore = new uk.gov.ida.saml.security.IdaKeyStore(
             getSigningKeyPair(keyStoreConfiguration),
             singletonList(getEncryptingKeyPair())
         );
@@ -227,7 +227,7 @@ public class VerifyEidasBridgeFactory {
         return new ResponseHandler(
             stringToResponse,
                 new SamlResponseSignatureValidator(samlMessageSignatureValidator),
-            new AssertionDecrypter(new KeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(encryptionAlgorithmWhitelist), new DecrypterFactory()),
+            new AssertionDecrypter(new IdaKeyStoreCredentialRetriever(samlSecurityKeyStore), new EncryptionAlgorithmValidator(encryptionAlgorithmWhitelist), new DecrypterFactory()),
             new SamlAssertionsSignatureValidator(samlMessageSignatureValidator),
             new EidasIdentityAssertionUnmarshaller());
     }

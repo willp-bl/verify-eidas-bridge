@@ -14,6 +14,7 @@ import org.opensaml.saml.saml2.core.SubjectConfirmationData;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.helpers.EidasSamlBootstrap;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.AuthnContext;
 import uk.gov.ida.saml.core.extensions.IPAddress;
@@ -49,13 +50,13 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void shouldGenerateAnAuthnStatementAssertion() throws MarshallingException, SecurityException, SignatureException {
-        assertNotNull(authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER));
+        assertNotNull(authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER, LevelOfAssurance.SUBSTANTIAL));
     }
 
 
     @Test
     public void generateIssuerAndSubject() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER, LevelOfAssurance.SUBSTANTIAL);
 
         assertEquals(BRIDGE_ENTITY_ID, assertion.getIssuer().getValue());
         Subject subject = assertion.getSubject();
@@ -69,7 +70,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void generateAttributeStatementWithIpAddress() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER, LevelOfAssurance.SUBSTANTIAL);
         List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
         assertNotNull(attributeStatements);
         assertTrue(attributeStatements.size() == 1);
@@ -87,7 +88,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void generateLoa2AuthnStatement() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER, LevelOfAssurance.SUBSTANTIAL);
         List<AuthnStatement> authnStatements = assertion.getAuthnStatements();
         assertNotNull(authnStatements);
         assertTrue(authnStatements.size() == 1);
@@ -100,7 +101,7 @@ public class AuthnStatementAssertionGeneratorTest {
 
     @Test
     public void shouldSignAssertion() throws Exception {
-        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER);
+        Assertion assertion = authnStatementAssertionGenerator.generate(IN_RESPONSE_TO, IP_ADDRESS, PERSON_IDENTIFIER, LevelOfAssurance.SUBSTANTIAL);
         assertNotNull(assertion.getSignature());
     }
 }

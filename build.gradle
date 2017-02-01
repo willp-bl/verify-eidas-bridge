@@ -12,7 +12,7 @@ repositories {
 }
 
 project.ext {
-    dropwizardVersion = '1.0.5'
+    dropwizardVersion = '1.0.6'
     openSamlVersion = '3.3.0'
 }
 
@@ -24,18 +24,18 @@ dependencies {
             "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
             "io.dropwizard:dropwizard-assets:$dropwizardVersion",
             "org.opensaml:opensaml-core:$openSamlVersion",
-            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-33",
+            "uk.gov.ida:saml-metadata-bindings:$openSamlVersion-35",
             "uk.gov.ida:dropwizard-saml:$openSamlVersion-354",
-            "uk.gov.verify:saml-utils:$openSamlVersion-20",
+            "uk.gov.verify:saml-utils:$openSamlVersion-21",
             "org.dhatim:dropwizard-jwt-cookie-authentication:2.0.2",
-            "uk.gov.ida:saml-security:$openSamlVersion-26",
+            "uk.gov.ida:saml-security:$openSamlVersion-27",
     )
     testCompile(
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
-            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-33",
+            "uk.gov.ida:saml-metadata-bindings-test:$openSamlVersion-35",
             "org.jsoup:jsoup:1.10.2",
     )
-    testCompile("com.github.tomakehurst:wiremock:2.5.0") { transitive = false }
+    testCompile("com.github.tomakehurst:wiremock:2.5.1") { transitive = false }
 }
 
 task wrapper(type: Wrapper) {

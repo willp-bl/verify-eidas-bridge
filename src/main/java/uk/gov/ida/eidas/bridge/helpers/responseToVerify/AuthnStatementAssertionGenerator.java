@@ -5,7 +5,6 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
-import org.opensaml.saml.saml2.core.AuthnContext;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Issuer;
@@ -13,6 +12,7 @@ import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.helpers.RandomIdGenerator;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.hub.factories.AttributeFactory;
 
@@ -37,7 +37,7 @@ public class AuthnStatementAssertionGenerator {
         this.signingHelper = signingHelper;
     }
 
-    public Assertion generate(String inResponseTo, String ipAddress, String persistentId) throws MarshallingException, SecurityException, SignatureException {
+    public Assertion generate(String inResponseTo, String ipAddress, String persistentId, LevelOfAssurance levelOfAssurance) throws MarshallingException, SecurityException, SignatureException {
         Assertion assertion = openSamlXmlObjectFactory.createAssertion();
 
         assertion.setIssueInstant(new DateTime());
@@ -52,7 +52,7 @@ public class AuthnStatementAssertionGenerator {
         attributeStatement.getAttributes().add(ipAddressAttribute);
         assertion.getAttributeStatements().add(attributeStatement);
 
-        assertion.getAuthnStatements().add(buildAuthnStatement());
+        assertion.getAuthnStatements().add(buildAuthnStatement(levelOfAssurance));
 
         return signingHelper.sign(assertion);
     }
@@ -61,11 +61,11 @@ public class AuthnStatementAssertionGenerator {
      * This code has been duplicated from stub-idp saml
      * see uk.gov.ida.saml.idp.stub.transformers.outbound.IdentityProviderAuthnStatementToAuthnStatementTransformer#transform
      **/
-    private AuthnStatement buildAuthnStatement() {
+    private AuthnStatement buildAuthnStatement(LevelOfAssurance levelOfAssurance) {
         AuthnStatement authnStatement = openSamlXmlObjectFactory.createAuthnStatement();
-        AuthnContext authnContext = openSamlXmlObjectFactory.createAuthnContext();
+        org.opensaml.saml.saml2.core.AuthnContext authnContext = openSamlXmlObjectFactory.createAuthnContext();
         AuthnContextClassRef authnContextClassReference = openSamlXmlObjectFactory.createAuthnContextClassReference(
-            uk.gov.ida.saml.core.domain.AuthnContext.LEVEL_2.getUri()
+            levelOfAssurance.toVerifyLevelOfAssurance().getUri()
         );
         authnContext.setAuthnContextClassRef(authnContextClassReference);
         authnStatement.setAuthnContext(authnContext);

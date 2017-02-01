@@ -1,6 +1,9 @@
 package uk.gov.ida.eidas.bridge.helpers.responseFromEidas;
 
 import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
@@ -8,6 +11,7 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.security.SecurityException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
 import uk.gov.ida.eidas.bridge.domain.EidasSamlResponse;
+import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.saml.deserializers.StringToOpenSamlObjectTransformer;
 import uk.gov.ida.saml.security.AssertionDecrypter;
 import uk.gov.ida.saml.security.SamlAssertionsSignatureValidator;
@@ -68,8 +72,17 @@ public class ResponseHandler {
         List<Assertion> decryptedAssertions = assertionDecrypter.decryptAssertions(validatedResponse);
         ValidatedAssertions validatedAssertions = samlAssertionsSignatureValidator.validate(decryptedAssertions, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
 
+        List<Assertion> assertions = validatedAssertions.getAssertions();
+        String levelOfAssurance = assertions.stream().findFirst()
+                .map(Assertion::getAuthnStatements)
+                .flatMap(x -> x.stream().findFirst())
+                .map(AuthnStatement::getAuthnContext)
+                .map(AuthnContext::getAuthnContextClassRef)
+                .map(AuthnContextClassRef::getAuthnContextClassRef)
+                .orElseThrow(() -> new RuntimeException("Expected a level of assurance in the response"));
+
         EidasIdentityAssertion eidasIdentityAssertion = eidasIdentityAssertionUnmarshaller.unmarshallAssertion(validatedAssertions);
 
-        return new EidasSamlResponse(eidasIdentityAssertion);
+        return new EidasSamlResponse(eidasIdentityAssertion, LevelOfAssurance.fromString(levelOfAssurance));
     }
 }
