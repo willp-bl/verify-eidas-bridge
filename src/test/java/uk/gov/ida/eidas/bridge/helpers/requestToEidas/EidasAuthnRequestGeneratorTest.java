@@ -37,6 +37,7 @@ import uk.gov.ida.eidas.saml.extensions.SPTypeImpl;
 import uk.gov.ida.saml.core.domain.AuthnContext;
 
 import javax.xml.namespace.QName;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -176,7 +177,7 @@ public class EidasAuthnRequestGeneratorTest {
     }
 
     private EidasAuthnRequestGenerator createEidasAuthnRequestGenerator(String entityId) {
-        return new EidasAuthnRequestGenerator(entityId, aSigningHelper().build(), singleSignOnServiceLocator);
+        return new EidasAuthnRequestGenerator(entityId, aSigningHelper().build(), singleSignOnServiceLocator, new ArrayList<>());
     }
 
 }

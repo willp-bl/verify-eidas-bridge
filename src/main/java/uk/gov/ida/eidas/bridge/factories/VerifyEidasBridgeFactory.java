@@ -277,7 +277,7 @@ public class VerifyEidasBridgeFactory {
     }
 
     private EidasAuthnRequestGenerator getEidasAuthnRequestGenerator() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", getEidasSigningHelper(), getEidasSingleSignOnServiceLocator());
+        return new EidasAuthnRequestGenerator(configuration.getHostname() + "/metadata", getEidasSigningHelper(), getEidasSingleSignOnServiceLocator(), configuration.getEidasMetadataConfiguration().getCountries());
     }
 
     private SingleSignOnServiceLocator getEidasSingleSignOnServiceLocator() {

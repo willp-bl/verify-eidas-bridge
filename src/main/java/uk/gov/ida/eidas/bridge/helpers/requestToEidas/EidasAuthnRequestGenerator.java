@@ -17,6 +17,7 @@ import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
 import uk.gov.ida.eidas.bridge.helpers.SigningHelper;
 import uk.gov.ida.eidas.common.LevelOfAssurance;
 import uk.gov.ida.eidas.saml.extensions.NamespaceConstants;
@@ -30,6 +31,10 @@ import uk.gov.ida.saml.core.OpenSamlXmlObjectFactory;
 import uk.gov.ida.saml.core.domain.AuthnContext;
 
 import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 public class EidasAuthnRequestGenerator {
     public static final String PROVIDER_NAME = "PROVIDER_NAME";
@@ -40,12 +45,14 @@ public class EidasAuthnRequestGenerator {
     private final String bridgeEntityId;
     private final SigningHelper signingHelper;
     private final SingleSignOnServiceLocator signOnServiceLocator;
+    private final List<CountryConfiguration> countryConfigurations;
 
 
-    public EidasAuthnRequestGenerator(String bridgeEntityId, SigningHelper signingHelper, SingleSignOnServiceLocator signOnServiceLocator) {
+    public EidasAuthnRequestGenerator(String bridgeEntityId, SigningHelper signingHelper, SingleSignOnServiceLocator signOnServiceLocator, List<CountryConfiguration> countryConfigurations) {
         this.bridgeEntityId = bridgeEntityId;
         this.signingHelper = signingHelper;
         this.signOnServiceLocator = signOnServiceLocator;
+        this.countryConfigurations = countryConfigurations;
     }
 
     public AuthnRequest generateAuthnRequest(String authnReqeustId, String destinationEntityId, AuthnContext lowestAuthnContext) throws MarshallingException, SignatureException, SecurityException {
@@ -56,7 +63,15 @@ public class EidasAuthnRequestGenerator {
         eidasAuthnRequest.setID(authnReqeustId);
         eidasAuthnRequest.setIssueInstant(new DateTime());
         eidasAuthnRequest.setConsent(StatusResponseType.UNSPECIFIED_CONSENT);
-        eidasAuthnRequest.setDestination(signOnServiceLocator.getSignOnUrl(destinationEntityId));
+
+        Optional<String> overriddenSignOnUrl = countryConfigurations
+            .stream()
+            .filter(x -> x.getEntityID().equals(destinationEntityId))
+            .findFirst()
+            .flatMap(x -> ofNullable(x.getOverriddenSignOnUrl()));
+
+        eidasAuthnRequest.setDestination(overriddenSignOnUrl.orElseGet(() -> signOnServiceLocator.getSignOnUrl(destinationEntityId)));
+
         eidasAuthnRequest.setForceAuthn(true);
         eidasAuthnRequest.setProviderName(PROVIDER_NAME);
         eidasAuthnRequest.setIssuer(openSamlXmlObjectFactory.createIssuer(bridgeEntityId));
