@@ -77,7 +77,7 @@ public class BridgeAppRule extends DropwizardAppRule<BridgeConfiguration> {
             .collect(
                 Collectors.toMap(
                     Map.Entry::getKey,
-                    entry -> () -> new CountryConfiguration(entry.getValue().get(), entry.getKey(), false)
+                    entry -> () -> new CountryConfiguration(entry.getValue().get(), entry.getKey(), false, false)
                 )
         );
         return createBridgeAppRuleFromConfig(verifyMetadataUri, configMap);

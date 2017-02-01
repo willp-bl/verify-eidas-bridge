@@ -95,8 +95,8 @@ public class SendAuthnRequestToBridgeIntegrationTest {
 
     private static final String COUNTRY_CODE = "NL";
     private static Map<String, Supplier<CountryConfiguration>> countryConfig = ImmutableMap.of(
-        COUNTRY_CODE, () -> new CountryConfiguration(nlMetadata.url(), COUNTRY_CODE, false),
-        "SE", () -> new CountryConfiguration(eidasMetadataWithoutSignedSSODescriptor.url(), "SE", /* workaroundBrokenRoleDescriptorSignatures = */ true)
+        COUNTRY_CODE, () -> new CountryConfiguration(nlMetadata.url(), COUNTRY_CODE, false, false),
+        "SE", () -> new CountryConfiguration(eidasMetadataWithoutSignedSSODescriptor.url(), "SE", /* workaroundBrokenRoleDescriptorSignatures = */ true, false)
     );
 
     @ClassRule

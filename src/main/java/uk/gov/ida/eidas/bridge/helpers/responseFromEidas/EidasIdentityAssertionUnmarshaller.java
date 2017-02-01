@@ -16,7 +16,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
-import uk.gov.ida.eidas.bridge.helpers.requestToEidas.SingleSignOnServiceLocator;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
 import uk.gov.ida.saml.core.domain.Gender;
 import uk.gov.ida.saml.core.extensions.StringBasedMdsAttributeValue;
