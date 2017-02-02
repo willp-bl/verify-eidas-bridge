@@ -7,10 +7,12 @@ import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
+import org.opensaml.saml.saml2.core.StatusMessage;
 import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
 import org.opensaml.saml.saml2.core.impl.ResponseBuilder;
 import org.opensaml.saml.saml2.core.impl.StatusBuilder;
 import org.opensaml.saml.saml2.core.impl.StatusCodeBuilder;
+import org.opensaml.saml.saml2.core.impl.StatusMessageBuilder;
 import org.opensaml.security.SecurityException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import uk.gov.ida.eidas.bridge.domain.EidasIdentityAssertion;
@@ -58,14 +60,18 @@ public class VerifyResponseGenerator {
 
             StatusCode statusCodeResponder = new StatusCodeBuilder().buildObject();
             statusCodeResponder.setValue(StatusCode.RESPONDER);
-            
+
             if (eidasStatusCode != null) {
                 StatusCode statusCode = new StatusCodeBuilder().buildObject();
                 statusCode.setValue(eidasStatusCode.getValue());
                 statusCodeResponder.setStatusCode(statusCode);
             }
-
             status.setStatusCode(statusCodeResponder);
+
+            StatusMessage statusMessage = new StatusMessageBuilder().buildObject();
+            statusMessage.setMessage(eidasSamlResponse.getErrorMessage());
+            status.setStatusMessage(statusMessage);
+
             response.setStatus(status);
         }
 

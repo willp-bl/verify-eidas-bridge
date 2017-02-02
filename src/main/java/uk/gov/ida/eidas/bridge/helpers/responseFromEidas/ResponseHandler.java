@@ -22,16 +22,11 @@ import uk.gov.ida.saml.security.validators.signature.SamlResponseSignatureValida
 import java.util.List;
 
 public class ResponseHandler {
-    public static final String RESPONSE_INRESPONSETO_FAILURE_MESSAGE_START = "Response InResponseTo";
-    public static final String RESPONSE_ISSUER_FAILURE_MESSAGE_START = "Response issuer";
-
-
     private final StringToOpenSamlObjectTransformer<Response> stringToResponse;
     private final SamlResponseSignatureValidator samlResponseSignatureValidator;
     private final AssertionDecrypter assertionDecrypter;
     private final SamlAssertionsSignatureValidator samlAssertionsSignatureValidator;
     private final EidasIdentityAssertionUnmarshaller eidasIdentityAssertionUnmarshaller;
-
 
     public ResponseHandler(StringToOpenSamlObjectTransformer<Response> stringToResponse,
                            SamlResponseSignatureValidator samlResponseSignatureValidator,
@@ -49,23 +44,21 @@ public class ResponseHandler {
         Response response = this.stringToResponse.apply(base64EncodedResponse);
 
         if(!response.getInResponseTo().equals(expectedId)) {
-            throw new SecurityException(RESPONSE_INRESPONSETO_FAILURE_MESSAGE_START + " (" + response.getInResponseTo() + ") didn't match expected id (" + expectedId + ")");
+            throw new SecurityException("Response InResponseTo" + " (" + response.getInResponseTo() + ") didn't match expected id (" + expectedId + ")");
         }
 
         String actualIssuer = response.getIssuer().getValue();
         if(!eidasEntityId.equals(actualIssuer)) {
-            throw new SecurityException(RESPONSE_ISSUER_FAILURE_MESSAGE_START + " (" + actualIssuer + ") didn't match expected issuer (" + eidasEntityId + ")");
+            throw new SecurityException("Response issuer" + " (" + actualIssuer + ") didn't match expected issuer (" + eidasEntityId + ")");
         }
 
         ValidatedResponse validatedResponse = samlResponseSignatureValidator.validate(response, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
         Status status = validatedResponse.getStatus();
         if(status != null) {
-            StatusCode statusCodeResponder = status.getStatusCode();
-            if(statusCodeResponder != null) {
-                StatusCode statusCode = statusCodeResponder.getStatusCode();
-                if(statusCode == null || !statusCode.getValue().equals(StatusCode.SUCCESS)) {
-                    return new EidasSamlResponse(statusCode);
-                }
+            StatusCode outerStatusCode = status.getStatusCode();
+            if(outerStatusCode != null && !outerStatusCode.getValue().equals(StatusCode.SUCCESS)) {
+                StatusCode innerStatusCode = outerStatusCode.getStatusCode();
+                return new EidasSamlResponse(innerStatusCode, status.getStatusMessage().getMessage());
             }
         }
 
