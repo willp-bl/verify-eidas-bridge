@@ -7,14 +7,17 @@ public class EidasSamlResponse {
     private final EidasIdentityAssertion assertion;
     private final StatusCode failureStatus;
     private final LevelOfAssurance levelOfAssurance;
+    private final boolean isSuccess;
 
     public EidasSamlResponse(EidasIdentityAssertion assertion, LevelOfAssurance levelOfAssurance) {
+        this.isSuccess = true;
         this.assertion = assertion;
         this.failureStatus = null;
         this.levelOfAssurance = levelOfAssurance;
     }
 
     public EidasSamlResponse(StatusCode failureStatus) {
+        this.isSuccess = false;
         this.failureStatus = failureStatus;
         this.assertion = null;
         this.levelOfAssurance = null;
@@ -25,7 +28,7 @@ public class EidasSamlResponse {
     }
 
     public boolean isSuccess() {
-        return failureStatus == null;
+        return isSuccess;
     }
 
     public StatusCode getFailureStatus() {

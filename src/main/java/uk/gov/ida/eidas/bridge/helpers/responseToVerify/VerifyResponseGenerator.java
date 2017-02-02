@@ -56,11 +56,14 @@ public class VerifyResponseGenerator {
             Status status = new StatusBuilder().buildObject();
             StatusCode eidasStatusCode = eidasSamlResponse.getFailureStatus();
 
-            StatusCode statusCode = new StatusCodeBuilder().buildObject();
-            statusCode.setValue(eidasStatusCode.getValue());
             StatusCode statusCodeResponder = new StatusCodeBuilder().buildObject();
             statusCodeResponder.setValue(StatusCode.RESPONDER);
-            statusCodeResponder.setStatusCode(statusCode);
+            
+            if (eidasStatusCode != null) {
+                StatusCode statusCode = new StatusCodeBuilder().buildObject();
+                statusCode.setValue(eidasStatusCode.getValue());
+                statusCodeResponder.setStatusCode(statusCode);
+            }
 
             status.setStatusCode(statusCodeResponder);
             response.setStatus(status);
