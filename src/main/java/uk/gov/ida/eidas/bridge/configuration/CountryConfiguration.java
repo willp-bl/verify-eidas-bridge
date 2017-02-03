@@ -11,12 +11,11 @@ public class CountryConfiguration extends TrustStoreConfiguration {
     public CountryConfiguration() {
     }
 
-    public CountryConfiguration(String entityID, String countryCode, String overriddenSignOnUrl, boolean workaroundBrokenRoleDescriptorSignatures, boolean workaroundBrokenContentTypeHeaders) {
+    public CountryConfiguration(String entityID, String countryCode, String overriddenSignOnUrl, boolean workaroundBrokenRoleDescriptorSignatures) {
         this.entityID = entityID;
         this.countryCode = countryCode;
         this.overriddenSignOnUrl = overriddenSignOnUrl;
         this.workaroundBrokenRoleDescriptorSignatures = workaroundBrokenRoleDescriptorSignatures;
-        this.workaroundBrokenContentTypeHeaders = workaroundBrokenContentTypeHeaders;
     }
 
     public String getEntityID() {
@@ -43,14 +42,6 @@ public class CountryConfiguration extends TrustStoreConfiguration {
 
     public boolean workaroundBrokenRoleDescriptorSignatures() {
         return workaroundBrokenRoleDescriptorSignatures;
-    }
-
-    @Valid
-    @JsonProperty
-    private boolean workaroundBrokenContentTypeHeaders;
-
-    public boolean workaroundBrokenContentTypeHeaders() {
-        return workaroundBrokenContentTypeHeaders;
     }
 
     @Valid

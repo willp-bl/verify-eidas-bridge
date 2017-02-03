@@ -2,7 +2,6 @@ package uk.gov.ida.eidas.bridge.factories;
 
 import com.google.common.base.Throwables;
 import io.dropwizard.client.JerseyClientBuilder;
-import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.setup.Environment;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
@@ -11,7 +10,6 @@ import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.opensaml.saml.metadata.resolver.filter.impl.SignatureValidationFilter;
 import uk.gov.ida.eidas.bridge.configuration.CountryConfiguration;
 import uk.gov.ida.eidas.bridge.configuration.EidasMetadataConfiguration;
-import uk.gov.ida.eidas.bridge.hacks.BrokenContentTypeWorkaroundJerseyFilter;
 import uk.gov.ida.eidas.bridge.hacks.RoleDescriptorSkippingSignatureValidationFilter;
 import uk.gov.ida.eidas.bridge.security.MetadataResolverRepository;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
@@ -47,7 +45,7 @@ class CountryMetadataResolverRepositoryFactory {
         return configuration.getCountries().stream().collect(Collectors.toMap(
                 CountryConfiguration::getEntityID,
                 config -> {
-                    Client client = createClient(environment, configuration, config.getCountryCode(), config.workaroundBrokenContentTypeHeaders());
+                    Client client = createClient(environment, configuration, config.getCountryCode());
                     return getCountryMetadataResolver(config, minRefreshDelay, maxRefreshDelay, client);
                 }
         ));
@@ -95,12 +93,8 @@ class CountryMetadataResolverRepositoryFactory {
         }
     }
 
-    private Client createClient(Environment environment, EidasMetadataConfiguration eidasMetadataConfgiruation, String countryCode, boolean workaroundBrokenContentTypeHeaders) {
-        Client client = new JerseyClientBuilder(environment).using(eidasMetadataConfgiruation.getClient()).build(countryCode + "-metadata-client");
-        if (workaroundBrokenContentTypeHeaders) {
-            client.register(new BrokenContentTypeWorkaroundJerseyFilter());
-        }
-        return client;
+    private Client createClient(Environment environment, EidasMetadataConfiguration eidasMetadataConfgiruation, String countryCode) {
+        return new JerseyClientBuilder(environment).using(eidasMetadataConfgiruation.getClient()).build(countryCode + "-metadata-client");
     }
 
     MetadataResolverRepository createRepository(Environment environment, EidasMetadataConfiguration eidasMetadataConfiguration) {
