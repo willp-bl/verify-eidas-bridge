@@ -1,5 +1,6 @@
 package uk.gov.ida.eidas.bridge.helpers;
 
+import io.dropwizard.testing.ResourceHelpers;
 import org.junit.Before;
 import org.junit.Test;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -20,7 +21,17 @@ import uk.gov.ida.eidas.bridge.factories.BridgeMetadataFactory;
 import uk.gov.ida.eidas.bridge.resources.EidasResponseResource;
 import uk.gov.ida.saml.core.test.TestCertificateStrings;
 import uk.gov.ida.saml.core.test.TestCredentialFactory;
+import uk.gov.ida.saml.serializers.XmlObjectToBase64EncodedStringTransformer;
+import uk.gov.ida.shared.utils.string.StringEncoding;
 
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import java.io.File;
+import java.io.StringReader;
+import java.nio.file.Paths;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -51,6 +62,20 @@ public class BridgeMetadataGeneratorTest {
         EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
         assertNotNull("Should have bridge entity descriptor", entityDescriptor);
         assertEquals("Should have an entityDescriptor ID", "bridgeEntityDescriptor", entityDescriptor.getID());
+    }
+
+    @Test
+    public void shouldBeValidAgainstSamlMetadataSchema() throws Exception {
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        File metadataSchemaFile = Paths.get(ResourceHelpers.resourceFilePath("schemas/saml-schema-metadata-2.0.xsd")).toFile();
+        Schema metadataSchema = schemaFactory.newSchema(metadataSchemaFile);
+
+        EntityDescriptor entityDescriptor = bridgeMetadataGenerator.createEntityDescriptor();
+        String metadataString = StringEncoding.fromBase64Encoded(new XmlObjectToBase64EncodedStringTransformer<>().apply(entityDescriptor));
+
+        Validator validator = metadataSchema.newValidator();
+        // This will throw if the metadata is not valid against the schema:
+        validator.validate(new StreamSource(new StringReader(metadataString)));
     }
 
     @Test

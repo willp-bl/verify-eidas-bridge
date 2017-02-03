@@ -65,6 +65,7 @@ public class BridgeMetadataGenerator {
         AssertionConsumerService assertionConsumerService = new AssertionConsumerServiceBuilder().buildObject();
         assertionConsumerService.setLocation(hostname + EidasResponseResource.ASSERTION_CONSUMER_PATH);
         assertionConsumerService.setBinding(SAMLConstants.SAML2_POST_BINDING_URI);
+        assertionConsumerService.setIndex(0);
         spSsoDescriptor.getAssertionConsumerServices().add(assertionConsumerService);
         signingHelper.sign(spSsoDescriptor);
         return spSsoDescriptor;
